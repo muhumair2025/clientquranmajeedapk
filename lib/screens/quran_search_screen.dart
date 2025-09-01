@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:xml/xml.dart';
 import 'dart:async';
+import 'dart:math' as math;
 import '../themes/app_theme.dart';
 import '../localization/app_localizations_extension.dart';
 import 'quran_reader_screen.dart';
@@ -22,6 +23,11 @@ class _QuranSearchScreenState extends State<QuranSearchScreen> with SingleTicker
   bool isLoading = false;
   bool isLoadingQuranData = true;
   Timer? _searchDebounceTimer;
+  
+  // Cache for expensive operations
+  final Map<String, String> _normalizedTextCache = {};
+  final Map<String, List<RegExp>> _searchPatternsCache = {};
+  String _lastSearchQuery = '';
   
   // Quran data
   Map<int, SurahData> surahsData = {};
@@ -146,8 +152,13 @@ class _QuranSearchScreenState extends State<QuranSearchScreen> with SingleTicker
     }
   }
 
-  // Enhanced text normalization for intelligent Arabic search
+  // Enhanced text normalization for intelligent Arabic search (with caching)
   String _normalizeText(String text) {
+    // Check cache first
+    if (_normalizedTextCache.containsKey(text)) {
+      return _normalizedTextCache[text]!;
+    }
+    
     String normalized = text.trim();
     
     // Remove all diacritics and harakat (comprehensive Arabic diacritics)
@@ -159,8 +170,8 @@ class _QuranSearchScreenState extends State<QuranSearchScreen> with SingleTicker
     // Normalize multiple spaces to single space
     normalized = normalized.replaceAll(RegExp(r'\s+'), ' ').trim();
     
-    // Apply comprehensive Arabic character normalization
-    Map<String, String> charMap = {
+    // Apply comprehensive Arabic character normalization (const map for better performance)
+    const charMap = {
       // Alif variations - normalize to basic alif
       'أ': 'ا', 'إ': 'ا', 'آ': 'ا', 'ء': 'ا', 'ٱ': 'ا',
       
@@ -210,7 +221,14 @@ class _QuranSearchScreenState extends State<QuranSearchScreen> with SingleTicker
       normalized = normalized.replaceAll(from, to);
     });
     
-    return normalized.toLowerCase();
+    final result = normalized.toLowerCase();
+    
+    // Cache result (limit cache size to prevent memory issues)
+    if (_normalizedTextCache.length < 1000) {
+      _normalizedTextCache[text] = result;
+    }
+    
+    return result;
   }
   
   // Create space-flexible normalized text for better matching
@@ -256,87 +274,129 @@ class _QuranSearchScreenState extends State<QuranSearchScreen> with SingleTicker
     if (query.isEmpty) {
       setState(() {
         searchResults = [];
+        _lastSearchQuery = '';
       });
       return;
     }
+    
+    // Skip search if query hasn't changed
+    if (query == _lastSearchQuery) {
+      return;
+    }
+    
+    _lastSearchQuery = query;
 
     setState(() {
       isLoading = true;
-      searchResults = [];
     });
 
-    List<SearchResult> results = [];
-    
-    // Clean and normalize the query
-    String cleanQuery = query.trim();
-    String normalizedQuery = _normalizeText(cleanQuery);
-    
-    // Create multiple search strategies for better matching
-    List<RegExp> searchPatterns = _createMultipleSearchPatterns(cleanQuery);
-    
-    // Search through all surahs and ayahs (Arabic text only)
-    surahsData.forEach((surahIndex, surahData) {
-      for (var ayah in surahData.ayahs) {
-        // Only search in Arabic text
-        MatchResult arabicMatch = _analyzeMatch(ayah.text, cleanQuery, normalizedQuery, searchPatterns);
+    // Use async execution to prevent UI blocking
+    Future.microtask(() async {
+      List<SearchResult> results = [];
+      
+      // Clean and normalize the query
+      String cleanQuery = query.trim();
+      String normalizedQuery = _normalizeText(cleanQuery);
+      
+      // Create multiple search strategies for better matching
+      List<RegExp> searchPatterns = _createMultipleSearchPatterns(cleanQuery);
+      
+      // Early exit for very short queries
+      if (cleanQuery.length < 2) {
+        if (mounted) {
+          setState(() {
+            searchResults = [];
+            isLoading = false;
+          });
+        }
+        return;
+      }
+      
+      // Search through all surahs and ayahs (Arabic text only)
+      int processedCount = 0;
+      const batchSize = 50; // Process in batches to prevent blocking
+      
+      for (var entry in surahsData.entries) {
+        final surahIndex = entry.key;
+        final surahData = entry.value;
         
-        // Add result if match found in Arabic text
-        if (arabicMatch.found) {
-          double relevanceScore = _calculateRelevance(
-            ayah.text,
-            cleanQuery,
-            normalizedQuery,
-          );
+        for (var ayah in surahData.ayahs) {
+          // Only search in Arabic text
+          MatchResult arabicMatch = _analyzeMatch(ayah.text, cleanQuery, normalizedQuery, searchPatterns);
           
-          // Apply confidence multiplier
-          relevanceScore *= arabicMatch.confidence;
+          // Add result if match found in Arabic text
+          if (arabicMatch.found) {
+            double relevanceScore = _calculateRelevance(
+              ayah.text,
+              cleanQuery,
+              normalizedQuery,
+            );
+            
+            // Apply confidence multiplier
+            relevanceScore *= arabicMatch.confidence;
+            
+            // Get translation for display (but not for searching)
+            String? translation = translationsData[surahIndex]?[ayah.ayahIndex];
+            
+            results.add(SearchResult(
+              surahIndex: surahIndex,
+              surahName: surahData.name,
+              ayahIndex: ayah.ayahIndex,
+              ayahText: ayah.text,
+              translation: translation ?? '',
+              matchType: 'arabic', // Always Arabic since we only search Arabic
+              relevanceScore: relevanceScore,
+            ));
+          }
           
-          // Get translation for display (but not for searching)
-          String? translation = translationsData[surahIndex]?[ayah.ayahIndex];
-          
-          results.add(SearchResult(
-            surahIndex: surahIndex,
-            surahName: surahData.name,
-            ayahIndex: ayah.ayahIndex,
-            ayahText: ayah.text,
-            translation: translation ?? '',
-            matchType: 'arabic', // Always Arabic since we only search Arabic
-            relevanceScore: relevanceScore,
-          ));
+          // Yield control periodically to prevent blocking
+          processedCount++;
+          if (processedCount % batchSize == 0) {
+            // Allow other operations to run
+            await Future.delayed(Duration.zero);
+          }
         }
       }
-    });
 
-    // Advanced sorting: prioritize exact matches, then by relevance
-    results.sort((a, b) {
-      // First sort by match type priority (exact matches first)
-      int aPriority = _getMatchPriority(a, cleanQuery);
-      int bPriority = _getMatchPriority(b, cleanQuery);
+      // Advanced sorting: prioritize exact matches, then by relevance
+      results.sort((a, b) {
+        // First sort by match type priority (exact matches first)
+        int aPriority = _getMatchPriority(a, cleanQuery);
+        int bPriority = _getMatchPriority(b, cleanQuery);
+        
+        if (aPriority != bPriority) {
+          return bPriority.compareTo(aPriority); // Higher priority first
+        }
+        
+        // Then by relevance score
+        return b.relevanceScore.compareTo(a.relevanceScore);
+      });
       
-      if (aPriority != bPriority) {
-        return bPriority.compareTo(aPriority); // Higher priority first
+      // Remove duplicate or very similar results
+      results = _removeDuplicateResults(results);
+      
+      // Limit results to top 50 for better performance and relevance
+      if (results.length > 50) {
+        results = results.take(50).toList();
       }
-      
-      // Then by relevance score
-      return b.relevanceScore.compareTo(a.relevanceScore);
-    });
-    
-    // Remove duplicate or very similar results
-    results = _removeDuplicateResults(results);
-    
-    // Limit results to top 50 for better performance and relevance
-    if (results.length > 50) {
-      results = results.take(50).toList();
-    }
 
-    setState(() {
-      searchResults = results;
-      isLoading = false;
+      // Only update UI if query is still current and widget is mounted
+      if (mounted && query == _lastSearchQuery) {
+        setState(() {
+          searchResults = results;
+          isLoading = false;
+        });
+      }
     });
   }
   
-  // Create multiple search patterns for better matching
+  // Create multiple search patterns for better matching (with caching)
   List<RegExp> _createMultipleSearchPatterns(String query) {
+    // Check cache first
+    if (_searchPatternsCache.containsKey(query)) {
+      return _searchPatternsCache[query]!;
+    }
+    
     List<RegExp> patterns = [];
     
     try {
@@ -357,6 +417,11 @@ class _QuranSearchScreenState extends State<QuranSearchScreen> with SingleTicker
     } catch (e) {
       // Fallback to simple pattern
       patterns.add(RegExp(RegExp.escape(query), caseSensitive: false));
+    }
+    
+    // Cache result (limit cache size)
+    if (_searchPatternsCache.length < 100) {
+      _searchPatternsCache[query] = patterns;
     }
     
     return patterns;
@@ -776,13 +841,16 @@ class _QuranSearchScreenState extends State<QuranSearchScreen> with SingleTicker
                       _searchDebounceTimer!.cancel();
                     }
                     
-                    _searchDebounceTimer = Timer(const Duration(milliseconds: 300), () {
-                      if (_searchController.text == value && value.trim().isNotEmpty) {
-                        _performTextSearch(value.trim());
-                      } else if (value.trim().isEmpty) {
-                        setState(() {
-                          searchResults = [];
-                        });
+                    _searchDebounceTimer = Timer(const Duration(milliseconds: 400), () {
+                      if (_searchController.text == value) {
+                        if (value.trim().isNotEmpty) {
+                          _performTextSearch(value.trim());
+                        } else {
+                          setState(() {
+                            searchResults = [];
+                            _lastSearchQuery = '';
+                          });
+                        }
                       }
                     });
                   },
@@ -1256,45 +1324,30 @@ class _QuranSearchScreenState extends State<QuranSearchScreen> with SingleTicker
       fontWeight: FontWeight.bold,
     );
     
-    // Try different matching strategies in order of preference
-    List<RegExp> patterns = [];
-    
-    try {
-      // 1. Exact match (case-insensitive)
-      patterns.add(RegExp(RegExp.escape(query), caseSensitive: false));
-      
-      // 2. Normalized match
-      String normalizedQuery = _normalizeText(query);
-      String normalizedText = _normalizeText(text);
-      if (normalizedText.contains(normalizedQuery)) {
-        patterns.add(RegExp(RegExp.escape(normalizedQuery), caseSensitive: false));
-      }
-      
-      // 3. Flexible character variation pattern
-      patterns.add(_createSearchPattern(query));
-    } catch (e) {
-      // Fallback
-      patterns.add(RegExp(RegExp.escape(query), caseSensitive: false));
+    if (query.isEmpty) {
+      spans.add(TextSpan(text: text, style: style));
+      return spans;
     }
     
-    // Find the best matches using the first successful pattern
-    List<Match> allMatches = [];
+    // Try different highlighting strategies in order of preference
+    List<_HighlightMatch> allMatches = [];
     
-    for (RegExp pattern in patterns) {
-      List<Match> matches = pattern.allMatches(text).toList();
-      if (matches.isNotEmpty) {
-        allMatches = matches;
-        break;
-      }
-      
-      // Try on normalized text if direct match fails
-      String normalizedText = _normalizeText(text);
-      matches = pattern.allMatches(normalizedText).toList();
-      if (matches.isNotEmpty) {
-        // Map normalized positions back to original text positions
-        allMatches = _mapNormalizedMatches(text, normalizedText, matches);
-        break;
-      }
+    // 1. Try exact match first (most precise)
+    allMatches.addAll(_findExactMatches(text, query));
+    
+    // 2. If no exact matches, try case-insensitive
+    if (allMatches.isEmpty) {
+      allMatches.addAll(_findCaseInsensitiveMatches(text, query));
+    }
+    
+    // 3. If still no matches, try normalized matching (without diacritics)
+    if (allMatches.isEmpty) {
+      allMatches.addAll(_findNormalizedMatches(text, query));
+    }
+    
+    // 4. If still no matches, try partial matching for longer queries
+    if (allMatches.isEmpty && query.length >= 3) {
+      allMatches.addAll(_findPartialMatches(text, query));
     }
     
     if (allMatches.isEmpty) {
@@ -1302,8 +1355,9 @@ class _QuranSearchScreenState extends State<QuranSearchScreen> with SingleTicker
       return spans;
     }
     
-    // Sort matches by position
+    // Sort matches by position and merge overlapping ones
     allMatches.sort((a, b) => a.start.compareTo(b.start));
+    allMatches = _mergeOverlappingMatches(allMatches);
     
     // Build spans with highlighting
     int lastEnd = 0;
@@ -1337,6 +1391,130 @@ class _QuranSearchScreenState extends State<QuranSearchScreen> with SingleTicker
     return spans;
   }
   
+
+  
+  // Find exact matches
+  List<_HighlightMatch> _findExactMatches(String text, String query) {
+    List<_HighlightMatch> matches = [];
+    int index = 0;
+    
+    while (index < text.length) {
+      int foundIndex = text.indexOf(query, index);
+      if (foundIndex == -1) break;
+      
+      matches.add(_HighlightMatch(foundIndex, foundIndex + query.length));
+      index = foundIndex + 1;
+    }
+    
+    return matches;
+  }
+  
+  // Find case-insensitive matches
+  List<_HighlightMatch> _findCaseInsensitiveMatches(String text, String query) {
+    List<_HighlightMatch> matches = [];
+    String lowerText = text.toLowerCase();
+    String lowerQuery = query.toLowerCase();
+    int index = 0;
+    
+    while (index < lowerText.length) {
+      int foundIndex = lowerText.indexOf(lowerQuery, index);
+      if (foundIndex == -1) break;
+      
+      matches.add(_HighlightMatch(foundIndex, foundIndex + query.length));
+      index = foundIndex + 1;
+    }
+    
+    return matches;
+  }
+  
+  // Find normalized matches (without diacritics)
+  List<_HighlightMatch> _findNormalizedMatches(String text, String query) {
+    List<_HighlightMatch> matches = [];
+    String normalizedText = _normalizeText(text);
+    String normalizedQuery = _normalizeText(query);
+    
+    if (normalizedQuery.isEmpty) return matches;
+    
+    int index = 0;
+    while (index < normalizedText.length) {
+      int foundIndex = normalizedText.indexOf(normalizedQuery, index);
+      if (foundIndex == -1) break;
+      
+      // Map back to original text positions
+      int originalStart = _mapNormalizedToOriginal(text, normalizedText, foundIndex);
+      int originalEnd = _mapNormalizedToOriginal(text, normalizedText, foundIndex + normalizedQuery.length);
+      
+      if (originalStart != -1 && originalEnd != -1 && originalEnd > originalStart) {
+        matches.add(_HighlightMatch(originalStart, originalEnd));
+      }
+      
+      index = foundIndex + 1;
+    }
+    
+    return matches;
+  }
+  
+  // Find partial matches for longer queries
+  List<_HighlightMatch> _findPartialMatches(String text, String query) {
+    List<_HighlightMatch> matches = [];
+    
+    // Try to find the longest possible substring matches
+    for (int len = query.length; len >= 3; len--) {
+      for (int i = 0; i <= query.length - len; i++) {
+        String subQuery = query.substring(i, i + len);
+        matches.addAll(_findCaseInsensitiveMatches(text, subQuery));
+        
+        if (matches.isNotEmpty) {
+          return matches; // Return first successful partial match
+        }
+      }
+    }
+    
+    return matches;
+  }
+  
+  // Map normalized position back to original text position
+  int _mapNormalizedToOriginal(String originalText, String normalizedText, int normalizedIndex) {
+    int originalIndex = 0;
+    int normalizedCount = 0;
+    
+    while (originalIndex < originalText.length && normalizedCount < normalizedIndex) {
+      String char = originalText[originalIndex];
+      String normalizedChar = _normalizeText(char);
+      
+      if (normalizedChar.isNotEmpty) {
+        normalizedCount++;
+      }
+      originalIndex++;
+    }
+    
+    return originalIndex;
+  }
+  
+  // Merge overlapping matches
+  List<_HighlightMatch> _mergeOverlappingMatches(List<_HighlightMatch> matches) {
+    if (matches.isEmpty) return matches;
+    
+    List<_HighlightMatch> merged = [];
+    _HighlightMatch current = matches[0];
+    
+    for (int i = 1; i < matches.length; i++) {
+      _HighlightMatch next = matches[i];
+      
+      if (next.start <= current.end) {
+        // Overlapping or adjacent, merge them
+        current = _HighlightMatch(current.start, math.max(current.end, next.end));
+      } else {
+        // No overlap, add current and move to next
+        merged.add(current);
+        current = next;
+      }
+    }
+    
+    merged.add(current);
+    return merged;
+  }
+  
   // Map normalized text matches back to original text positions
   List<Match> _mapNormalizedMatches(String originalText, String normalizedText, List<Match> normalizedMatches) {
     List<Match> mappedMatches = [];
@@ -1366,6 +1544,14 @@ class _QuranSearchScreenState extends State<QuranSearchScreen> with SingleTicker
     
     return mappedMatches;
   }
+}
+
+// Helper class for highlight matches
+class _HighlightMatch {
+  final int start;
+  final int end;
+  
+  _HighlightMatch(this.start, this.end);
 }
 
 // Search result model

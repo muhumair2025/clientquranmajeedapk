@@ -527,4 +527,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get resumeDownload => 'استكمال التحميل';
   String get pauseDownload => 'إيقاف التحميل مؤقتاً';
   String get cancelDownload => 'إلغاء التحميل';
+  
+  // Surah Modal
+  @override
+  String get searchByAyahNumber => 'البحث برقم الآية أو النص...';
+  @override
+  String get totalAyahsInfo => 'إجمالي الآيات';
+  @override
+  String get noAyahsFound => 'لم يتم العثور على آيات';
 } 

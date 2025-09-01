@@ -276,4 +276,9 @@ abstract class AppLocalizations {
 
   // Media type labels
   String get vocabularyVideo;
+  
+  // Surah Modal
+  String get searchByAyahNumber;
+  String get totalAyahsInfo;
+  String get noAyahsFound;
 } 

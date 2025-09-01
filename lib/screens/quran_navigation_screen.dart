@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:xml/xml.dart';
+import 'package:provider/provider.dart';
+import 'dart:async';
 import '../themes/app_theme.dart';
 import '../localization/app_localizations_extension.dart';
+import '../providers/font_provider.dart';
 import 'quran_reader_screen.dart';
 import 'quran_search_screen.dart';
 
@@ -16,6 +21,14 @@ class _QuranNavigationScreenState extends State<QuranNavigationScreen>
   late TabController _tabController;
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
+  Timer? _searchDebounceTimer;
+  
+  // Cache for expensive operations
+  List<Map<String, dynamic>>? _cachedParaNames;
+  Map<int, List<String>>? _cachedSurahTranslations;
+  List<Map<String, dynamic>>? _cachedSurahList;
+  List<Map<String, dynamic>>? _filteredSurahs;
+  List<Map<String, dynamic>>? _filteredParas;
 
   // Enhanced search function that supports multiple languages and number search
   bool _matchesSearch(String query, Map<String, dynamic> item, {bool isPara = false}) {
@@ -23,7 +36,7 @@ class _QuranNavigationScreenState extends State<QuranNavigationScreen>
     
     final lowerQuery = query.toLowerCase().trim();
     
-    // Number search
+    // Number search (optimized)
     if (RegExp(r'^\d+$').hasMatch(lowerQuery)) {
       final searchNumber = int.tryParse(lowerQuery);
       if (searchNumber != null) {
@@ -31,13 +44,9 @@ class _QuranNavigationScreenState extends State<QuranNavigationScreen>
       }
     }
     
-    // Arabic number search (٠١٢٣٤٥٦٧٨٩)
-    final arabicNumbers = {'٠': '0', '١': '1', '٢': '2', '٣': '3', '٤': '4', '٥': '5', '٦': '6', '٧': '7', '٨': '8', '٩': '9'};
-    String convertedQuery = lowerQuery;
-    arabicNumbers.forEach((arabic, english) {
-      convertedQuery = convertedQuery.replaceAll(arabic, english);
-    });
-    if (RegExp(r'^\d+$').hasMatch(convertedQuery)) {
+    // Arabic number search (cached conversion)
+    String convertedQuery = _convertArabicNumbers(lowerQuery);
+    if (convertedQuery != lowerQuery && RegExp(r'^\d+$').hasMatch(convertedQuery)) {
       final searchNumber = int.tryParse(convertedQuery);
       if (searchNumber != null) {
         return item['number'] == searchNumber;
@@ -45,8 +54,8 @@ class _QuranNavigationScreenState extends State<QuranNavigationScreen>
     }
     
     if (isPara) {
-      // Para-specific search
-      final paraNames = _getParaNames();
+      // Para-specific search (using cached data)
+      final paraNames = _getCachedParaNames();
       final paraName = paraNames[item['number'] - 1];
       
       return paraName['arabic'].toString().contains(query) ||
@@ -54,23 +63,58 @@ class _QuranNavigationScreenState extends State<QuranNavigationScreen>
              paraName['urdu'].toString().contains(query) ||
              paraName['pashto'].toString().contains(query);
     } else {
-      // Surah search with additional Urdu/Pashto support
+      // Surah search with cached translations
       final surahNumber = item['number'] as int;
       
-      // Common Urdu/Pashto names for popular surahs
-      final urduPashtoNames = _getCommonSurahTranslations();
+      // Check basic fields first (faster)
+      if (item['name'].toString().contains(query) ||
+          item['transliteration'].toString().toLowerCase().contains(lowerQuery)) {
+        return true;
+      }
+      
+      // Only check translations if basic search fails
+      final urduPashtoNames = _getCachedSurahTranslations();
       final translations = urduPashtoNames[surahNumber];
       
-      bool matchesTranslation = false;
       if (translations != null) {
-        matchesTranslation = translations.any((name) => 
+        return translations.any((name) => 
           name.toLowerCase().contains(lowerQuery) || name.contains(query));
       }
       
-      return item['name'].toString().contains(query) ||
-             item['transliteration'].toString().toLowerCase().contains(lowerQuery) ||
-             matchesTranslation;
+      return false;
     }
+  }
+  
+  // Cache Arabic number conversion
+  static const Map<String, String> _arabicToEnglishNumbers = {
+    '٠': '0', '١': '1', '٢': '2', '٣': '3', '٤': '4', 
+    '٥': '5', '٦': '6', '٧': '7', '٨': '8', '٩': '9'
+  };
+  
+  String _convertArabicNumbers(String input) {
+    String result = input;
+    _arabicToEnglishNumbers.forEach((arabic, english) {
+      result = result.replaceAll(arabic, english);
+    });
+    return result;
+  }
+  
+  // Cached para names getter
+  List<Map<String, dynamic>> _getCachedParaNames() {
+    _cachedParaNames ??= _getParaNames();
+    return _cachedParaNames!;
+  }
+  
+  // Cached surah translations getter
+  Map<int, List<String>> _getCachedSurahTranslations() {
+    _cachedSurahTranslations ??= _getCommonSurahTranslations();
+    return _cachedSurahTranslations!;
+  }
+  
+  // Cached surah list getter
+  List<Map<String, dynamic>> _getCachedSurahList() {
+    _cachedSurahList ??= _getSurahList();
+    return _cachedSurahList!;
   }
 
   @override
@@ -83,6 +127,7 @@ class _QuranNavigationScreenState extends State<QuranNavigationScreen>
   void dispose() {
     _tabController.dispose();
     _searchController.dispose();
+    _searchDebounceTimer?.cancel();
     super.dispose();
   }
 
@@ -213,8 +258,19 @@ class _QuranNavigationScreenState extends State<QuranNavigationScreen>
                       controller: _searchController,
                       textDirection: TextDirection.rtl,
                       onChanged: (value) {
-                        setState(() {
-                          _searchQuery = value;
+                        // Cancel previous timer
+                        _searchDebounceTimer?.cancel();
+                        
+                        // Set up new timer with 300ms delay
+                        _searchDebounceTimer = Timer(const Duration(milliseconds: 300), () {
+                          if (mounted && _searchController.text == value) {
+                            setState(() {
+                              _searchQuery = value;
+                              // Clear cached filtered results to force recalculation
+                              _filteredSurahs = null;
+                              _filteredParas = null;
+                            });
+                          }
                         });
                       },
                       decoration: InputDecoration(
@@ -259,9 +315,12 @@ class _QuranNavigationScreenState extends State<QuranNavigationScreen>
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     
-    // Create para list with search filtering
-    final paraList = List.generate(30, (index) => {'number': index + 1});
-    final filteredParas = paraList.where((para) => _matchesSearch(_searchQuery, para, isPara: true)).toList();
+    // Use cached filtered results if available, otherwise compute
+    if (_filteredParas == null) {
+      final paraList = List.generate(30, (index) => {'number': index + 1});
+      _filteredParas = paraList.where((para) => _matchesSearch(_searchQuery, para, isPara: true)).toList();
+    }
+    final filteredParas = _filteredParas!;
     
     return ListView.builder(
       padding: const EdgeInsets.all(16),
@@ -393,10 +452,13 @@ class _QuranNavigationScreenState extends State<QuranNavigationScreen>
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     
-    // Filter surahs based on enhanced search query
-    final filteredSurahs = _getSurahList()
-        .where((surah) => _matchesSearch(_searchQuery, surah, isPara: false))
-        .toList();
+    // Use cached filtered results if available, otherwise compute
+    if (_filteredSurahs == null) {
+      _filteredSurahs = _getCachedSurahList()
+          .where((surah) => _matchesSearch(_searchQuery, surah, isPara: false))
+          .toList();
+    }
+    final filteredSurahs = _filteredSurahs!;
     
     return ListView.builder(
       padding: const EdgeInsets.all(16),
@@ -502,6 +564,27 @@ class _QuranNavigationScreenState extends State<QuranNavigationScreen>
                       ),
                     ),
                     const SizedBox(width: 12),
+                    // Send icon button
+                    IconButton(
+                      onPressed: () => _showSurahModal(context, surah),
+                      icon: Icon(
+                        Icons.send_rounded,
+                        color: AppTheme.primaryGreen,
+                        size: 20,
+                      ),
+                      padding: const EdgeInsets.all(8),
+                      constraints: const BoxConstraints(
+                        minWidth: 36,
+                        minHeight: 36,
+                      ),
+                      style: IconButton.styleFrom(
+                        backgroundColor: AppTheme.primaryGreen.withValues(alpha: 0.1),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
                     // Makki/Madani indicator on the right side
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -745,5 +828,686 @@ class _QuranNavigationScreenState extends State<QuranNavigationScreen>
       {'number': 113, 'name': 'الفلق', 'transliteration': 'Al-Falaq', 'ayahCount': 5, 'pageNumber': 604, 'isMakki': true},
       {'number': 114, 'name': 'الناس', 'transliteration': 'An-Nas', 'ayahCount': 6, 'pageNumber': 604, 'isMakki': true},
     ];
+  }
+
+  void _showSurahModal(BuildContext context, Map<String, dynamic> surah) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => SurahAyahModal(surah: surah),
+    );
+  }
+}
+
+// Helper class for highlight matches in navigation screen
+class _NavHighlightMatch {
+  final int start;
+  final int end;
+  
+  _NavHighlightMatch(this.start, this.end);
+}
+
+class SurahAyahModal extends StatefulWidget {
+  final Map<String, dynamic> surah;
+
+  const SurahAyahModal({super.key, required this.surah});
+
+  @override
+  State<SurahAyahModal> createState() => _SurahAyahModalState();
+}
+
+class _SurahAyahModalState extends State<SurahAyahModal> {
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = '';
+  List<Map<String, dynamic>> ayahs = [];
+  bool isLoading = true;
+  Timer? _searchDebounceTimer;
+  List<Map<String, dynamic>>? _cachedFilteredAyahs;
+  
+  // Keyboard mapping for Urdu/Pashto to Arabic conversion
+  static const Map<String, String> urduToArabicMap = {
+    // Urdu keyboard to Arabic mapping
+    'ا': 'ا', 'ب': 'ب', 'پ': 'پ', 'ت': 'ت', 'ٹ': 'ٹ', 'ث': 'ث', 'ج': 'ج', 'چ': 'چ', 'ح': 'ح', 'خ': 'خ',
+    'د': 'د', 'ڈ': 'ڈ', 'ذ': 'ذ', 'ر': 'ر', 'ڑ': 'ڑ', 'ز': 'ز', 'ژ': 'ژ', 'س': 'س', 'ش': 'ش', 'ص': 'ص',
+    'ض': 'ض', 'ط': 'ط', 'ظ': 'ظ', 'ع': 'ع', 'غ': 'غ', 'ف': 'ف', 'ق': 'ق', 'ک': 'ک', 'گ': 'گ', 'ل': 'ل',
+    'م': 'م', 'ن': 'ن', 'و': 'و', 'ہ': 'ہ', 'ھ': 'ھ', 'ء': 'ء', 'ی': 'ی', 'ے': 'ے',
+    // Urdu vowels and diacritics
+    'َ': 'َ', 'ِ': 'ِ', 'ُ': 'ُ', 'ً': 'ً', 'ٍ': 'ٍ', 'ٌ': 'ٌ', 'ْ': 'ْ', 'ّ': 'ّ', 'ٰ': 'ٰ', 'ٔ': 'ٔ', 'ٖ': 'ٖ',
+    // Common Urdu romanized to Arabic
+    'allah': 'الله', 'bismillah': 'بسم الله', 'alhamdulillah': 'الحمد لله', 'subhanallah': 'سبحان الله',
+    'astaghfirullah': 'استغفر الله', 'inshallah': 'ان شاء الله', 'mashallah': 'ما شاء الله',
+    'la': 'لا', 'illa': 'الا', 'wal': 'وال', 'min': 'من', 'ila': 'الی', 'fi': 'فی',
+    // Common words
+    'رب': 'رب', 'خدا': 'الله', 'نماز': 'صلاة', 'روزہ': 'صوم', 'حج': 'حج', 'زکات': 'زکاة',
+  };
+  
+  static const Map<String, String> pashtoToArabicMap = {
+    // Pashto specific characters and common words
+    'ښ': 'ښ', 'ګ': 'ګ', 'ړ': 'ړ', 'ډ': 'ډ', 'ټ': 'ټ', 'څ': 'څ', 'ځ': 'ځ', 'ژ': 'ژ',
+    // Common Pashto words to Arabic
+    'الله': 'الله', 'د الله': 'الله', 'جل جلاله': 'الله', 'رب': 'رب', 'خدای': 'الله',
+    'لمونځ': 'صلاة', 'روژه': 'صوم', 'حج': 'حج', 'زکات': 'زکاة',
+  };
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSurahAyahs();
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    _searchDebounceTimer?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _loadSurahAyahs() async {
+    try {
+      final String arabicData = await rootBundle.loadString('assets/quran_data/quran_arabic.xml');
+      final arabicDocument = XmlDocument.parse(arabicData);
+      
+      // Find the specific surah
+      final surahElement = arabicDocument.findAllElements('sura')
+          .firstWhere((element) => element.getAttribute('index') == widget.surah['number'].toString());
+      
+      List<Map<String, dynamic>> loadedAyahs = [];
+      for (var ayaElement in surahElement.findAllElements('aya')) {
+        int ayahIndex = int.parse(ayaElement.getAttribute('index')!);
+        String text = ayaElement.getAttribute('text')!;
+        
+        loadedAyahs.add({
+          'index': ayahIndex,
+          'text': text,
+        });
+      }
+      
+      setState(() {
+        ayahs = loadedAyahs;
+        isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        isLoading = false;
+      });
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error loading ayahs: $e')),
+        );
+      }
+    }
+  }
+
+  // Convert Urdu/Pashto input to Arabic for better search results (optimized)
+  String _convertToArabicSearch(String input) {
+    if (input.isEmpty) return input;
+    
+    String converted = input.toLowerCase().trim();
+    
+    // Only apply mappings if input contains relevant characters
+    bool hasUrduChars = false;
+    bool hasPashtoChars = false;
+    
+    // Quick check for relevant characters
+    for (String char in converted.split('')) {
+      if (urduToArabicMap.containsKey(char)) {
+        hasUrduChars = true;
+      }
+      if (pashtoToArabicMap.containsKey(char)) {
+        hasPashtoChars = true;
+      }
+      if (hasUrduChars && hasPashtoChars) break;
+    }
+    
+    // Apply mappings only if needed
+    if (hasUrduChars) {
+      urduToArabicMap.forEach((urdu, arabic) {
+        converted = converted.replaceAll(urdu, arabic);
+      });
+    }
+    
+    if (hasPashtoChars) {
+      pashtoToArabicMap.forEach((pashto, arabic) {
+        converted = converted.replaceAll(pashto, arabic);
+      });
+    }
+    
+    return converted;
+  }
+  
+  // Reuse the same Arabic number conversion function
+  String _convertArabicNumbers(String input) {
+    String result = input;
+    const arabicNumbers = {'٠': '0', '١': '1', '٢': '2', '٣': '3', '٤': '4', '٥': '5', '٦': '6', '٧': '7', '٨': '8', '٩': '9'};
+    arabicNumbers.forEach((arabic, english) {
+      result = result.replaceAll(arabic, english);
+    });
+    return result;
+  }
+  
+  // Enhanced search with highlighting support (optimized with caching)
+  List<Map<String, dynamic>> get filteredAyahs {
+    if (_searchQuery.isEmpty) {
+      return ayahs.map((ayah) => {...ayah, 'highlighted': false}).toList();
+    }
+    
+    // Return cached results if available
+    if (_cachedFilteredAyahs != null) {
+      return _cachedFilteredAyahs!;
+    }
+    
+    final query = _searchQuery.trim();
+    
+    // Quick numeric search first
+    final numericQuery = _convertArabicNumbers(query);
+    if (RegExp(r'^\d+$').hasMatch(numericQuery)) {
+      final searchNumber = int.tryParse(numericQuery);
+      if (searchNumber != null) {
+        _cachedFilteredAyahs = ayahs.where((ayah) => ayah['index'] == searchNumber)
+            .map((ayah) => {...ayah, 'highlighted': true, 'searchTerm': query})
+            .toList();
+        return _cachedFilteredAyahs!;
+      }
+    }
+    
+    // Text search with optimized matching
+    final lowerQuery = query.toLowerCase();
+    final convertedQuery = _convertToArabicSearch(query);
+    
+    List<Map<String, dynamic>> results = [];
+    
+    for (var ayah in ayahs) {
+      final ayahText = ayah['text'].toString();
+      final lowerAyahText = ayahText.toLowerCase();
+      
+      bool found = false;
+      String matchedTerm = '';
+      
+      // Check exact matches first (fastest)
+      if (ayahText.contains(query)) {
+        found = true;
+        matchedTerm = query;
+      }
+      // Then case-insensitive
+      else if (lowerAyahText.contains(lowerQuery)) {
+        found = true;
+        matchedTerm = query;
+      }
+      // Then converted query
+      else if (convertedQuery.isNotEmpty && lowerAyahText.contains(convertedQuery.toLowerCase())) {
+        found = true;
+        matchedTerm = convertedQuery;
+      }
+      // Finally diacritics-free matching (most expensive)
+      else if (query.length >= 2) {
+        final cleanAyahText = _removeArabicDiacritics(ayahText);
+        final cleanQuery = _removeArabicDiacritics(query);
+        if (cleanAyahText.toLowerCase().contains(cleanQuery.toLowerCase())) {
+          found = true;
+          matchedTerm = query;
+        }
+      }
+      
+      // Check ayah index as fallback
+      if (!found && ayah['index'].toString().contains(query)) {
+        found = true;
+        matchedTerm = query;
+      }
+      
+      if (found) {
+        results.add({
+          ...ayah, 
+          'highlighted': true, 
+          'searchTerm': matchedTerm,
+        });
+      }
+    }
+    
+    _cachedFilteredAyahs = results;
+    return results;
+  }
+  
+  // Remove Arabic diacritics for better matching
+  String _removeArabicDiacritics(String text) {
+    return text.replaceAll(RegExp(r'[\u064B-\u0652\u0670\u0640]'), '');
+  }
+
+  void _navigateToAyah(int ayahIndex) {
+    Navigator.pop(context); // Close modal first
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => QuranReaderScreen(
+          surahIndex: widget.surah['number'],
+          surahName: widget.surah['name'],
+          initialAyahIndex: ayahIndex,
+        ),
+      ),
+    );
+  }
+  
+  // Create highlighted text widget for search results (optimized for complete word highlighting)
+  Widget _buildHighlightedText(String text, String? searchTerm, bool isHighlighted, TextStyle baseStyle) {
+    if (!isHighlighted || searchTerm == null || searchTerm.isEmpty) {
+      return Text(
+        text,
+        style: baseStyle,
+        textDirection: TextDirection.rtl,
+        textAlign: TextAlign.right,
+      );
+    }
+    
+    final cleanSearchTerm = searchTerm.trim();
+    if (cleanSearchTerm.length < 2) {
+      return Text(
+        text,
+        style: baseStyle,
+        textDirection: TextDirection.rtl,
+        textAlign: TextAlign.right,
+      );
+    }
+    
+    // Find all possible matches with different strategies
+    List<_NavHighlightMatch> allMatches = [];
+    
+    // 1. Try exact match first
+    allMatches.addAll(_findExactMatches(text, cleanSearchTerm));
+    
+    // 2. If no exact matches, try case-insensitive
+    if (allMatches.isEmpty) {
+      allMatches.addAll(_findCaseInsensitiveMatches(text, cleanSearchTerm));
+    }
+    
+    // 3. If no matches, try converted query (Urdu/Pashto to Arabic)
+    if (allMatches.isEmpty) {
+      String convertedQuery = _convertToArabicSearch(cleanSearchTerm);
+      if (convertedQuery != cleanSearchTerm && convertedQuery.isNotEmpty) {
+        allMatches.addAll(_findCaseInsensitiveMatches(text, convertedQuery));
+      }
+    }
+    
+    // 4. If still no matches, try without diacritics
+    if (allMatches.isEmpty && cleanSearchTerm.length >= 2) {
+      allMatches.addAll(_findDiacriticsFreMatches(text, cleanSearchTerm));
+    }
+    
+    if (allMatches.isEmpty) {
+      return Text(
+        text,
+        style: baseStyle,
+        textDirection: TextDirection.rtl,
+        textAlign: TextAlign.right,
+      );
+    }
+    
+    // Sort and merge overlapping matches
+    allMatches.sort((a, b) => a.start.compareTo(b.start));
+    allMatches = _mergeOverlappingMatches(allMatches);
+    
+    // Build spans with highlighting
+    List<TextSpan> spans = [];
+    int lastEnd = 0;
+    
+    for (final match in allMatches) {
+      // Add text before match
+      if (match.start > lastEnd) {
+        spans.add(TextSpan(
+          text: text.substring(lastEnd, match.start),
+          style: baseStyle,
+        ));
+      }
+      
+      // Add highlighted match
+      spans.add(TextSpan(
+        text: text.substring(match.start, match.end),
+        style: baseStyle.copyWith(
+          backgroundColor: AppTheme.primaryGold.withValues(alpha: 0.3),
+          color: AppTheme.primaryGreen,
+          fontWeight: FontWeight.bold,
+        ),
+      ));
+      
+      lastEnd = match.end;
+    }
+    
+    // Add remaining text
+    if (lastEnd < text.length) {
+      spans.add(TextSpan(text: text.substring(lastEnd), style: baseStyle));
+    }
+    
+    return RichText(
+      text: TextSpan(children: spans),
+      textDirection: TextDirection.rtl,
+      textAlign: TextAlign.right,
+    );
+  }
+  
+
+  
+  // Find exact matches
+  List<_NavHighlightMatch> _findExactMatches(String text, String query) {
+    List<_NavHighlightMatch> matches = [];
+    int index = 0;
+    
+    while (index < text.length) {
+      int foundIndex = text.indexOf(query, index);
+      if (foundIndex == -1) break;
+      
+      matches.add(_NavHighlightMatch(foundIndex, foundIndex + query.length));
+      index = foundIndex + 1;
+    }
+    
+    return matches;
+  }
+  
+  // Find case-insensitive matches
+  List<_NavHighlightMatch> _findCaseInsensitiveMatches(String text, String query) {
+    List<_NavHighlightMatch> matches = [];
+    String lowerText = text.toLowerCase();
+    String lowerQuery = query.toLowerCase();
+    int index = 0;
+    
+    while (index < lowerText.length) {
+      int foundIndex = lowerText.indexOf(lowerQuery, index);
+      if (foundIndex == -1) break;
+      
+      matches.add(_NavHighlightMatch(foundIndex, foundIndex + query.length));
+      index = foundIndex + 1;
+    }
+    
+    return matches;
+  }
+  
+  // Find matches without diacritics
+  List<_NavHighlightMatch> _findDiacriticsFreMatches(String text, String query) {
+    List<_NavHighlightMatch> matches = [];
+    String cleanText = _removeArabicDiacritics(text).toLowerCase();
+    String cleanQuery = _removeArabicDiacritics(query).toLowerCase();
+    
+    if (cleanQuery.isEmpty) return matches;
+    
+    int index = 0;
+    while (index < cleanText.length) {
+      int foundIndex = cleanText.indexOf(cleanQuery, index);
+      if (foundIndex == -1) break;
+      
+      // Map back to original text positions (approximate)
+      int originalStart = _mapCleanToOriginal(text, foundIndex);
+      int originalEnd = _mapCleanToOriginal(text, foundIndex + cleanQuery.length);
+      
+      if (originalStart != -1 && originalEnd != -1 && originalEnd > originalStart) {
+        matches.add(_NavHighlightMatch(originalStart, originalEnd));
+      }
+      
+      index = foundIndex + 1;
+    }
+    
+    return matches;
+  }
+  
+  // Map clean text position to original position (approximate)
+  int _mapCleanToOriginal(String originalText, int cleanPosition) {
+    int originalIndex = 0;
+    int cleanCount = 0;
+    
+    while (originalIndex < originalText.length && cleanCount < cleanPosition) {
+      String char = originalText[originalIndex];
+      if (!RegExp(r'[\u064B-\u0652\u0670\u0640]').hasMatch(char)) {
+        cleanCount++;
+      }
+      originalIndex++;
+    }
+    
+    return originalIndex;
+  }
+  
+  // Merge overlapping matches
+  List<_NavHighlightMatch> _mergeOverlappingMatches(List<_NavHighlightMatch> matches) {
+    if (matches.isEmpty) return matches;
+    
+    List<_NavHighlightMatch> merged = [];
+    _NavHighlightMatch current = matches[0];
+    
+    for (int i = 1; i < matches.length; i++) {
+      _NavHighlightMatch next = matches[i];
+      
+      if (next.start <= current.end + 1) { // Allow 1 character gap
+        // Overlapping or very close, merge them
+        current = _NavHighlightMatch(current.start, 
+            next.end > current.end ? next.end : current.end);
+      } else {
+        // No overlap, add current and move to next
+        merged.add(current);
+        current = next;
+      }
+    }
+    
+    merged.add(current);
+    return merged;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final surahNumber = widget.surah['number'] as int;
+    final surahName = widget.surah['name'] as String;
+    final totalAyahs = widget.surah['ayahCount'] as int;
+    
+    return Consumer<FontProvider>(
+      builder: (context, fontProvider, child) {
+
+    return Container(
+      height: MediaQuery.of(context).size.height * 0.85,
+      decoration: BoxDecoration(
+        color: isDark ? AppTheme.darkBackground : Colors.white,
+        borderRadius: const BorderRadius.only(
+          topLeft: Radius.circular(20),
+          topRight: Radius.circular(20),
+        ),
+      ),
+      child: Column(
+        children: [
+          // Handle bar
+          Container(
+            margin: const EdgeInsets.only(top: 12),
+            width: 40,
+            height: 4,
+            decoration: BoxDecoration(
+              color: Colors.grey[300],
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          
+          // Header
+          Container(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    IconButton(
+                      onPressed: () => Navigator.pop(context),
+                      icon: const Icon(Icons.close_rounded),
+                    ),
+                    Expanded(
+                      child: Column(
+                        children: [
+                          Text(
+                            surahName,
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              color: isDark ? Colors.white : Colors.black,
+                            ),
+                            textAlign: TextAlign.center,
+                            textDirection: TextDirection.rtl,
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Surah $surahNumber • ${context.l.totalAyahsInfo}: $totalAyahs (1-$totalAyahs)',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: isDark ? Colors.white60 : Colors.grey[600],
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 48), // Balance the close button
+                  ],
+                ),
+                
+                const SizedBox(height: 16),
+                
+                // Search box
+                Container(
+                  decoration: BoxDecoration(
+                    color: isDark ? AppTheme.darkSurface : AppTheme.lightGray,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: TextField(
+                    controller: _searchController,
+                    textDirection: TextDirection.rtl,
+                    onChanged: (value) {
+                      // Cancel previous timer
+                      _searchDebounceTimer?.cancel();
+                      
+                      // Set up new timer with 250ms delay (faster for ayah search)
+                      _searchDebounceTimer = Timer(const Duration(milliseconds: 250), () {
+                        if (mounted && _searchController.text == value) {
+                          setState(() {
+                            _searchQuery = value;
+                            _cachedFilteredAyahs = null; // Clear cache
+                          });
+                        }
+                      });
+                    },
+                    decoration: InputDecoration(
+                      hintText: context.l.searchByAyahNumber,
+                      hintStyle: TextStyle(
+                        color: Colors.grey[500],
+                        fontSize: 14,
+                      ),
+                      prefixIcon: Icon(
+                        Icons.search_rounded,
+                        color: AppTheme.primaryGreen,
+                        size: 24,
+                      ),
+                      border: InputBorder.none,
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 12,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          
+          // Ayahs list
+          Expanded(
+            child: isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : filteredAyahs.isEmpty
+                    ? Center(
+                        child: Text(
+                          _searchQuery.isEmpty ? context.l.noAyahsFound : context.l.noResultsFound,
+                          style: TextStyle(
+                            color: isDark ? Colors.white60 : Colors.grey[600],
+                            fontSize: 16,
+                          ),
+                        ),
+                      )
+                    : ListView.builder(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        itemCount: filteredAyahs.length,
+                        itemBuilder: (context, index) {
+                          final ayah = filteredAyahs[index];
+                          final ayahIndex = ayah['index'] as int;
+                          final ayahText = ayah['text'] as String;
+                          
+                          return Container(
+                            margin: const EdgeInsets.only(bottom: 12),
+                            decoration: BoxDecoration(
+                              color: isDark ? AppTheme.darkSurface : Colors.white,
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: isDark ? Colors.white10 : Colors.grey[200]!,
+                              ),
+                            ),
+                            child: Material(
+                              color: Colors.transparent,
+                              child: InkWell(
+                                borderRadius: BorderRadius.circular(12),
+                                onTap: () => _navigateToAyah(ayahIndex),
+                                child: Padding(
+                                  padding: const EdgeInsets.all(16),
+                                  child: Row(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      // Ayah number
+                                      Container(
+                                        width: 32,
+                                        height: 32,
+                                        decoration: BoxDecoration(
+                                          color: AppTheme.primaryGreen.withValues(alpha: 0.1),
+                                          borderRadius: BorderRadius.circular(16),
+                                        ),
+                                        child: Center(
+                                          child: Text(
+                                            '$ayahIndex',
+                                            style: TextStyle(
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.bold,
+                                              color: AppTheme.primaryGreen,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                      
+                                      const SizedBox(width: 12),
+                                      
+                                      // Ayah text with highlighting and font settings
+                                      Expanded(
+                                        child: _buildHighlightedText(
+                                          ayahText,
+                                          ayah['searchTerm'],
+                                          ayah['highlighted'] ?? false,
+                                          TextStyle(
+                                            fontSize: 18.0, // Fixed 18 pixel font size
+                                            height: 1.8,
+                                            color: isDark ? Colors.white : Colors.black,
+                                            fontFamily: fontProvider.selectedFontOption.family,
+                                          ),
+                                        ),
+                                      ),
+                                      
+                                      const SizedBox(width: 8),
+                                      
+                                      // Navigate icon
+                                      Icon(
+                                        Icons.arrow_forward_ios_rounded,
+                                        size: 16,
+                                        color: Colors.grey[400],
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+          ),
+        ],
+      ),
+    );
+      },
+    );
   }
 } 

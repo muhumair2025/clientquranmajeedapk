@@ -486,4 +486,12 @@ class AppLocalizationsEn extends AppLocalizations {
   // Media type labels
   @override
   String get vocabularyVideo => 'Vocabulary - Video';
+  
+  // Surah Modal
+  @override
+  String get searchByAyahNumber => 'Search by ayah number or text...';
+  @override
+  String get totalAyahsInfo => 'Total Ayahs';
+  @override
+  String get noAyahsFound => 'No ayahs found';
 } 

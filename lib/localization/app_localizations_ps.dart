@@ -486,4 +486,12 @@ class AppLocalizationsPs extends AppLocalizations {
   // Media type labels
   @override
   String get vocabularyVideo => 'لغات - ویډیو';
+  
+  // Surah Modal
+  @override
+  String get searchByAyahNumber => 'د آیت شمیره یا متن سره لټون...';
+  @override
+  String get totalAyahsInfo => 'ټول آیتونه';
+  @override
+  String get noAyahsFound => 'هیڅ آیت ونه موندل شو';
 } 
