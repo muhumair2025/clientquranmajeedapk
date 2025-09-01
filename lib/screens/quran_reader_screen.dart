@@ -7,6 +7,7 @@ import '../services/lughat_service.dart';
 import '../widgets/media_viewers.dart';
 import '../providers/font_provider.dart';
 import '../localization/app_localizations_extension.dart';
+import 'bulk_audio_player_screen.dart';
 import 'dart:async';
 
 class QuranReaderScreen extends StatefulWidget {
@@ -1536,14 +1537,14 @@ class _QuranReaderScreenState extends State<QuranReaderScreen> {
   void _showLughatAudio(int surahIndex, int ayahIndex) {
     final audioData = LughatService.getAudioData(surahIndex, ayahIndex);
     if (audioData != null) {
+      // Directly open bulk audio player
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (context) => FullScreenAudioPlayer(
-            audioUrl: audioData.content,
-            title: context.l.verseVocabularyTitle.replaceAll('{verse}', _convertToArabicNumeral(ayahIndex)),
-            surahIndex: surahIndex,
-            ayahIndex: ayahIndex,
+          builder: (context) => BulkAudioPlayerScreen(
+            initialSurahIndex: surahIndex,
+            initialAyahIndex: ayahIndex,
+            surahName: surahsData[surahIndex]?.name ?? 'Surah $surahIndex',
           ),
         ),
       );

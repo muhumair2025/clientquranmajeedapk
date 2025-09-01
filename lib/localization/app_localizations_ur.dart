@@ -535,4 +535,28 @@ class AppLocalizationsUr extends AppLocalizations {
   String get totalAyahsInfo => 'کل آیات';
   @override
   String get noAyahsFound => 'کوئی آیت نہیں ملی';
+  
+  // Bulk Audio Player
+  @override
+  String get bulkAudioPlayer => 'بلک آڈیو پلیئر';
+  @override
+  String get playbackSettings => 'پلے بیک سیٹنگز';
+  @override
+  String get fromAyah => 'آیت سے';
+  @override
+  String get toAyah => 'آیت تک';
+  @override
+  String get playbackMode => 'پلے بیک موڈ';
+  @override
+  String get single => 'ایک';
+  @override
+  String get sequential => 'ترتیبی';
+  @override
+  String get repeat => 'دہرانا';
+  @override
+  String get autoPlayNext => 'اگلا خودکار چلائیں';
+  @override
+  String get playingRange => 'چلانے کی رینج';
+  @override
+  String get number => 'نمبر';
 } 

@@ -281,4 +281,17 @@ abstract class AppLocalizations {
   String get searchByAyahNumber;
   String get totalAyahsInfo;
   String get noAyahsFound;
+  
+  // Bulk Audio Player
+  String get bulkAudioPlayer;
+  String get playbackSettings;
+  String get fromAyah;
+  String get toAyah;
+  String get playbackMode;
+  String get single;
+  String get sequential;
+  String get repeat;
+  String get autoPlayNext;
+  String get playingRange;
+  String get number;
 } 

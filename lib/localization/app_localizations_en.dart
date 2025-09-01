@@ -494,4 +494,28 @@ class AppLocalizationsEn extends AppLocalizations {
   String get totalAyahsInfo => 'Total Ayahs';
   @override
   String get noAyahsFound => 'No ayahs found';
+  
+  // Bulk Audio Player
+  @override
+  String get bulkAudioPlayer => 'Bulk Audio Player';
+  @override
+  String get playbackSettings => 'Playback Settings';
+  @override
+  String get fromAyah => 'From Verse';
+  @override
+  String get toAyah => 'To Verse';
+  @override
+  String get playbackMode => 'Playback Mode';
+  @override
+  String get single => 'Single';
+  @override
+  String get sequential => 'Sequential';
+  @override
+  String get repeat => 'Repeat';
+  @override
+  String get autoPlayNext => 'Auto Play Next';
+  @override
+  String get playingRange => 'Playing Range';
+  @override
+  String get number => 'Number';
 } 

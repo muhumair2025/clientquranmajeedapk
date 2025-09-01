@@ -535,4 +535,28 @@ class AppLocalizationsAr extends AppLocalizations {
   String get totalAyahsInfo => 'إجمالي الآيات';
   @override
   String get noAyahsFound => 'لم يتم العثور على آيات';
+  
+  // Bulk Audio Player
+  @override
+  String get bulkAudioPlayer => 'مشغل الصوت المتعدد';
+  @override
+  String get playbackSettings => 'إعدادات التشغيل';
+  @override
+  String get fromAyah => 'من الآية';
+  @override
+  String get toAyah => 'إلى الآية';
+  @override
+  String get playbackMode => 'وضع التشغيل';
+  @override
+  String get single => 'واحد';
+  @override
+  String get sequential => 'متسلسل';
+  @override
+  String get repeat => 'إعادة';
+  @override
+  String get autoPlayNext => 'تشغيل التالي تلقائياً';
+  @override
+  String get playingRange => 'نطاق التشغيل';
+  @override
+  String get number => 'رقم';
 } 

@@ -494,4 +494,28 @@ class AppLocalizationsPs extends AppLocalizations {
   String get totalAyahsInfo => 'ټول آیتونه';
   @override
   String get noAyahsFound => 'هیڅ آیت ونه موندل شو';
+  
+  // Bulk Audio Player
+  @override
+  String get bulkAudioPlayer => 'بلک آډیو پلیر';
+  @override
+  String get playbackSettings => 'د غږولو تنظیمات';
+  @override
+  String get fromAyah => 'د آیت څخه';
+  @override
+  String get toAyah => 'تر آیت پورې';
+  @override
+  String get playbackMode => 'د غږولو طریقه';
+  @override
+  String get single => 'یو';
+  @override
+  String get sequential => 'پرله پسې';
+  @override
+  String get repeat => 'تکرار';
+  @override
+  String get autoPlayNext => 'راتلونکی په خپلکاره غږوه';
+  @override
+  String get playingRange => 'د غږولو حد';
+  @override
+  String get number => 'شمېره';
 } 
