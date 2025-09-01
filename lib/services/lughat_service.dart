@@ -185,9 +185,15 @@ class LughatService {
         },
       );
       
+      // Ensure 100% progress is reported
+      _downloadProgress[downloadKey] = 1.0;
+      onProgress(1.0);
+      
       _downloadStatus[downloadKey] = DownloadStatus.completed;
       _downloadTokens.remove(downloadKey);
-      _downloadProgress.remove(downloadKey);
+      
+      // Keep progress at 1.0 for completed downloads instead of removing
+      _downloadProgress[downloadKey] = 1.0;
       
       return localPath;
       
@@ -275,6 +281,13 @@ class LughatService {
 
   static double getDownloadProgress(int surahIndex, int ayahIndex, LughatType type) {
     final downloadKey = '${surahIndex}_${ayahIndex}_${type.name}';
+    final status = _downloadStatus[downloadKey] ?? DownloadStatus.notStarted;
+    
+    // Always return 1.0 for completed downloads
+    if (status == DownloadStatus.completed) {
+      return 1.0;
+    }
+    
     return _downloadProgress[downloadKey] ?? 0.0;
   }
 

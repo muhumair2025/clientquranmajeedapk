@@ -44,6 +44,8 @@ dependencies:
   path_provider: ^2.1.2
   dio: ^5.4.0
   shared_preferences: ^2.5.3
+  flutter_localizations:
+    sdk: flutter
 
 dev_dependencies:
   flutter_test:
@@ -81,9 +83,21 @@ flutter:
 
   # Configure fonts for the Quran Majeed app
   fonts:
+    # Arabic fonts for Quran text
     - family: Al Qalam Quran Majeed
       fonts:
         - asset: assets/fonts/al_qalam_quran_majeed.ttf
+    - family: Kitab
+      fonts:
+        - asset: assets/fonts/kitab.ttf
+    - family: Noorehuda
+      fonts:
+        - asset: assets/fonts/noorehuda.ttf
+    - family: Noorehira
+      fonts:
+        - asset: assets/fonts/noorehira.ttf
+    
+    # Pashto fonts
     - family: Bahij Badr
       fonts:
         - asset: assets/fonts/bahij_badr_light.ttf
@@ -96,10 +110,46 @@ flutter:
     - family: Bahij Badr Light
       fonts:
         - asset: assets/fonts/bahij_badr_light.ttf
-    - family: Kitab
+    
+    # Urdu fonts (Noto Nastaliq)
+    - family: Noto Nastaliq
       fonts:
-        - asset: assets/fonts/kitab.ttf
-    - family: Noorehuda
+        - asset: assets/fonts/noto_nastaliq_regular.ttf
+          weight: 400
+        - asset: assets/fonts/noto_nastaliq_bold.ttf
+          weight: 700
+    - family: Noto Nastaliq Regular
       fonts:
-        - asset: assets/fonts/noorehuda.ttf
+        - asset: assets/fonts/noto_nastaliq_regular.ttf
+    - family: Noto Nastaliq Bold
+      fonts:
+        - asset: assets/fonts/noto_nastaliq_bold.ttf
+    
+    # Arabic fonts (Tajawal)
+    - family: Tajawal
+      fonts:
+        - asset: assets/fonts/tajawal_regular.ttf
+          weight: 400
+        - asset: assets/fonts/tajawal_bold.ttf
+          weight: 700
+    - family: Tajawal Regular
+      fonts:
+        - asset: assets/fonts/tajawal_regular.ttf
+    - family: Tajawal Bold
+      fonts:
+        - asset: assets/fonts/tajawal_bold.ttf
+    
+    # English fonts (Poppins)
+    - family: Poppins
+      fonts:
+        - asset: assets/fonts/poppins_regular.ttf
+          weight: 400
+        - asset: assets/fonts/poppins_bold.ttf
+          weight: 700
+    - family: Poppins Regular
+      fonts:
+        - asset: assets/fonts/poppins_regular.ttf
+    - family: Poppins Bold
+      fonts:
+        - asset: assets/fonts/poppins_bold.ttf
 

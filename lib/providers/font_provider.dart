@@ -1,5 +1,6 @@
-import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../localization/app_localizations_extension.dart';
 
 class FontProvider with ChangeNotifier {
   String _selectedArabicFont = 'Al Qalam Quran Majeed';
@@ -103,16 +104,29 @@ class FontOption {
 }
 
 enum FontSize {
-  small(20.0, 'کشر'),
-  medium(24.0, 'منځنی'),
-  large(28.0, 'لوی'),
-  xl(38.0, 'ډیر لوی');
+  small(20.0),
+  medium(24.0),
+  large(28.0),
+  xl(38.0);
   
-  const FontSize(this.size, this.displayName);
+  const FontSize(this.size);
   
   final double size;
-  final String displayName;
   
   // Check if this font size needs flexible layout
   bool get needsFlexibleLayout => this == FontSize.xl;
+  
+  // Get localized display name for font size
+  String getDisplayName(BuildContext context) {
+    switch (this) {
+      case FontSize.small:
+        return context.l.fontSizeSmall;
+      case FontSize.medium:
+        return context.l.fontSizeMedium;
+      case FontSize.large:
+        return context.l.fontSizeLarge;
+      case FontSize.xl:
+        return context.l.fontSizeXLarge;
+    }
+  }
 } 

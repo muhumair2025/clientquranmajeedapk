@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../themes/app_theme.dart';
+import '../localization/app_localizations_extension.dart';
 import 'quran_reader_screen.dart';
+import 'quran_search_screen.dart';
 
 class QuranNavigationScreen extends StatefulWidget {
   const QuranNavigationScreen({super.key});
@@ -15,6 +17,62 @@ class _QuranNavigationScreenState extends State<QuranNavigationScreen>
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
 
+  // Enhanced search function that supports multiple languages and number search
+  bool _matchesSearch(String query, Map<String, dynamic> item, {bool isPara = false}) {
+    if (query.isEmpty) return true;
+    
+    final lowerQuery = query.toLowerCase().trim();
+    
+    // Number search
+    if (RegExp(r'^\d+$').hasMatch(lowerQuery)) {
+      final searchNumber = int.tryParse(lowerQuery);
+      if (searchNumber != null) {
+        return item['number'] == searchNumber;
+      }
+    }
+    
+    // Arabic number search (٠١٢٣٤٥٦٧٨٩)
+    final arabicNumbers = {'٠': '0', '١': '1', '٢': '2', '٣': '3', '٤': '4', '٥': '5', '٦': '6', '٧': '7', '٨': '8', '٩': '9'};
+    String convertedQuery = lowerQuery;
+    arabicNumbers.forEach((arabic, english) {
+      convertedQuery = convertedQuery.replaceAll(arabic, english);
+    });
+    if (RegExp(r'^\d+$').hasMatch(convertedQuery)) {
+      final searchNumber = int.tryParse(convertedQuery);
+      if (searchNumber != null) {
+        return item['number'] == searchNumber;
+      }
+    }
+    
+    if (isPara) {
+      // Para-specific search
+      final paraNames = _getParaNames();
+      final paraName = paraNames[item['number'] - 1];
+      
+      return paraName['arabic'].toString().contains(query) ||
+             paraName['transliteration'].toString().toLowerCase().contains(lowerQuery) ||
+             paraName['urdu'].toString().contains(query) ||
+             paraName['pashto'].toString().contains(query);
+    } else {
+      // Surah search with additional Urdu/Pashto support
+      final surahNumber = item['number'] as int;
+      
+      // Common Urdu/Pashto names for popular surahs
+      final urduPashtoNames = _getCommonSurahTranslations();
+      final translations = urduPashtoNames[surahNumber];
+      
+      bool matchesTranslation = false;
+      if (translations != null) {
+        matchesTranslation = translations.any((name) => 
+          name.toLowerCase().contains(lowerQuery) || name.contains(query));
+      }
+      
+      return item['name'].toString().contains(query) ||
+             item['transliteration'].toString().toLowerCase().contains(lowerQuery) ||
+             matchesTranslation;
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -28,6 +86,8 @@ class _QuranNavigationScreenState extends State<QuranNavigationScreen>
     super.dispose();
   }
 
+
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -36,10 +96,23 @@ class _QuranNavigationScreenState extends State<QuranNavigationScreen>
     return Scaffold(
       backgroundColor: isDark ? AppTheme.darkBackground : AppTheme.lightBackground,
       appBar: AppBar(
-        title: const Text('قرآن کریم'),
+        title: Text(context.l.quranKareem),
         backgroundColor: AppTheme.primaryGreen,
         foregroundColor: Colors.white,
         elevation: 0,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.search_rounded),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const QuranSearchScreen(),
+                ),
+              );
+            },
+          ),
+        ],
       ),
       body: Column(
         children: [
@@ -78,7 +151,7 @@ class _QuranNavigationScreenState extends State<QuranNavigationScreen>
                                   ] : null,
                                 ),
                                 child: Text(
-                                  'پاړې',
+                                  context.l.paras,
                                   textAlign: TextAlign.center,
                                   style: TextStyle(
                                     fontSize: 16,
@@ -112,7 +185,7 @@ class _QuranNavigationScreenState extends State<QuranNavigationScreen>
                                   ] : null,
                                 ),
                                 child: Text(
-                                  'سورتونه',
+                                  context.l.surahs,
                                   textAlign: TextAlign.center,
                                   style: TextStyle(
                                     fontSize: 16,
@@ -145,10 +218,10 @@ class _QuranNavigationScreenState extends State<QuranNavigationScreen>
                         });
                       },
                       decoration: InputDecoration(
-                        hintText: 'د سورت لټون وکړئ',
+                        hintText: context.l.searchSurahPara,
                         hintStyle: TextStyle(
                           color: Colors.grey[500],
-                          fontSize: 16,
+                          fontSize: 14,
                         ),
                         prefixIcon: Icon(
                           Icons.search_rounded,
@@ -186,11 +259,15 @@ class _QuranNavigationScreenState extends State<QuranNavigationScreen>
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     
+    // Create para list with search filtering
+    final paraList = List.generate(30, (index) => {'number': index + 1});
+    final filteredParas = paraList.where((para) => _matchesSearch(_searchQuery, para, isPara: true)).toList();
+    
     return ListView.builder(
       padding: const EdgeInsets.all(16),
-      itemCount: 30, // 30 Para
+      itemCount: filteredParas.length,
       itemBuilder: (context, index) {
-        final paraNumber = index + 1;
+        final paraNumber = filteredParas[index]['number'] as int;
         return Container(
           margin: const EdgeInsets.only(bottom: 12),
           decoration: BoxDecoration(
@@ -214,7 +291,7 @@ class _QuranNavigationScreenState extends State<QuranNavigationScreen>
                   context,
                   MaterialPageRoute(
                     builder: (context) => QuranReaderScreen(
-                      surahIndex: 1, // For now, use first surah for para navigation
+                      surahIndex: 0, // Will be ignored when paraIndex is provided
                       paraIndex: paraNumber,
                       paraName: _getParaName(paraNumber),
                     ),
@@ -279,7 +356,7 @@ class _QuranNavigationScreenState extends State<QuranNavigationScreen>
                           const SizedBox(height: 4),
                           // Ayah count
                           Text(
-                            'آیتونه ${_getParaAyahCount(paraNumber)}',
+                            context.l.ayahsCount.replaceAll('{count}', _getParaAyahCount(paraNumber).toString()),
                             style: TextStyle(
                               fontSize: 13,
                               color: isDark ? Colors.white60 : Colors.grey[600],
@@ -316,11 +393,9 @@ class _QuranNavigationScreenState extends State<QuranNavigationScreen>
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     
-    // Filter surahs based on search query
+    // Filter surahs based on enhanced search query
     final filteredSurahs = _getSurahList()
-        .where((surah) => _searchQuery.isEmpty || 
-            surah['name'].toString().contains(_searchQuery) ||
-            surah['transliteration'].toString().toLowerCase().contains(_searchQuery.toLowerCase()))
+        .where((surah) => _matchesSearch(_searchQuery, surah, isPara: false))
         .toList();
     
     return ListView.builder(
@@ -416,7 +491,7 @@ class _QuranNavigationScreenState extends State<QuranNavigationScreen>
                           const SizedBox(height: 4),
                           // Ayah count
                           Text(
-                            'آیتونه ${surah['ayahCount']}',
+                            context.l.ayahsCount.replaceAll('{count}', surah['ayahCount'].toString()),
                             style: TextStyle(
                               fontSize: 13,
                               color: isDark ? Colors.white60 : Colors.grey[600],
@@ -475,6 +550,82 @@ class _QuranNavigationScreenState extends State<QuranNavigationScreen>
       171, 140, 140, 159, 201, 185, 250, 125, 154, 564
     ];
     return ayahCounts[paraNumber - 1];
+  }
+
+  List<Map<String, dynamic>> _getParaNames() {
+    return [
+      {'number': 1, 'arabic': 'الم', 'transliteration': 'Alif Lam Mim', 'urdu': 'الف لام میم', 'pashto': 'الف لام میم'},
+      {'number': 2, 'arabic': 'سيقول', 'transliteration': 'Sayaqulu', 'urdu': 'سیقول', 'pashto': 'سیقول'},
+      {'number': 3, 'arabic': 'تلك الرسل', 'transliteration': 'Tilkar Rusul', 'urdu': 'تلک الرسل', 'pashto': 'تلک الرسل'},
+      {'number': 4, 'arabic': 'لن تنالوا', 'transliteration': 'Lan Tanalu', 'urdu': 'لن تنالوا', 'pashto': 'لن تنالوا'},
+      {'number': 5, 'arabic': 'والمحصنات', 'transliteration': 'Wal Muhsinat', 'urdu': 'والمحصنات', 'pashto': 'والمحصنات'},
+      {'number': 6, 'arabic': 'لا يحب الله', 'transliteration': 'La Yuhibbullah', 'urdu': 'لا یحب اللہ', 'pashto': 'لا یحب اللہ'},
+      {'number': 7, 'arabic': 'وإذا سمعوا', 'transliteration': 'Wa Iza Samiu', 'urdu': 'وإذا سمعوا', 'pashto': 'وإذا سمعوا'},
+      {'number': 8, 'arabic': 'ولو أننا', 'transliteration': 'Wa Lau Annana', 'urdu': 'ولو أننا', 'pashto': 'ولو أننا'},
+      {'number': 9, 'arabic': 'قال الملأ', 'transliteration': 'Qalal Mala', 'urdu': 'قال الملأ', 'pashto': 'قال الملأ'},
+      {'number': 10, 'arabic': 'واعلموا', 'transliteration': 'Waelamu', 'urdu': 'واعلموا', 'pashto': 'واعلموا'},
+      {'number': 11, 'arabic': 'يعتذرون', 'transliteration': 'Yatazirun', 'urdu': 'یعتذرون', 'pashto': 'یعتذرون'},
+      {'number': 12, 'arabic': 'وما من دابة', 'transliteration': 'Wa Ma Min Dabbah', 'urdu': 'وما من دابة', 'pashto': 'وما من دابة'},
+      {'number': 13, 'arabic': 'وما أبرئ', 'transliteration': 'Wa Ma Ubarriu', 'urdu': 'وما أبرئ', 'pashto': 'وما أبرئ'},
+      {'number': 14, 'arabic': 'ربما', 'transliteration': 'Rubama', 'urdu': 'ربما', 'pashto': 'ربما'},
+      {'number': 15, 'arabic': 'سبحان الذي', 'transliteration': 'Subhanallazi', 'urdu': 'سبحان الذی', 'pashto': 'سبحان الذی'},
+      {'number': 16, 'arabic': 'قال ألم', 'transliteration': 'Qal Alam', 'urdu': 'قال ألم', 'pashto': 'قال ألم'},
+      {'number': 17, 'arabic': 'اقترب للناس', 'transliteration': 'Iqtaraba Linnas', 'urdu': 'اقترب للناس', 'pashto': 'اقترب للناس'},
+      {'number': 18, 'arabic': 'قد أفلح', 'transliteration': 'Qad Aflaha', 'urdu': 'قد أفلح', 'pashto': 'قد أفلح'},
+      {'number': 19, 'arabic': 'وقال الذين', 'transliteration': 'Wa Qalallazina', 'urdu': 'وقال الذین', 'pashto': 'وقال الذین'},
+      {'number': 20, 'arabic': 'أمن خلق', 'transliteration': 'A man Khalaqa', 'urdu': 'أمن خلق', 'pashto': 'أمن خلق'},
+      {'number': 21, 'arabic': 'اتل ما أوحي', 'transliteration': 'Utlu Ma Uhiya', 'urdu': 'اتل ما أوحی', 'pashto': 'اتل ما أوحی'},
+      {'number': 22, 'arabic': 'ومن يقنت', 'transliteration': 'Wa Man Yaqnut', 'urdu': 'ومن یقنت', 'pashto': 'ومن یقنت'},
+      {'number': 23, 'arabic': 'وما لي', 'transliteration': 'Wa Mali', 'urdu': 'وما لی', 'pashto': 'وما لی'},
+      {'number': 24, 'arabic': 'فمن أظلم', 'transliteration': 'Fa man Azlamu', 'urdu': 'فمن أظلم', 'pashto': 'فمن أظلم'},
+      {'number': 25, 'arabic': 'إليه يرد', 'transliteration': 'Ilayhi Yuraddu', 'urdu': 'إلیہ یرد', 'pashto': 'إلیہ یرد'},
+      {'number': 26, 'arabic': 'حم', 'transliteration': 'Ha Mim', 'urdu': 'حم', 'pashto': 'حم'},
+      {'number': 27, 'arabic': 'قال فما خطبكم', 'transliteration': 'Qala Fama Khatbukum', 'urdu': 'قال فما خطبکم', 'pashto': 'قال فما خطبکم'},
+      {'number': 28, 'arabic': 'قد سمع', 'transliteration': 'Qad Samia', 'urdu': 'قد سمع', 'pashto': 'قد سمع'},
+      {'number': 29, 'arabic': 'تبارك الذي', 'transliteration': 'Tabarakallazi', 'urdu': 'تبارک الذی', 'pashto': 'تبارک الذی'},
+      {'number': 30, 'arabic': 'عم', 'transliteration': 'Amma', 'urdu': 'عم', 'pashto': 'عم'},
+    ];
+  }
+
+  Map<int, List<String>> _getCommonSurahTranslations() {
+    return {
+      1: ['فاتحہ', 'فاتحه', 'فاتحة', 'opening', 'opener', 'الفاتحه'],
+      2: ['بقرہ', 'بقره', 'بقرة', 'cow', 'baqarah', 'البقره'],
+      3: ['آل عمران', 'ال عمران', 'imran', 'family of imran'],
+      4: ['نساء', 'women', 'an-nisa', 'النساء'],
+      5: ['مائدہ', 'مائده', 'table', 'المائده'],
+      6: ['انعام', 'الانعام', 'cattle', 'an-am'],
+      7: ['اعراف', 'الاعراف', 'heights', 'al-araf'],
+      8: ['انفال', 'الانفال', 'spoils', 'al-anfal'],
+      9: ['توبہ', 'توبه', 'repentance', 'tawbah', 'التوبه'],
+      10: ['یونس', 'jonah', 'yunus'],
+      11: ['ہود', 'hud'],
+      12: ['یوسف', 'joseph', 'yusuf'],
+      13: ['رعد', 'الرعد', 'thunder', 'ar-rad'],
+      14: ['ابراہیم', 'ibrahim', 'abraham'],
+      15: ['حجر', 'الحجر', 'rocky tract', 'al-hijr'],
+      16: ['نحل', 'النحل', 'bee', 'an-nahl'],
+      17: ['اسراء', 'الاسراء', 'night journey', 'isra'],
+      18: ['کہف', 'الکہف', 'cave', 'kahf'],
+      19: ['مریم', 'mary', 'maryam'],
+      20: ['طہ', 'taha', 'ta-ha'],
+      21: ['انبیاء', 'الانبیاء', 'prophets', 'anbiya'],
+      22: ['حج', 'الحج', 'pilgrimage', 'hajj'],
+      23: ['مومنون', 'المومنون', 'believers', 'muminun'],
+      24: ['نور', 'النور', 'light', 'an-nur'],
+      25: ['فرقان', 'الفرقان', 'criterion', 'furqan'],
+      26: ['شعراء', 'الشعراء', 'poets', 'shuara'],
+      27: ['نمل', 'النمل', 'ant', 'naml'],
+      28: ['قصص', 'القصص', 'stories', 'qasas'],
+      29: ['عنکبوت', 'العنکبوت', 'spider', 'ankabut'],
+      30: ['روم', 'الروم', 'romans', 'rum'],
+      36: ['یٰسین', 'yasin', 'ya-sin'],
+      55: ['رحمان', 'الرحمان', 'merciful', 'rahman'],
+      67: ['ملک', 'الملک', 'sovereignty', 'mulk'],
+      112: ['اخلاص', 'الاخلاص', 'sincerity', 'ikhlas'],
+      113: ['فلق', 'الفلق', 'daybreak', 'falaq'],
+      114: ['ناس', 'الناس', 'mankind', 'nas'],
+    };
   }
 
   List<Map<String, dynamic>> _getSurahList() {

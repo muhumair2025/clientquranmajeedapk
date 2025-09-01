@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../utils/font_manager.dart';
 
 class AppTheme {
   // Color Palette
@@ -25,13 +26,32 @@ class AppTheme {
   static const Color darkTextPrimary = Color(0xFFFFFFFF);
   static const Color darkTextSecondary = Color(0xFFB0B0B0);
 
-  // Light Theme
-  static ThemeData lightTheme = ThemeData(
+  // Method to get language-specific light theme
+  static ThemeData getLightTheme(String languageCode) {
+    String fontFamily = FontManager.getRegularFont(languageCode);
+    return _buildLightTheme(fontFamily);
+  }
+
+  // Method to get language-specific dark theme
+  static ThemeData getDarkTheme(String languageCode) {
+    String fontFamily = FontManager.getRegularFont(languageCode);
+    return _buildDarkTheme(fontFamily);
+  }
+
+  // Light Theme (default - keeping for backward compatibility)
+  static ThemeData lightTheme = _buildLightTheme('Bahij Badr Light');
+
+  // Dark Theme (default - keeping for backward compatibility)
+  static ThemeData darkTheme = _buildDarkTheme('Bahij Badr Light');
+
+  // Private method to build light theme with specific font
+  static ThemeData _buildLightTheme(String fontFamily) {
+    return ThemeData(
     useMaterial3: true,
     brightness: Brightness.light,
     primaryColor: primaryGreen,
     scaffoldBackgroundColor: lightBackground,
-    fontFamily: 'Al Qalam Quran Majeed',
+    fontFamily: fontFamily,
     
     colorScheme: const ColorScheme.light(
       primary: primaryGreen,
@@ -42,7 +62,7 @@ class AppTheme {
       onSurface: lightTextPrimary,
     ),
     
-    appBarTheme: const AppBarTheme(
+    appBarTheme: AppBarTheme(
       backgroundColor: primaryGreen,
       foregroundColor: Colors.white,
       elevation: 0,
@@ -51,7 +71,7 @@ class AppTheme {
         fontSize: 20,
         fontWeight: FontWeight.bold,
         color: Colors.white,
-        fontFamily: 'Al Qalam Quran Majeed',
+        fontFamily: fontFamily,
       ),
     ),
     
@@ -75,29 +95,36 @@ class AppTheme {
       ),
     ),
     
-    textTheme: const TextTheme(
+    textTheme: TextTheme(
       headlineLarge: TextStyle(
         fontSize: 24,
         fontWeight: FontWeight.bold,
         color: lightTextPrimary,
+        fontFamily: FontManager.getBoldFont(fontFamily == 'Bahij Badr Light' ? 'ps' : 
+                    fontFamily == 'Poppins Regular' ? 'en' : 
+                    fontFamily == 'Noto Nastaliq Regular' ? 'ur' : 'ar'),
       ),
       headlineMedium: TextStyle(
         fontSize: 20,
         fontWeight: FontWeight.w600,
         color: lightTextPrimary,
+        fontFamily: fontFamily,
       ),
       bodyLarge: TextStyle(
         fontSize: 16,
         color: lightTextPrimary,
+        fontFamily: fontFamily,
       ),
       bodyMedium: TextStyle(
         fontSize: 14,
         color: lightTextSecondary,
+        fontFamily: fontFamily,
       ),
       labelLarge: TextStyle(
         fontSize: 14,
         fontWeight: FontWeight.w600,
         color: lightTextPrimary,
+        fontFamily: fontFamily,
       ),
     ),
     
@@ -105,85 +132,95 @@ class AppTheme {
       backgroundColor: primaryGreen,
     ),
   );
+  }
 
-  // Dark Theme
-  static ThemeData darkTheme = ThemeData(
-    useMaterial3: true,
-    brightness: Brightness.dark,
-    primaryColor: primaryGreen,
-    scaffoldBackgroundColor: darkBackground,
-    fontFamily: 'Al Qalam Quran Majeed',
-    
-    colorScheme: const ColorScheme.dark(
-      primary: primaryGreen,
-      secondary: accentGreen,
-      surface: darkSurface,
-      onPrimary: Colors.white,
-      onSecondary: Colors.white,
-      onSurface: darkTextPrimary,
-    ),
-    
-    appBarTheme: const AppBarTheme(
-      backgroundColor: primaryGreen,
-      foregroundColor: Colors.white,
-      elevation: 0,
-      centerTitle: true,
-      titleTextStyle: TextStyle(
-        fontSize: 20,
-        fontWeight: FontWeight.bold,
-        color: Colors.white,
-        fontFamily: 'Al Qalam Quran Majeed',
+  // Private method to build dark theme with specific font
+  static ThemeData _buildDarkTheme(String fontFamily) {
+    return ThemeData(
+      useMaterial3: true,
+      brightness: Brightness.dark,
+      primaryColor: primaryGreen,
+      scaffoldBackgroundColor: darkBackground,
+      fontFamily: fontFamily,
+      
+      colorScheme: const ColorScheme.dark(
+        primary: primaryGreen,
+        secondary: accentGreen,
+        surface: darkSurface,
+        onPrimary: Colors.white,
+        onSecondary: Colors.white,
+        onSurface: darkTextPrimary,
       ),
-    ),
-    
-    cardTheme: CardThemeData(
-      color: darkCardBackground,
-      elevation: 0,
-      margin: const EdgeInsets.all(8),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
-    ),
-    
-    elevatedButtonTheme: ElevatedButtonThemeData(
-      style: ElevatedButton.styleFrom(
+      
+      appBarTheme: AppBarTheme(
         backgroundColor: primaryGreen,
         foregroundColor: Colors.white,
-        elevation: 2,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
+        elevation: 0,
+        centerTitle: true,
+        titleTextStyle: TextStyle(
+          fontSize: 20,
+          fontWeight: FontWeight.bold,
+          color: Colors.white,
+          fontFamily: fontFamily,
         ),
       ),
-    ),
-    
-    textTheme: const TextTheme(
-      headlineLarge: TextStyle(
-        fontSize: 24,
-        fontWeight: FontWeight.bold,
-        color: darkTextPrimary,
+      
+      cardTheme: CardThemeData(
+        color: darkCardBackground,
+        elevation: 0,
+        margin: const EdgeInsets.all(8),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
       ),
-      headlineMedium: TextStyle(
-        fontSize: 20,
-        fontWeight: FontWeight.w600,
-        color: darkTextPrimary,
+      
+      elevatedButtonTheme: ElevatedButtonThemeData(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: primaryGreen,
+          foregroundColor: Colors.white,
+          elevation: 2,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
       ),
-      bodyLarge: TextStyle(
-        fontSize: 16,
-        color: darkTextPrimary,
+      
+      textTheme: TextTheme(
+        headlineLarge: TextStyle(
+          fontSize: 24,
+          fontWeight: FontWeight.bold,
+          color: darkTextPrimary,
+          fontFamily: FontManager.getBoldFont(fontFamily == 'Bahij Badr Light' ? 'ps' : 
+                      fontFamily == 'Poppins Regular' ? 'en' : 
+                      fontFamily == 'Noto Nastaliq Regular' ? 'ur' : 'ar'),
+        ),
+        headlineMedium: TextStyle(
+          fontSize: 20,
+          fontWeight: FontWeight.w600,
+          color: darkTextPrimary,
+          fontFamily: fontFamily,
+        ),
+        bodyLarge: TextStyle(
+          fontSize: 16,
+          color: darkTextPrimary,
+          fontFamily: fontFamily,
+        ),
+        bodyMedium: TextStyle(
+          fontSize: 14,
+          color: darkTextSecondary,
+          fontFamily: fontFamily,
+        ),
+        labelLarge: TextStyle(
+          fontSize: 14,
+          fontWeight: FontWeight.w600,
+          color: darkTextPrimary,
+          fontFamily: fontFamily,
+        ),
       ),
-      bodyMedium: TextStyle(
-        fontSize: 14,
-        color: darkTextSecondary,
+      
+      drawerTheme: const DrawerThemeData(
+        backgroundColor: darkGreen,
       ),
-      labelLarge: TextStyle(
-        fontSize: 14,
-        fontWeight: FontWeight.w600,
-        color: darkTextPrimary,
-      ),
-    ),
-    
-    drawerTheme: const DrawerThemeData(
-      backgroundColor: darkGreen,
-    ),
-  );
+    );
+  }
 } 

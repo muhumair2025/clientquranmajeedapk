@@ -6,6 +6,7 @@ import '../themes/app_theme.dart';
 import '../services/lughat_service.dart';
 import '../widgets/media_viewers.dart';
 import '../providers/font_provider.dart';
+import '../localization/app_localizations_extension.dart';
 import 'dart:async';
 
 class QuranReaderScreen extends StatefulWidget {
@@ -13,6 +14,7 @@ class QuranReaderScreen extends StatefulWidget {
   final String surahName;
   final int? paraIndex;
   final String? paraName;
+  final int? initialAyahIndex;
 
   const QuranReaderScreen({
     super.key,
@@ -20,6 +22,7 @@ class QuranReaderScreen extends StatefulWidget {
     this.surahName = '',
     this.paraIndex,
     this.paraName,
+    this.initialAyahIndex,
   });
 
   @override
@@ -33,6 +36,7 @@ class _QuranReaderScreenState extends State<QuranReaderScreen> {
   bool isLoading = true;
   Map<int, SurahData> surahsData = {};
   Map<int, Map<int, String>> translationsData = {}; // surahIndex -> ayahIndex -> translation
+  Map<int, ParaData> parasData = {}; // paraIndex -> ParaData with start/end positions
   
   // Ayah highlighting state
   String? highlightedAyah;
@@ -70,6 +74,9 @@ class _QuranReaderScreenState extends State<QuranReaderScreen> {
       // Load Pashto translation
       final String translationData = await rootBundle.loadString('assets/quran_data/quran_tr_ps.xml');
       final translationDocument = XmlDocument.parse(translationData);
+      
+      // Parse para markers and associated surahs/ayahs
+      _parseParaData(arabicDocument);
       
       // Parse Arabic text
       for (var suraElement in arabicDocument.findAllElements('sura')) {
@@ -119,13 +126,64 @@ class _QuranReaderScreenState extends State<QuranReaderScreen> {
     }
   }
 
+  void _parseParaData(XmlDocument document) {
+    // Parse all para tags and find which surahs/ayahs they start with
+    var allElements = document.findAllElements('*').toList();
+    
+    for (int i = 0; i < allElements.length; i++) {
+      var element = allElements[i];
+      
+      if (element.name.local == 'para') {
+        int paraIndex = int.parse(element.getAttribute('index')!);
+        
+        // Find the next aya after this para tag (might be in same or different sura)
+        int? startSurahIndex;
+        int? startAyahIndex;
+        int? currentSurahIndex;
+        
+        // Look backwards to find current sura if para is within a sura
+        for (int j = i - 1; j >= 0; j--) {
+          var prevElement = allElements[j];
+          if (prevElement.name.local == 'sura') {
+            currentSurahIndex = int.parse(prevElement.getAttribute('index')!);
+            break;
+          }
+        }
+        
+        // Look forward for the next aya
+        for (int j = i + 1; j < allElements.length; j++) {
+          var nextElement = allElements[j];
+          
+          if (nextElement.name.local == 'sura') {
+            currentSurahIndex = int.parse(nextElement.getAttribute('index')!);
+          } else if (nextElement.name.local == 'aya') {
+            startAyahIndex = int.parse(nextElement.getAttribute('index')!);
+            startSurahIndex = currentSurahIndex;
+            break;
+          }
+        }
+        
+        if (startSurahIndex != null && startAyahIndex != null) {
+          parasData[paraIndex] = ParaData(
+            index: paraIndex,
+            startSurahIndex: startSurahIndex,
+            startAyahIndex: startAyahIndex,
+          );
+          
+          debugPrint('Para $paraIndex starts at Surah $startSurahIndex, Ayah $startAyahIndex');
+        }
+      }
+    }
+  }
+
   void _generateQuranPages() {
     pages.clear();
     
     // Handle both Surah and Para navigation
-    if (widget.paraIndex != null) {
-      // TODO: Load para data when para structure is available
-      // For now, we'll handle surah only
+    if (widget.paraIndex != null && parasData.containsKey(widget.paraIndex)) {
+      // Para navigation - generate pages starting from para location
+      _generateParaPages();
+      return;
     }
     
     if (surahsData.containsKey(widget.surahIndex)) {
@@ -157,6 +215,194 @@ class _QuranReaderScreenState extends State<QuranReaderScreen> {
     setState(() {
       isLoading = false;
     });
+    
+    // Navigate to specific ayah if requested
+    if (widget.initialAyahIndex != null) {
+      _navigateToInitialAyah();
+    }
+  }
+
+  void _generateParaPages() {
+    if (widget.paraIndex == null || !parasData.containsKey(widget.paraIndex!)) {
+      setState(() {
+        isLoading = false;
+      });
+      return;
+    }
+    
+    ParaData paraData = parasData[widget.paraIndex!]!;
+    
+    // Get current font size to determine layout type
+    FontSize currentFontSize = Provider.of<FontProvider>(context, listen: false).selectedFontSize;
+    
+    // Generate all ayahs starting from para location until the next para or end
+    List<AyahSegment> allSegments = [];
+    
+    // Determine end point (next para or end of Quran)
+    int? endSurahIndex;
+    int? endAyahIndex;
+    
+    if (widget.paraIndex! < 30) {
+      // Find next para
+      ParaData? nextPara = parasData[widget.paraIndex! + 1];
+      if (nextPara != null) {
+        endSurahIndex = nextPara.startSurahIndex;
+        endAyahIndex = nextPara.startAyahIndex - 1;
+        
+        // If next para starts at ayah 1, we need the last ayah of previous surah
+        if (endAyahIndex! < 1) {
+          endSurahIndex = endSurahIndex - 1;
+          if (surahsData.containsKey(endSurahIndex)) {
+            endAyahIndex = surahsData[endSurahIndex]!.ayahs.length;
+          }
+        }
+      }
+    }
+    
+    // If no end point found, go to end of Quran
+    if (endSurahIndex == null) {
+      endSurahIndex = 114;
+      if (surahsData.containsKey(114)) {
+        endAyahIndex = surahsData[114]!.ayahs.length;
+      }
+    }
+    
+    // Collect all ayahs from start to end
+    bool collecting = false;
+    int? lastCollectedSurah = null;
+    
+    debugPrint('Para ${widget.paraIndex} collection: start at S${paraData.startSurahIndex}:A${paraData.startAyahIndex}, end at S${endSurahIndex}:A${endAyahIndex}');
+    
+    for (int surahIdx = paraData.startSurahIndex; surahIdx <= endSurahIndex!; surahIdx++) {
+      if (!surahsData.containsKey(surahIdx)) continue;
+      
+      SurahData surahData = surahsData[surahIdx]!;
+      
+      for (var ayah in surahData.ayahs) {
+        // Start collecting from para start point
+        if (surahIdx == paraData.startSurahIndex && ayah.ayahIndex == paraData.startAyahIndex) {
+          collecting = true;
+          debugPrint('Started collecting at Surah ${surahIdx}, Ayah ${ayah.ayahIndex}');
+        }
+        
+        // Stop collecting at end point
+        if (surahIdx == endSurahIndex && ayah.ayahIndex > endAyahIndex!) {
+          break;
+        }
+        
+        if (collecting) {
+          // Debug: Track surah transitions
+          if (lastCollectedSurah != null && lastCollectedSurah != surahIdx) {
+            debugPrint('=== SURAH TRANSITION: From Surah $lastCollectedSurah to Surah $surahIdx at Ayah ${ayah.ayahIndex} ===');
+          }
+          lastCollectedSurah = surahIdx;
+          
+          String ayahText = '${ayah.text} ﴿${_convertToArabicNumeral(ayah.ayahIndex)}﴾';
+          List<String> words = ayahText.split(' ').where((word) => word.trim().isNotEmpty).toList();
+          
+          // Debug first few words of ayah 1
+          if (ayah.ayahIndex == 1) {
+            debugPrint('Collecting Ayah 1 of Surah $surahIdx (${surahData.name}): First words: ${words.take(3).join(' ')}');
+          }
+          
+          for (String word in words) {
+            allSegments.add(AyahSegment(
+              text: word,
+              surahIndex: surahData.index,
+              ayahIndex: ayah.ayahIndex,
+              ayahFullText: ayah.text,
+            ));
+          }
+        }
+      }
+    }
+    
+    debugPrint('Total segments collected: ${allSegments.length}');
+    
+    // Debug: Print surah transitions in collected segments
+    int? prevSurah = null;
+    for (int i = 0; i < allSegments.length; i++) {
+      if (allSegments[i].surahIndex != prevSurah) {
+        if (prevSurah != null) {
+          debugPrint('Segment $i: Surah transition from $prevSurah to ${allSegments[i].surahIndex}, Ayah ${allSegments[i].ayahIndex}');
+        }
+        prevSurah = allSegments[i].surahIndex;
+      }
+    }
+    
+    if (allSegments.isEmpty) {
+      setState(() {
+        isLoading = false;
+      });
+      return;
+    }
+    
+    // Generate pages using the same logic as surah pages
+    // Format para title with separator
+    String formattedTitle = 'پارہ ◆ ${widget.paraName ?? ''}';
+    
+    List<QuranPageData> pageDataList;
+    if (currentFontSize.needsFlexibleLayout) {
+      pageDataList = _generateFlexibleQuranPagesFromSegments(allSegments, currentFontSize.size, formattedTitle, true);
+    } else {
+      pageDataList = _generateStandardQuranPagesFromSegments(allSegments, formattedTitle, true);
+    }
+    
+    for (int i = 0; i < pageDataList.length; i++) {
+      pages.add(QuranPage(
+        pageNumber: i + 1,
+        lines: pageDataList[i].lines,
+        surahName: formattedTitle,
+        isFirstPage: i == 0,
+        ayahSegments: pageDataList[i].ayahSegments,
+      ));
+    }
+    
+    setState(() {
+      isLoading = false;
+    });
+  }
+  
+  void _navigateToInitialAyah() {
+    if (widget.initialAyahIndex == null || pages.isEmpty) return;
+    
+    // Find the page containing the requested ayah
+    for (int pageIndex = 0; pageIndex < pages.length; pageIndex++) {
+      final page = pages[pageIndex];
+      
+      // Check if this page contains the requested ayah
+      for (var lineSegments in page.ayahSegments) {
+        for (var segment in lineSegments) {
+          if (segment.ayahIndex == widget.initialAyahIndex) {
+            // Found the page, navigate to it
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              _pageController.jumpToPage(pageIndex);
+              // Highlight the ayah
+              setState(() {
+                highlightedAyah = '${widget.surahIndex}_${widget.initialAyahIndex}';
+              });
+              
+              // Keep the ayah highlighted longer when navigating to it
+              highlightTimer?.cancel();
+              highlightTimer = Timer(const Duration(seconds: 10), () {
+                if (mounted) {
+                  setState(() {
+                    highlightedAyah = null;
+                  });
+                }
+              });
+              
+              // Show translation modal after navigation
+              Future.delayed(const Duration(milliseconds: 500), () {
+                final ayahText = _getAyahText(widget.surahIndex, widget.initialAyahIndex!);
+                _showTranslationModal(widget.surahIndex, widget.initialAyahIndex!, ayahText);
+              });
+            });
+            return;
+          }
+        }
+      }
+    }
   }
 
   String _convertToArabicNumeral(int number) {
@@ -466,6 +712,340 @@ class _QuranReaderScreenState extends State<QuranReaderScreen> {
     return pages;
   }
 
+  List<QuranPageData> _generateStandardQuranPagesFromSegments(List<AyahSegment> allSegments, String title, [bool isPara = false]) {
+    List<QuranPageData> pages = [];
+    
+    if (allSegments.isEmpty) return pages;
+    
+    // Get screen dimensions
+    final screenSize = MediaQuery.of(context).size;
+    final double availableWidth = screenSize.width - 16; // 8px padding on each side
+    
+    // Calculate words per line dynamically based on screen width
+    final TextPainter textPainter = TextPainter(
+      textDirection: TextDirection.rtl,
+      textAlign: TextAlign.justify,
+    );
+    
+    // Track which surahs have been processed (headers shown)
+    Set<int> processedSurahs = {};
+    
+    // Generate pages with exactly 15 lines each
+    int segmentIndex = 0;
+    int pageNumber = 0;
+    
+    while (segmentIndex < allSegments.length) {
+      List<String> pageLines = [];
+      List<List<AyahSegment>> pageAyahSegments = [];
+      int startingSegmentIndex = segmentIndex;
+      
+      // Add title header for first page
+      if (pageNumber == 0) {
+        pageLines.add(title);
+        pageAyahSegments.add([]); // Empty segments for header
+      }
+      
+      // Fill remaining lines with content
+      while (pageLines.length < linesPerPage && segmentIndex < allSegments.length) {
+        // For para mode, check if we need to add surah headers
+        if (isPara && segmentIndex < allSegments.length) {
+          // Look ahead to find the start of a new ayah
+          AyahSegment currentSegment = allSegments[segmentIndex];
+          
+          // Check if this is the first segment of ayah 1 of a new surah
+          bool isFirstSegmentOfAyah1 = false;
+          if (currentSegment.ayahIndex == 1 && !processedSurahs.contains(currentSegment.surahIndex)) {
+            // Check if this is the first segment for this ayah by looking back
+            if (segmentIndex == 0) {
+              isFirstSegmentOfAyah1 = true;
+            } else {
+              AyahSegment prevSegment = allSegments[segmentIndex - 1];
+              // It's the first segment if previous segment was from different surah or different ayah
+              isFirstSegmentOfAyah1 = prevSegment.surahIndex != currentSegment.surahIndex || 
+                                     prevSegment.ayahIndex != currentSegment.ayahIndex;
+            }
+          }
+          
+          if (isFirstSegmentOfAyah1) {
+            debugPrint('>>> NEW SURAH DETECTED: Surah ${currentSegment.surahIndex} at segment $segmentIndex');
+            
+            // Add surah header
+            if (pageLines.length < linesPerPage && surahsData.containsKey(currentSegment.surahIndex)) {
+              String surahName = surahsData[currentSegment.surahIndex]!.name;
+              pageLines.add('سُورَةُ $surahName');
+              pageAyahSegments.add([]); // Empty segments for surah header
+              debugPrint('Added Surah header: سُورَةُ $surahName');
+            }
+            
+            // Add Bismillah (except for Surah 9)
+            if (currentSegment.surahIndex != 9 && pageLines.length < linesPerPage) {
+              pageLines.add('بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ');
+              pageAyahSegments.add([]); // Empty segments for Bismillah
+              debugPrint('Added Bismillah');
+            }
+            
+            // Mark this surah as processed
+            processedSurahs.add(currentSegment.surahIndex);
+          }
+        }
+        
+        // Skip line building if we've filled the page with headers
+        if (pageLines.length >= linesPerPage) {
+          break;
+        }
+        
+        List<AyahSegment> lineSegments = [];
+        double currentLineWidth = 0;
+        
+        // Build line with segments
+        while (segmentIndex < allSegments.length) {
+          AyahSegment testSegment = allSegments[segmentIndex];
+          
+          // Create test line
+          List<String> testWords = lineSegments.map((s) => s.text).toList();
+          testWords.add(testSegment.text);
+          String testLine = testWords.join(' ');
+          
+          // Measure the line with the new word using actual font settings
+          textPainter.text = TextSpan(
+            text: testLine,
+            style: TextStyle(
+              fontFamily: 'Al Qalam Quran Majeed', // Keep default for measurement
+              fontSize: Provider.of<FontProvider>(context, listen: false).arabicFontSize,
+              wordSpacing: wordSpacing,
+            ),
+          );
+          textPainter.layout();
+          currentLineWidth = textPainter.width;
+          
+          // Add segment if it fits
+          if (currentLineWidth <= availableWidth) {
+            lineSegments.add(testSegment);
+            segmentIndex++;
+            
+            // Only check for break points after we have substantial content
+            if (currentLineWidth >= availableWidth * 0.85) {
+              String currentWord = testSegment.text;
+              
+              // Check if we're at a natural break point
+              if (currentWord.contains('﴾')) {
+                // Ayah ending - good place to break
+                break;
+              } else if (currentWord.contains('ۚ') || currentWord.contains('ۖ') || 
+                         currentWord.contains('ۗ') || currentWord.contains('ۘ') ||
+                         currentWord.contains('ۙ') || currentWord.contains('ۛ')) {
+                // Waqf marks - also good places to break
+                if (currentLineWidth >= availableWidth * 0.9) {
+                  break;
+                }
+              }
+            }
+          } else {
+            // Word doesn't fit, but check if line is too short
+            if (lineSegments.length < 3) {
+              // Force add the segment if line has too few words
+              lineSegments.add(testSegment);
+              segmentIndex++;
+            }
+            break;
+          }
+        }
+        
+        // Ensure we have at least some content on each line
+        if (lineSegments.isEmpty && segmentIndex < allSegments.length) {
+          // Force at least one segment
+          lineSegments.add(allSegments[segmentIndex]);
+          segmentIndex++;
+        }
+        
+        if (lineSegments.isNotEmpty) {
+          pageLines.add(lineSegments.map((s) => s.text).join(' '));
+          pageAyahSegments.add(lineSegments);
+        }
+      }
+      
+      // If we couldn't fit any new segments on this page, force at least one segment
+      if (segmentIndex == startingSegmentIndex && segmentIndex < allSegments.length) {
+        if (pageLines.length < linesPerPage) {
+          pageLines.add(allSegments[segmentIndex].text);
+          pageAyahSegments.add([allSegments[segmentIndex]]);
+          segmentIndex++;
+        }
+      }
+      
+      // Pad with empty lines if needed
+      while (pageLines.length < linesPerPage) {
+        pageLines.add('');
+        pageAyahSegments.add([]);
+      }
+      
+      // Trim to exactly 15 lines
+      if (pageLines.length > linesPerPage) {
+        pageLines = pageLines.take(linesPerPage).toList();
+        pageAyahSegments = pageAyahSegments.take(linesPerPage).toList();
+      }
+      
+      pages.add(QuranPageData(
+        lines: pageLines,
+        ayahSegments: pageAyahSegments,
+      ));
+      pageNumber++;
+    }
+    
+    return pages;
+  }
+
+  List<QuranPageData> _generateFlexibleQuranPagesFromSegments(List<AyahSegment> allSegments, double fontSize, String title, [bool isPara = false]) {
+    List<QuranPageData> pages = [];
+    
+    if (allSegments.isEmpty) return pages;
+    
+    // Get screen dimensions
+    final screenSize = MediaQuery.of(context).size;
+    final double availableWidth = screenSize.width - 16; // 8px padding on each side
+    final double availableHeight = screenSize.height - 120; // More space for header/footer
+    
+    // Calculate how many lines can fit with XL font
+    final double lineHeight = fontSize * 1.6; // More generous spacing for XL
+    final int maxLinesPerPage = (availableHeight / lineHeight).floor().clamp(8, 20); // Min 8, max 20 lines
+    
+    // Calculate words per line dynamically based on screen width
+    final TextPainter textPainter = TextPainter(
+      textDirection: TextDirection.rtl,
+      textAlign: TextAlign.justify,
+    );
+    
+    // Track which surahs have been processed (headers shown)
+    Set<int> processedSurahs = {};
+    
+    // Generate flexible pages
+    int segmentIndex = 0;
+    int pageNumber = 0;
+    
+    while (segmentIndex < allSegments.length) {
+      List<String> pageLines = [];
+      List<List<AyahSegment>> pageAyahSegments = [];
+      int startingSegmentIndex = segmentIndex;
+      
+      // Add title header for first page
+      if (pageNumber == 0) {
+        pageLines.add(title);
+        pageAyahSegments.add([]); // Empty segments for header
+      }
+      
+      // Fill remaining lines with content
+      while (pageLines.length < maxLinesPerPage && segmentIndex < allSegments.length) {
+        // For para mode, check if we need to add surah headers
+        if (isPara && segmentIndex < allSegments.length) {
+          // Look ahead to find the start of a new ayah
+          AyahSegment currentSegment = allSegments[segmentIndex];
+          
+          // Check if this is the first segment of ayah 1 of a new surah
+          bool isFirstSegmentOfAyah1 = false;
+          if (currentSegment.ayahIndex == 1 && !processedSurahs.contains(currentSegment.surahIndex)) {
+            // Check if this is the first segment for this ayah by looking back
+            if (segmentIndex == 0) {
+              isFirstSegmentOfAyah1 = true;
+            } else {
+              AyahSegment prevSegment = allSegments[segmentIndex - 1];
+              // It's the first segment if previous segment was from different surah or different ayah
+              isFirstSegmentOfAyah1 = prevSegment.surahIndex != currentSegment.surahIndex || 
+                                     prevSegment.ayahIndex != currentSegment.ayahIndex;
+            }
+          }
+          
+          if (isFirstSegmentOfAyah1) {
+            debugPrint('>>> NEW SURAH DETECTED (Flexible): Surah ${currentSegment.surahIndex} at segment $segmentIndex');
+            
+            // Add surah header
+            if (pageLines.length < maxLinesPerPage && surahsData.containsKey(currentSegment.surahIndex)) {
+              String surahName = surahsData[currentSegment.surahIndex]!.name;
+              pageLines.add('سُورَةُ $surahName');
+              pageAyahSegments.add([]); // Empty segments for surah header
+              debugPrint('Added Surah header: سُورَةُ $surahName');
+            }
+            
+            // Add Bismillah (except for Surah 9)
+            if (currentSegment.surahIndex != 9 && pageLines.length < maxLinesPerPage) {
+              pageLines.add('بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ');
+              pageAyahSegments.add([]); // Empty segments for Bismillah
+              debugPrint('Added Bismillah');
+            }
+            
+            // Mark this surah as processed
+            processedSurahs.add(currentSegment.surahIndex);
+          }
+        }
+        
+        // Skip line building if we've filled the page with headers
+        if (pageLines.length >= maxLinesPerPage) {
+          break;
+        }
+        List<AyahSegment> lineSegments = [];
+        double currentLineWidth = 0;
+        
+        // Add segments until we reach about 90% of line width
+        while (segmentIndex < allSegments.length) {
+          AyahSegment testSegment = allSegments[segmentIndex];
+          
+          // Create test line
+          List<String> testWords = lineSegments.map((s) => s.text).toList();
+          testWords.add(testSegment.text);
+          String testLine = testWords.join(' ');
+          
+          // Measure the line with the new word
+          textPainter.text = TextSpan(
+            text: testLine,
+            style: TextStyle(
+              fontFamily: 'Al Qalam Quran Majeed', // Keep default for measurement
+              fontSize: fontSize,
+              wordSpacing: wordSpacing,
+            ),
+          );
+          textPainter.layout();
+          currentLineWidth = textPainter.width;
+          
+          // Check if adding this segment would exceed line width
+          if (currentLineWidth <= availableWidth * 0.9 || lineSegments.isEmpty) {
+            lineSegments.add(testSegment);
+            segmentIndex++;
+          } else {
+            break;
+          }
+        }
+        
+        // Ensure we have at least some content on each line
+        if (lineSegments.isEmpty && segmentIndex < allSegments.length) {
+          lineSegments.add(allSegments[segmentIndex]);
+          segmentIndex++;
+        }
+        
+        if (lineSegments.isNotEmpty) {
+          pageLines.add(lineSegments.map((s) => s.text).join(' '));
+          pageAyahSegments.add(lineSegments);
+        }
+      }
+      
+      // Force at least one segment if we couldn't fit any
+      if (segmentIndex == startingSegmentIndex && segmentIndex < allSegments.length) {
+        if (pageLines.length < maxLinesPerPage) {
+          pageLines.add(allSegments[segmentIndex].text);
+          pageAyahSegments.add([allSegments[segmentIndex]]);
+          segmentIndex++;
+        }
+      }
+      
+      // No need to pad to fixed number of lines for flexible layout
+      pages.add(QuranPageData(
+        lines: pageLines,
+        ayahSegments: pageAyahSegments,
+      ));
+      pageNumber++;
+    }
+    
+    return pages;
+  }
+
   void _onAyahTap(int surahIndex, int ayahIndex, String ayahText) {
     // Highlight the ayah
     setState(() {
@@ -477,6 +1057,65 @@ class _QuranReaderScreenState extends State<QuranReaderScreen> {
     
     // Show translation modal
     _showTranslationModal(surahIndex, ayahIndex, ayahText);
+  }
+
+  // Helper methods for ayah navigation
+  Map<String, int>? _getPreviousAyah(int surahIndex, int ayahIndex) {
+    if (ayahIndex > 1) {
+      // Same surah, previous ayah
+      return {'surahIndex': surahIndex, 'ayahIndex': ayahIndex - 1};
+    } else if (surahIndex > 1) {
+      // Previous surah, last ayah
+      int prevSurahIndex = surahIndex - 1;
+      if (surahsData.containsKey(prevSurahIndex)) {
+        int lastAyahIndex = surahsData[prevSurahIndex]!.ayahs.length;
+        return {'surahIndex': prevSurahIndex, 'ayahIndex': lastAyahIndex};
+      }
+    }
+    return null; // No previous ayah
+  }
+
+  Map<String, int>? _getNextAyah(int surahIndex, int ayahIndex) {
+    if (surahsData.containsKey(surahIndex)) {
+      SurahData currentSurah = surahsData[surahIndex]!;
+      if (ayahIndex < currentSurah.ayahs.length) {
+        // Same surah, next ayah
+        return {'surahIndex': surahIndex, 'ayahIndex': ayahIndex + 1};
+      } else {
+        // Next surah, first ayah
+        int nextSurahIndex = surahIndex + 1;
+        if (surahsData.containsKey(nextSurahIndex)) {
+          return {'surahIndex': nextSurahIndex, 'ayahIndex': 1};
+        }
+      }
+    }
+    return null; // No next ayah
+  }
+
+  String _getAyahText(int surahIndex, int ayahIndex) {
+    if (surahsData.containsKey(surahIndex)) {
+      SurahData surah = surahsData[surahIndex]!;
+      AyahData? ayah = surah.ayahs.where((a) => a.ayahIndex == ayahIndex).firstOrNull;
+      return ayah?.text ?? '';
+    }
+    return '';
+  }
+
+  void _navigateToAyah(int newSurahIndex, int newAyahIndex) {
+    String ayahText = _getAyahText(newSurahIndex, newAyahIndex);
+    
+    // Update highlighting
+    setState(() {
+      highlightedAyah = '${newSurahIndex}_$newAyahIndex';
+    });
+    
+    // Close current modal and show new one
+    Navigator.pop(context);
+    
+    // Small delay to ensure smooth transition
+    Future.delayed(const Duration(milliseconds: 100), () {
+      _showTranslationModal(newSurahIndex, newAyahIndex, ayahText);
+    });
   }
 
   void _showTranslationModal(int surahIndex, int ayahIndex, String ayahText) {
@@ -523,7 +1162,7 @@ class _QuranReaderScreenState extends State<QuranReaderScreen> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // Header with ayah number
+          // Header with ayah number and navigation
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
@@ -533,15 +1172,59 @@ class _QuranReaderScreenState extends State<QuranReaderScreen> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  'آیت ${_convertToArabicNumeral(ayahIndex)}',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: AppTheme.primaryGreen,
-                    fontFamily: 'Bahij Badr Bold',
+                // Previous button
+                _buildNavigationButton(
+                  icon: Icons.arrow_back_ios_rounded,
+                  onPressed: () {
+                    final previousAyah = _getPreviousAyah(surahIndex, ayahIndex);
+                    if (previousAyah != null) {
+                      _navigateToAyah(previousAyah['surahIndex']!, previousAyah['ayahIndex']!);
+                    }
+                  },
+                  isEnabled: _getPreviousAyah(surahIndex, ayahIndex) != null,
+                  isDark: isDark,
+                ),
+                
+                // Ayah number and surah info
+                Expanded(
+                  child: Column(
+                    children: [
+                      Text(
+                        'آیت ${_convertToArabicNumeral(ayahIndex)}',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: AppTheme.primaryGreen,
+                          fontFamily: 'Bahij Badr Bold',
+                        ),
+                      ),
+                      if (surahsData.containsKey(surahIndex))
+                        Text(
+                          surahsData[surahIndex]!.name,
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: AppTheme.primaryGreen.withValues(alpha: 0.7),
+                            fontFamily: 'Bahij Badr Light',
+                          ),
+                        ),
+                    ],
                   ),
                 ),
+                
+                // Next button
+                _buildNavigationButton(
+                  icon: Icons.arrow_forward_ios_rounded,
+                  onPressed: () {
+                    final nextAyah = _getNextAyah(surahIndex, ayahIndex);
+                    if (nextAyah != null) {
+                      _navigateToAyah(nextAyah['surahIndex']!, nextAyah['ayahIndex']!);
+                    }
+                  },
+                  isEnabled: _getNextAyah(surahIndex, ayahIndex) != null,
+                  isDark: isDark,
+                ),
+                
+                // Close button
                 IconButton(
                   onPressed: () => Navigator.pop(context),
                   icon: Icon(
@@ -607,23 +1290,23 @@ class _QuranReaderScreenState extends State<QuranReaderScreen> {
                       children: [
                         // Lughat Tashreeh section
                         _buildOptionSection(
-                          title: 'د آیت د لغاتو تشریح:',
+                          title: context.l.verseVocabulary,
                           options: [
                             OptionData(
                               icon: Icons.text_fields_rounded, 
-                              label: 'متن', 
+                              label: context.l.text, 
                               type: 'lughat_text',
                               isAvailable: LughatService.hasTextData(surahIndex, ayahIndex),
                             ),
                             OptionData(
                               icon: Icons.play_circle_outline_rounded, 
-                              label: 'غږ', 
+                              label: context.l.audio, 
                               type: 'lughat_audio',
                               isAvailable: LughatService.hasAudioData(surahIndex, ayahIndex),
                             ),
                             OptionData(
                               icon: Icons.videocam_outlined, 
-                              label: 'ویډیو', 
+                              label: context.l.video, 
                               type: 'lughat_video',
                               isAvailable: LughatService.hasVideoData(surahIndex, ayahIndex),
                             ),
@@ -637,23 +1320,23 @@ class _QuranReaderScreenState extends State<QuranReaderScreen> {
                         
                         // Tarjuma/Tafseer section
                         _buildOptionSection(
-                          title: 'د آیت ترجمه او تفسیر:',
+                          title: context.l.verseCommentary,
                           options: [
                             OptionData(
                               icon: Icons.text_fields_rounded, 
-                              label: 'متن', 
+                              label: context.l.text, 
                               type: 'tafseer_text',
                               isAvailable: false, // TODO: Add tafseer data
                             ),
                             OptionData(
                               icon: Icons.play_circle_outline_rounded, 
-                              label: 'غږ', 
+                              label: context.l.audio, 
                               type: 'tafseer_audio',
                               isAvailable: false, // TODO: Add tafseer data
                             ),
                             OptionData(
                               icon: Icons.videocam_outlined, 
-                              label: 'ویډیو', 
+                              label: context.l.video, 
                               type: 'tafseer_video',
                               isAvailable: false, // TODO: Add tafseer data
                             ),
@@ -667,23 +1350,23 @@ class _QuranReaderScreenState extends State<QuranReaderScreen> {
                         
                         // Faidi section
                         _buildOptionSection(
-                          title: 'د آیت فایدی:',
+                          title: context.l.verseBenefits,
                           options: [
                             OptionData(
                               icon: Icons.text_fields_rounded, 
-                              label: 'متن', 
+                              label: context.l.text, 
                               type: 'faidi_text',
                               isAvailable: false, // TODO: Add faidi data
                             ),
                             OptionData(
                               icon: Icons.play_circle_outline_rounded, 
-                              label: 'غږ', 
+                              label: context.l.audio, 
                               type: 'faidi_audio',
                               isAvailable: false, // TODO: Add faidi data
                             ),
                             OptionData(
                               icon: Icons.videocam_outlined, 
-                              label: 'ویډیو', 
+                              label: context.l.video, 
                               type: 'faidi_video',
                               isAvailable: false, // TODO: Add faidi data
                             ),
@@ -703,6 +1386,35 @@ class _QuranReaderScreenState extends State<QuranReaderScreen> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildNavigationButton({
+    required IconData icon,
+    required VoidCallback? onPressed,
+    required bool isEnabled,
+    required bool isDark,
+  }) {
+    return Container(
+      width: 36,
+      height: 36,
+      decoration: BoxDecoration(
+        color: isEnabled 
+            ? AppTheme.primaryGreen.withValues(alpha: 0.1)
+            : (isDark ? Colors.white.withValues(alpha: 0.05) : Colors.grey.withValues(alpha: 0.1)),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: IconButton(
+        onPressed: isEnabled ? onPressed : null,
+        icon: Icon(
+          icon,
+          size: 16,
+          color: isEnabled
+              ? AppTheme.primaryGreen
+              : (isDark ? Colors.white.withValues(alpha: 0.3) : Colors.grey.withValues(alpha: 0.4)),
+        ),
+        padding: EdgeInsets.zero,
       ),
     );
   }
@@ -784,22 +1496,22 @@ class _QuranReaderScreenState extends State<QuranReaderScreen> {
         _showLughatVideo(surahIndex, ayahIndex);
         break;
       case 'tafseer_text':
-        _showComingSoon('تفسیر - متن');
+        _showComingSoon(context.l.tafseerText);
         break;
       case 'tafseer_audio':
-        _showComingSoon('تفسیر - غږ');
+        _showComingSoon(context.l.tafseerAudio);
         break;
       case 'tafseer_video':
-        _showComingSoon('تفسیر - ویډیو');
+        _showComingSoon(context.l.tafseerVideo);
         break;
       case 'faidi_text':
-        _showComingSoon('فایدی - متن');
+        _showComingSoon(context.l.faidiText);
         break;
       case 'faidi_audio':
-        _showComingSoon('فایدی - غږ');
+        _showComingSoon(context.l.faidiAudio);
         break;
       case 'faidi_video':
-        _showComingSoon('فایدی - ویډیو');
+        _showComingSoon(context.l.faidiVideo);
         break;
     }
   }
@@ -812,12 +1524,12 @@ class _QuranReaderScreenState extends State<QuranReaderScreen> {
         MaterialPageRoute(
           builder: (context) => FullScreenTextViewer(
             content: textData.content,
-            title: 'د آیت ${_convertToArabicNumeral(ayahIndex)} د لغاتو تشریح',
+            title: context.l.verseVocabularyTitle.replaceAll('{verse}', _convertToArabicNumeral(ayahIndex)),
           ),
         ),
       );
     } else {
-      _showError('د دې آیت لپاره د لغاتو تشریح شتون نلري');
+      _showError(context.l.vocabularyTextNotAvailable);
     }
   }
 
@@ -829,14 +1541,14 @@ class _QuranReaderScreenState extends State<QuranReaderScreen> {
         MaterialPageRoute(
           builder: (context) => FullScreenAudioPlayer(
             audioUrl: audioData.content,
-            title: 'د آیت ${_convertToArabicNumeral(ayahIndex)} د لغاتو تشریح',
+            title: context.l.verseVocabularyTitle.replaceAll('{verse}', _convertToArabicNumeral(ayahIndex)),
             surahIndex: surahIndex,
             ayahIndex: ayahIndex,
           ),
         ),
       );
     } else {
-      _showError('د دې آیت لپاره د لغاتو تشریح غږ شتون نلري');
+      _showError(context.l.vocabularyAudioNotAvailable);
     }
   }
 
@@ -848,30 +1560,73 @@ class _QuranReaderScreenState extends State<QuranReaderScreen> {
         MaterialPageRoute(
           builder: (context) => FullScreenVideoPlayer(
             videoUrl: videoData.content,
-            title: 'د آیت ${_convertToArabicNumeral(ayahIndex)} د لغاتو تشریح',
+            title: context.l.verseVocabularyTitle.replaceAll('{verse}', _convertToArabicNumeral(ayahIndex)),
             surahIndex: surahIndex,
             ayahIndex: ayahIndex,
           ),
         ),
       );
     } else {
-      _showError('د دې آیت لپاره د لغاتو تشریح ویډیو شتون نلري');
+      _showError(context.l.vocabularyVideoNotAvailable);
     }
   }
 
   void _showError(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          message,
-          style: const TextStyle(fontFamily: 'Bahij Badr Light'),
-          textDirection: TextDirection.rtl,
-        ),
-        backgroundColor: Colors.red,
-        behavior: SnackBarBehavior.floating,
-        margin: const EdgeInsets.all(16),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-      ),
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        final theme = Theme.of(context);
+        final isDark = theme.brightness == Brightness.dark;
+        
+        return AlertDialog(
+          backgroundColor: isDark ? AppTheme.darkSurface : Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          title: Row(
+            children: [
+              Icon(
+                Icons.info_outline_rounded,
+                color: AppTheme.primaryGreen,
+                size: 24,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                                  child: Text(
+                    context.l.information,
+                    style: TextStyle(
+                      fontFamily: 'Bahij Badr Bold',
+                      fontSize: 16,
+                      color: isDark ? Colors.white : Colors.black,
+                    ),
+                    textDirection: TextDirection.rtl,
+                  ),
+              ),
+            ],
+          ),
+          content: Text(
+            message,
+            style: TextStyle(
+              fontFamily: 'Bahij Badr Light',
+              fontSize: 14,
+              color: isDark ? Colors.white70 : Colors.black87,
+            ),
+            textDirection: TextDirection.rtl,
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text(
+                context.l.ok,
+                style: TextStyle(
+                  fontFamily: 'Bahij Badr Light',
+                  color: AppTheme.primaryGreen,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -879,7 +1634,7 @@ class _QuranReaderScreenState extends State<QuranReaderScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
-          '$feature - ژر راځي',
+          '$feature - ${context.l.comingSoon}',
           style: const TextStyle(fontFamily: 'Bahij Badr Light'),
           textDirection: TextDirection.rtl,
         ),
@@ -890,6 +1645,8 @@ class _QuranReaderScreenState extends State<QuranReaderScreen> {
       ),
     );
   }
+
+
 
   void _showFontSettings(BuildContext context) {
     showModalBottomSheet(
@@ -937,7 +1694,7 @@ class _QuranReaderScreenState extends State<QuranReaderScreen> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  'د عربي متن فونټ',
+                  context.l.arabicTextFont,
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
@@ -979,7 +1736,7 @@ class _QuranReaderScreenState extends State<QuranReaderScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'د متن اندازه',
+                              context.l.textSizeLabel,
                               style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,
@@ -1049,7 +1806,7 @@ class _QuranReaderScreenState extends State<QuranReaderScreen> {
                                           ),
                                         if (isSelected) const SizedBox(width: 8),
                                         Text(
-                                          fontSize.displayName,
+                                          fontSize.getDisplayName(context),
                                           style: TextStyle(
                                             fontSize: 14,
                                             fontWeight: FontWeight.bold,
@@ -1083,7 +1840,7 @@ class _QuranReaderScreenState extends State<QuranReaderScreen> {
                       
                       // Font family section
                       Text(
-                        'د فونټ ډول',
+                        context.l.fontTypeLabel,
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
@@ -1240,8 +1997,21 @@ class _QuranReaderScreenState extends State<QuranReaderScreen> {
         backgroundColor: isDark ? AppTheme.darkBackground : AppTheme.lightBackground,
         body: isLoading
             ? Center(
-                child: CircularProgressIndicator(
-                  valueColor: AlwaysStoppedAnimation<Color>(AppTheme.primaryGreen),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    CircularProgressIndicator(
+                      valueColor: AlwaysStoppedAnimation<Color>(AppTheme.primaryGreen),
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      context.l.loading,
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: isDark ? Colors.white : Colors.black87,
+                      ),
+                    ),
+                  ],
                 ),
               )
             : Consumer<FontProvider>(
@@ -1313,16 +2083,22 @@ class _QuranReaderScreenState extends State<QuranReaderScreen> {
                               ),
                             ),
                             
-                            // Settings button
-                            IconButton(
-                              onPressed: () => _showFontSettings(context),
-                              icon: Icon(
-                                Icons.settings_rounded,
-                                color: isDark ? Colors.white60 : Colors.black54,
-                                size: 18,
-                              ),
-                              padding: EdgeInsets.zero,
-                              constraints: const BoxConstraints(),
+                            // Right side buttons
+                            Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                // Settings button
+                                IconButton(
+                                  onPressed: () => _showFontSettings(context),
+                                  icon: Icon(
+                                    Icons.settings_rounded,
+                                    color: isDark ? Colors.white60 : Colors.black54,
+                                    size: 18,
+                                  ),
+                                  padding: EdgeInsets.zero,
+                                  constraints: const BoxConstraints(),
+                                ),
+                              ],
                             ),
                           ],
                         ),
@@ -1336,6 +2112,8 @@ class _QuranReaderScreenState extends State<QuranReaderScreen> {
       ),
     );
   }
+
+
 
   Widget _buildQuranPage(QuranPage page, bool isDark, String selectedFont, double fontSize) {
     final screenHeight = MediaQuery.of(context).size.height;
@@ -1362,9 +2140,10 @@ class _QuranReaderScreenState extends State<QuranReaderScreen> {
             children: List.generate(page.lines.length, (index) {
               String line = page.lines[index];
               List<AyahSegment> lineSegments = index < page.ayahSegments.length ? page.ayahSegments[index] : [];
-              bool isHeader = page.isFirstPage && index < 2 && line.isNotEmpty;
               bool isBismillah = line.contains('بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ');
               bool isSurahHeader = line.startsWith('سُورَةُ');
+              bool isParaHeader = line.startsWith('پارہ');
+              bool isHeader = isBismillah || isSurahHeader || isParaHeader;
               
               return Container(
                 width: double.infinity,
@@ -1374,11 +2153,11 @@ class _QuranReaderScreenState extends State<QuranReaderScreen> {
                 child: line.isEmpty ? const SizedBox() : (isHeader ? Text(
                   line,
                   style: TextStyle(
-                    fontFamily: isSurahHeader ? 'Bahij Badr Bold' : selectedFont,
-                    fontSize: isHeader ? (isBismillah ? fontSize * 0.9 : fontSize * 0.75) : fontSize,
-                    color: isSurahHeader ? AppTheme.primaryGreen : (isDark ? Colors.white : Colors.black),
+                    fontFamily: (isSurahHeader || isParaHeader) ? 'Bahij Badr Bold' : selectedFont,
+                    fontSize: isHeader ? (isBismillah ? fontSize * 0.9 : (isParaHeader ? fontSize * 0.85 : fontSize * 0.75)) : fontSize,
+                    color: (isSurahHeader || isParaHeader) ? AppTheme.primaryGreen : (isDark ? Colors.white : Colors.black),
                     height: 1.4,
-                    fontWeight: isSurahHeader ? FontWeight.bold : FontWeight.normal,
+                    fontWeight: (isSurahHeader || isParaHeader) ? FontWeight.bold : FontWeight.normal,
                     wordSpacing: 0,
                     letterSpacing: 0,
                   ),
@@ -1408,9 +2187,10 @@ class _QuranReaderScreenState extends State<QuranReaderScreen> {
             children: List.generate(linesPerPage, (index) {
               String line = index < page.lines.length ? page.lines[index] : '';
               List<AyahSegment> lineSegments = index < page.ayahSegments.length ? page.ayahSegments[index] : [];
-              bool isHeader = page.isFirstPage && index < 2 && line.isNotEmpty;
               bool isBismillah = line.contains('بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ');
               bool isSurahHeader = line.startsWith('سُورَةُ');
+              bool isParaHeader = line.startsWith('پارہ');
+              bool isHeader = isBismillah || isSurahHeader || isParaHeader;
               
               return Container(
                 height: calculatedLineHeight,
@@ -1422,11 +2202,11 @@ class _QuranReaderScreenState extends State<QuranReaderScreen> {
                   child: isHeader ? Text(
                     line,
                     style: TextStyle(
-                      fontFamily: isSurahHeader ? 'Bahij Badr Bold' : selectedFont,
-                      fontSize: isHeader ? (isBismillah ? 22 : 18) : fontSize,
-                      color: isSurahHeader ? AppTheme.primaryGreen : (isDark ? Colors.white : Colors.black),
+                      fontFamily: (isSurahHeader || isParaHeader) ? 'Bahij Badr Bold' : selectedFont,
+                      fontSize: isHeader ? (isBismillah ? 22 : (isParaHeader ? 20 : 18)) : fontSize,
+                      color: (isSurahHeader || isParaHeader) ? AppTheme.primaryGreen : (isDark ? Colors.white : Colors.black),
                       height: 1.0,
-                      fontWeight: isSurahHeader ? FontWeight.bold : FontWeight.normal,
+                      fontWeight: (isSurahHeader || isParaHeader) ? FontWeight.bold : FontWeight.normal,
                       wordSpacing: 0,
                       letterSpacing: 0,
                     ),
@@ -1630,11 +2410,24 @@ class _QuranReaderScreenState extends State<QuranReaderScreen> {
         
         return GestureDetector(
           onTap: () => _onAyahTap(ayahSegments.first.surahIndex, ayahSegments.first.ayahIndex, ayahSegments.first.ayahFullText),
-          child: Container(
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 300),
             decoration: isHighlighted ? BoxDecoration(
-              color: AppTheme.primaryGreen.withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(4),
+              color: AppTheme.primaryGreen.withValues(alpha: 0.2),
+              borderRadius: BorderRadius.circular(6),
+              border: Border.all(
+                color: AppTheme.primaryGreen.withValues(alpha: 0.4),
+                width: 1.5,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: AppTheme.primaryGreen.withValues(alpha: 0.2),
+                  blurRadius: 8,
+                  spreadRadius: 2,
+                ),
+              ],
             ) : null,
+            padding: isHighlighted ? const EdgeInsets.symmetric(horizontal: 4, vertical: 2) : EdgeInsets.zero,
             child: Text(
               '${ayahSegments.map((s) => s.text).join(' ')} ',
               style: TextStyle(
@@ -1873,5 +2666,17 @@ class OptionData {
     required this.label,
     required this.type,
     this.isAvailable = true,
+  });
+}
+
+class ParaData {
+  final int index;
+  final int startSurahIndex;
+  final int startAyahIndex;
+
+  ParaData({
+    required this.index,
+    required this.startSurahIndex,
+    required this.startAyahIndex,
   });
 }

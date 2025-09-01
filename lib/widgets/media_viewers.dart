@@ -4,6 +4,7 @@ import 'package:audioplayers/audioplayers.dart';
 import 'package:chewie/chewie.dart';
 import '../themes/app_theme.dart';
 import '../services/lughat_service.dart';
+import '../localization/app_localizations_extension.dart';
 import 'dart:io';
 
 class FullScreenTextViewer extends StatelessWidget {
@@ -242,12 +243,16 @@ class FullScreenAudioPlayer extends StatefulWidget {
   State<FullScreenAudioPlayer> createState() => _FullScreenAudioPlayerState();
 }
 
-class _FullScreenAudioPlayerState extends State<FullScreenAudioPlayer> {
+class _FullScreenAudioPlayerState extends State<FullScreenAudioPlayer> 
+    with TickerProviderStateMixin {
   late AudioPlayer _audioPlayer;
   bool _isPlaying = false;
   bool _isLoading = false;
   Duration _duration = Duration.zero;
   Duration _position = Duration.zero;
+  
+  // Animation for rotating icon
+  late AnimationController _rotationController;
   
   // Download related
   DownloadStatus _downloadStatus = DownloadStatus.notStarted;
@@ -258,6 +263,13 @@ class _FullScreenAudioPlayerState extends State<FullScreenAudioPlayer> {
   void initState() {
     super.initState();
     _audioPlayer = AudioPlayer();
+    
+    // Initialize rotation animation
+    _rotationController = AnimationController(
+      duration: const Duration(seconds: 2),
+      vsync: this,
+    );
+    
     _setupAudioPlayer();
     _initializePlayer();
   }
@@ -299,6 +311,13 @@ class _FullScreenAudioPlayerState extends State<FullScreenAudioPlayer> {
           _isPlaying = state == PlayerState.playing;
           _isLoading = state == PlayerState.playing && _position == Duration.zero;
         });
+        
+        // Control rotation animation based on playing state
+        if (state == PlayerState.playing || _isLoading) {
+          _rotationController.repeat();
+        } else {
+          _rotationController.stop();
+        }
       }
     });
 
@@ -318,6 +337,15 @@ class _FullScreenAudioPlayerState extends State<FullScreenAudioPlayer> {
         });
       }
     });
+
+    // Add error listener for better debugging
+    _audioPlayer.onPlayerStateChanged.listen((state) {
+      if (state == PlayerState.stopped && mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    });
   }
 
   Future<void> _startAutoPlay() async {
@@ -328,18 +356,21 @@ class _FullScreenAudioPlayerState extends State<FullScreenAudioPlayer> {
       
       // Use local file if available, otherwise stream
       if (_localFilePath != null) {
+        debugPrint('Playing local audio file: $_localFilePath');
         await _audioPlayer.play(DeviceFileSource(_localFilePath!));
       } else {
+        debugPrint('Streaming audio from URL: ${widget.audioUrl}');
         await _audioPlayer.play(UrlSource(widget.audioUrl));
       }
-    } catch (e) {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-        _showErrorSnackBar('د غږ په غږولو کې ستونزه: $e');
+          } catch (e) {
+        debugPrint('Audio playback error: $e');
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+          });
+          _showUserFriendlyError(context.l.audioPlaybackError, e);
+        }
       }
-    }
   }
 
   Future<void> _playPause() async {
@@ -350,6 +381,7 @@ class _FullScreenAudioPlayerState extends State<FullScreenAudioPlayer> {
         setState(() {
           _isLoading = true;
         });
+        _rotationController.repeat(); // Start animation immediately
         
         // Use local file if available, otherwise stream
         if (_localFilePath != null) {
@@ -360,7 +392,7 @@ class _FullScreenAudioPlayerState extends State<FullScreenAudioPlayer> {
       }
     } catch (e) {
       if (mounted) {
-        _showErrorSnackBar('د غږ په غږولو کې ستونزه: $e');
+        _showUserFriendlyError(context.l.audioPlaybackError, e);
       }
     }
   }
@@ -379,29 +411,54 @@ class _FullScreenAudioPlayerState extends State<FullScreenAudioPlayer> {
           if (mounted) {
             setState(() {
               _downloadProgress = progress;
+              
+              // Check if download is completed (100%)
+              if (progress >= 1.0) {
+                _downloadStatus = DownloadStatus.completed;
+              }
             });
+            
+            // Show success message when download reaches 100%
+            if (progress >= 1.0) {
+              _showSuccessSnackBar(context.l.audioDownloadSuccess);
+              
+              // Get the local file path for completed download
+              LughatService.getLocalFilePath(widget.surahIndex, widget.ayahIndex, LughatType.audio).then((localPath) {
+                if (mounted && localPath != null) {
+                  setState(() {
+                    _localFilePath = localPath;
+                  });
+                }
+              });
+            }
           }
         },
         (error) {
           if (mounted) {
-            _showErrorSnackBar('د ډاونلوډ کې ستونزه: $error');
+            _showUserFriendlyError(context.l.downloadError, error);
           }
         },
       );
 
+      // Ensure final state is set even if progress callback didn't reach 100%
       if (mounted) {
         setState(() {
           _downloadStatus = DownloadStatus.completed;
           _localFilePath = localPath;
+          _downloadProgress = 1.0; // Ensure progress shows 100%
         });
-        _showSuccessSnackBar('غږ په بریالیتوب سره ډاونلوډ شو');
+        
+        // Only show success message if not already shown
+        if (_downloadProgress < 1.0) {
+          _showSuccessSnackBar(context.l.audioDownloadSuccess);
+        }
       }
     } catch (e) {
       if (mounted) {
         setState(() {
           _downloadStatus = DownloadStatus.failed;
         });
-        _showErrorSnackBar('د ډاونلوډ کې ستونزه: $e');
+        _showUserFriendlyError(context.l.downloadError, e);
       }
     }
   }
@@ -427,12 +484,31 @@ class _FullScreenAudioPlayerState extends State<FullScreenAudioPlayer> {
           if (mounted) {
             setState(() {
               _downloadProgress = progress;
+              
+              // Check if download is completed (100%)
+              if (progress >= 1.0) {
+                _downloadStatus = DownloadStatus.completed;
+              }
             });
+            
+            // Show success message when download reaches 100%
+            if (progress >= 1.0) {
+              _showSuccessSnackBar(context.l.audioDownloadSuccess);
+              
+              // Get the local file path for completed download
+              LughatService.getLocalFilePath(widget.surahIndex, widget.ayahIndex, LughatType.audio).then((localPath) {
+                if (mounted && localPath != null) {
+                  setState(() {
+                    _localFilePath = localPath;
+                  });
+                }
+              });
+            }
           }
         },
         (error) {
           if (mounted) {
-            _showErrorSnackBar('د ډاونلوډ کې ستونزه: $error');
+            _showUserFriendlyError(context.l.downloadError, error);
           }
         },
       );
@@ -441,31 +517,102 @@ class _FullScreenAudioPlayerState extends State<FullScreenAudioPlayer> {
         setState(() {
           _downloadStatus = DownloadStatus.failed;
         });
+        _showUserFriendlyError(context.l.downloadError, e);
       }
     }
   }
 
   Future<void> _deleteDownload() async {
     await LughatService.deleteDownload(widget.surahIndex, widget.ayahIndex, LughatType.audio);
-    setState(() {
-      _downloadStatus = DownloadStatus.notStarted;
-      _downloadProgress = 0.0;
-      _localFilePath = null;
-    });
-    _showSuccessSnackBar('ډاونلوډ شوی فایل ړنګ شو');
+    if (mounted) {
+      setState(() {
+        _downloadStatus = DownloadStatus.notStarted;
+        _downloadProgress = 0.0;
+        _localFilePath = null;
+      });
+      _showSuccessSnackBar(context.l.downloadedFileDeleted);
+    }
   }
 
-  void _showErrorSnackBar(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          message,
-          style: const TextStyle(fontFamily: 'Bahij Badr Light'),
-          textDirection: TextDirection.rtl,
-        ),
-        backgroundColor: Colors.red,
-      ),
+  void _showUserFriendlyError(String title, dynamic error) {
+    String friendlyMessage = _getFriendlyErrorMessage(error);
+    
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        final theme = Theme.of(context);
+        final isDark = theme.brightness == Brightness.dark;
+        
+        return AlertDialog(
+          backgroundColor: isDark ? AppTheme.darkSurface : Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          title: Row(
+            children: [
+              Icon(
+                Icons.error_outline_rounded,
+                color: Colors.red,
+                size: 24,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  title,
+                  style: TextStyle(
+                    fontFamily: 'Bahij Badr Bold',
+                    fontSize: 16,
+                    color: isDark ? Colors.white : Colors.black,
+                  ),
+                  textDirection: TextDirection.rtl,
+                ),
+              ),
+            ],
+          ),
+          content: Text(
+            friendlyMessage,
+            style: TextStyle(
+              fontFamily: 'Bahij Badr Light',
+              fontSize: 14,
+              color: isDark ? Colors.white70 : Colors.black87,
+            ),
+            textDirection: TextDirection.rtl,
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text(
+                context.l.ok,
+                style: TextStyle(
+                  fontFamily: 'Bahij Badr Light',
+                  color: AppTheme.primaryGreen,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
     );
+  }
+
+  String _getFriendlyErrorMessage(dynamic error) {
+    String errorStr = error.toString().toLowerCase();
+    
+    if (errorStr.contains('network') || errorStr.contains('connection') || errorStr.contains('timeout')) {
+      return context.l.networkConnectionError;
+    } else if (errorStr.contains('permission') || errorStr.contains('denied')) {
+      return context.l.filePermissionError;
+    } else if (errorStr.contains('space') || errorStr.contains('storage')) {
+      return context.l.insufficientSpaceError;
+    } else if (errorStr.contains('format') || errorStr.contains('codec')) {
+      return context.l.unsupportedFormatError;
+    } else if (errorStr.contains('404') || errorStr.contains('not found')) {
+      return context.l.fileNotFoundError;
+    } else if (errorStr.contains('500') || errorStr.contains('server')) {
+      return context.l.serverError;
+    } else {
+      return context.l.unknownError;
+    }
   }
 
   void _showSuccessSnackBar(String message) {
@@ -536,15 +683,15 @@ class _FullScreenAudioPlayerState extends State<FullScreenAudioPlayer> {
   String _getDownloadStatusText() {
     switch (_downloadStatus) {
       case DownloadStatus.notStarted:
-        return 'غږ ډاونلوډ نشوی';
+        return context.l.audioNotDownloaded;
       case DownloadStatus.downloading:
-        return 'ډاونلوډ کیږي...';
+        return context.l.downloadInProgress;
       case DownloadStatus.paused:
-        return 'ډاونلوډ ودرول شو';
+        return context.l.downloadCancelledStatus;
       case DownloadStatus.completed:
-        return 'غږ ډاونلوډ شوی';
+        return context.l.audioDownloaded;
       case DownloadStatus.failed:
-        return 'د ډاونلوډ کې ستونزه';
+        return context.l.downloadError;
     }
   }
 
@@ -659,7 +806,7 @@ class _FullScreenAudioPlayerState extends State<FullScreenAudioPlayer> {
                   children: [
                     const SizedBox(height: 40),
                     
-                    // Audio icon
+                    // Audio icon with rotation animation
                     Container(
                       width: 200,
                       height: 200,
@@ -667,10 +814,18 @@ class _FullScreenAudioPlayerState extends State<FullScreenAudioPlayer> {
                         color: AppTheme.primaryGreen.withValues(alpha: 0.1),
                         shape: BoxShape.circle,
                       ),
-                      child: Icon(
-                        _localFilePath != null ? Icons.offline_bolt_rounded : Icons.audiotrack_rounded,
-                        size: 80,
-                        color: AppTheme.primaryGreen,
+                      child: AnimatedBuilder(
+                        animation: _rotationController,
+                        builder: (context, child) {
+                          return Transform.rotate(
+                            angle: _rotationController.value * 2 * 3.14159,
+                            child: Icon(
+                              _localFilePath != null ? Icons.offline_bolt_rounded : Icons.audiotrack_rounded,
+                              size: 80,
+                              color: AppTheme.primaryGreen,
+                            ),
+                          );
+                        },
                       ),
                     ),
                     
@@ -760,13 +915,18 @@ class _FullScreenAudioPlayerState extends State<FullScreenAudioPlayer> {
                           child: IconButton(
                             onPressed: _playPause,
                             icon: _isLoading
-                                ? const SizedBox(
-                                    width: 24,
-                                    height: 24,
-                                    child: CircularProgressIndicator(
-                                      color: Colors.white,
-                                      strokeWidth: 2,
-                                    ),
+                                ? AnimatedBuilder(
+                                    animation: _rotationController,
+                                    builder: (context, child) {
+                                      return Transform.rotate(
+                                        angle: _rotationController.value * 2 * 3.14159,
+                                        child: Icon(
+                                          Icons.sync_rounded,
+                                          color: Colors.white,
+                                          size: 30,
+                                        ),
+                                      );
+                                    },
                                   )
                                 : Icon(
                                     _isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
@@ -815,6 +975,7 @@ class _FullScreenAudioPlayerState extends State<FullScreenAudioPlayer> {
   @override
   void dispose() {
     _audioPlayer.dispose();
+    _rotationController.dispose();
     super.dispose();
   }
 }
@@ -839,11 +1000,15 @@ class FullScreenVideoPlayer extends StatefulWidget {
   State<FullScreenVideoPlayer> createState() => _FullScreenVideoPlayerState();
 }
 
-class _FullScreenVideoPlayerState extends State<FullScreenVideoPlayer> {
+class _FullScreenVideoPlayerState extends State<FullScreenVideoPlayer> 
+    with TickerProviderStateMixin {
   late VideoPlayerController _videoPlayerController;
   ChewieController? _chewieController;
   bool _isLoading = true;
   String? _error;
+  
+  // Animation for rotating icon when buffering
+  late AnimationController _rotationController;
   
   // Download related
   DownloadStatus _downloadStatus = DownloadStatus.notStarted;
@@ -853,6 +1018,13 @@ class _FullScreenVideoPlayerState extends State<FullScreenVideoPlayer> {
   @override
   void initState() {
     super.initState();
+    
+    // Initialize rotation animation
+    _rotationController = AnimationController(
+      duration: const Duration(seconds: 2),
+      vsync: this,
+    );
+    
     _initializePlayer();
   }
   
@@ -887,14 +1059,27 @@ class _FullScreenVideoPlayerState extends State<FullScreenVideoPlayer> {
     try {
       // Use local file if available, otherwise stream
       if (_localFilePath != null) {
+        debugPrint('Playing local video file: $_localFilePath');
         _videoPlayerController = VideoPlayerController.file(File(_localFilePath!));
       } else {
+        debugPrint('Streaming video from URL: ${widget.videoUrl}');
         _videoPlayerController = VideoPlayerController.networkUrl(
           Uri.parse(widget.videoUrl),
         );
       }
 
       await _videoPlayerController.initialize();
+
+      // Add listener for video player state changes
+      _videoPlayerController.addListener(() {
+        if (mounted) {
+          if (_videoPlayerController.value.isBuffering) {
+            _rotationController.repeat();
+          } else {
+            _rotationController.stop();
+          }
+        }
+      });
 
       _chewieController = ChewieController(
         videoPlayerController: _videoPlayerController,
@@ -911,9 +1096,19 @@ class _FullScreenVideoPlayerState extends State<FullScreenVideoPlayer> {
         ),
         placeholder: Container(
           color: Colors.black,
-          child: const Center(
-            child: CircularProgressIndicator(
-              color: AppTheme.primaryGreen,
+          child: Center(
+            child: AnimatedBuilder(
+              animation: _rotationController,
+              builder: (context, child) {
+                return Transform.rotate(
+                  angle: _rotationController.value * 2 * 3.14159,
+                  child: Icon(
+                    Icons.videocam_outlined,
+                    size: 80,
+                    color: AppTheme.primaryGreen,
+                  ),
+                );
+              },
             ),
           ),
         ),
@@ -931,7 +1126,7 @@ class _FullScreenVideoPlayerState extends State<FullScreenVideoPlayer> {
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    'د ویډیو په غږولو کې ستونزه',
+                    context.l.videoPlaybackError,
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 16,
@@ -961,11 +1156,13 @@ class _FullScreenVideoPlayerState extends State<FullScreenVideoPlayer> {
         });
       }
     } catch (e) {
+      debugPrint('Video initialization error: $e');
       if (mounted) {
         setState(() {
           _isLoading = false;
-          _error = e.toString();
+          _error = 'Video initialization failed';
         });
+        _showUserFriendlyError(context.l.videoPlaybackError, e);
       }
     }
   }
@@ -984,29 +1181,54 @@ class _FullScreenVideoPlayerState extends State<FullScreenVideoPlayer> {
           if (mounted) {
             setState(() {
               _downloadProgress = progress;
+              
+              // Check if download is completed (100%)
+              if (progress >= 1.0) {
+                _downloadStatus = DownloadStatus.completed;
+              }
             });
+            
+            // Show success message when download reaches 100%
+            if (progress >= 1.0) {
+              _showSuccessSnackBar(context.l.videoDownloadSuccess);
+              
+              // Get the local file path for completed download
+              LughatService.getLocalFilePath(widget.surahIndex, widget.ayahIndex, LughatType.video).then((localPath) {
+                if (mounted && localPath != null) {
+                  setState(() {
+                    _localFilePath = localPath;
+                  });
+                }
+              });
+            }
           }
         },
         (error) {
           if (mounted) {
-            _showErrorSnackBar('د ډاونلوډ کې ستونزه: $error');
+            _showUserFriendlyError(context.l.downloadError, error);
           }
         },
       );
 
+      // Ensure final state is set even if progress callback didn't reach 100%
       if (mounted) {
         setState(() {
           _downloadStatus = DownloadStatus.completed;
           _localFilePath = localPath;
+          _downloadProgress = 1.0; // Ensure progress shows 100%
         });
-        _showSuccessSnackBar('ویډیو په بریالیتوب سره ډاونلوډ شو');
+        
+        // Only show success message if not already shown
+        if (_downloadProgress < 1.0) {
+          _showSuccessSnackBar(context.l.videoDownloadSuccess);
+        }
       }
     } catch (e) {
       if (mounted) {
         setState(() {
           _downloadStatus = DownloadStatus.failed;
         });
-        _showErrorSnackBar('د ډاونلوډ کې ستونزه: $e');
+        _showUserFriendlyError(context.l.downloadError, e);
       }
     }
   }
@@ -1032,12 +1254,31 @@ class _FullScreenVideoPlayerState extends State<FullScreenVideoPlayer> {
           if (mounted) {
             setState(() {
               _downloadProgress = progress;
+              
+              // Check if download is completed (100%)
+              if (progress >= 1.0) {
+                _downloadStatus = DownloadStatus.completed;
+              }
             });
+            
+            // Show success message when download reaches 100%
+            if (progress >= 1.0) {
+              _showSuccessSnackBar(context.l.videoDownloadSuccess);
+              
+              // Get the local file path for completed download
+              LughatService.getLocalFilePath(widget.surahIndex, widget.ayahIndex, LughatType.video).then((localPath) {
+                if (mounted && localPath != null) {
+                  setState(() {
+                    _localFilePath = localPath;
+                  });
+                }
+              });
+            }
           }
         },
         (error) {
           if (mounted) {
-            _showErrorSnackBar('د ډاونلوډ کې ستونزه: $error');
+            _showUserFriendlyError(context.l.downloadError, error);
           }
         },
       );
@@ -1046,31 +1287,102 @@ class _FullScreenVideoPlayerState extends State<FullScreenVideoPlayer> {
         setState(() {
           _downloadStatus = DownloadStatus.failed;
         });
+        _showUserFriendlyError(context.l.downloadError, e);
       }
     }
   }
 
   Future<void> _deleteDownload() async {
     await LughatService.deleteDownload(widget.surahIndex, widget.ayahIndex, LughatType.video);
-    setState(() {
-      _downloadStatus = DownloadStatus.notStarted;
-      _downloadProgress = 0.0;
-      _localFilePath = null;
-    });
-    _showSuccessSnackBar('ډاونلوډ شوی فایل ړنګ شو');
+    if (mounted) {
+      setState(() {
+        _downloadStatus = DownloadStatus.notStarted;
+        _downloadProgress = 0.0;
+        _localFilePath = null;
+      });
+      _showSuccessSnackBar(context.l.fileDeletedSuccess);
+    }
   }
 
-  void _showErrorSnackBar(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          message,
-          style: const TextStyle(fontFamily: 'Bahij Badr Light'),
-          textDirection: TextDirection.rtl,
-        ),
-        backgroundColor: Colors.red,
-      ),
+  void _showUserFriendlyError(String title, dynamic error) {
+    String friendlyMessage = _getFriendlyErrorMessage(error);
+    
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        final theme = Theme.of(context);
+        final isDark = theme.brightness == Brightness.dark;
+        
+        return AlertDialog(
+          backgroundColor: isDark ? AppTheme.darkSurface : Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          title: Row(
+            children: [
+              Icon(
+                Icons.error_outline_rounded,
+                color: Colors.red,
+                size: 24,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  title,
+                  style: TextStyle(
+                    fontFamily: 'Bahij Badr Bold',
+                    fontSize: 16,
+                    color: isDark ? Colors.white : Colors.black,
+                  ),
+                  textDirection: TextDirection.rtl,
+                ),
+              ),
+            ],
+          ),
+          content: Text(
+            friendlyMessage,
+            style: TextStyle(
+              fontFamily: 'Bahij Badr Light',
+              fontSize: 14,
+              color: isDark ? Colors.white70 : Colors.black87,
+            ),
+            textDirection: TextDirection.rtl,
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text(
+                context.l.ok,
+                style: TextStyle(
+                  fontFamily: 'Bahij Badr Light',
+                  color: AppTheme.primaryGreen,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
     );
+  }
+
+  String _getFriendlyErrorMessage(dynamic error) {
+    String errorStr = error.toString().toLowerCase();
+    
+    if (errorStr.contains('network') || errorStr.contains('connection') || errorStr.contains('timeout')) {
+      return context.l.networkConnectionError;
+    } else if (errorStr.contains('permission') || errorStr.contains('denied')) {
+      return context.l.filePermissionError;
+    } else if (errorStr.contains('space') || errorStr.contains('storage')) {
+      return context.l.insufficientSpaceError;
+    } else if (errorStr.contains('format') || errorStr.contains('codec')) {
+      return context.l.unsupportedFormatError;
+    } else if (errorStr.contains('404') || errorStr.contains('not found')) {
+      return context.l.fileNotFoundError;
+    } else if (errorStr.contains('500') || errorStr.contains('server')) {
+      return context.l.serverError;
+    } else {
+      return context.l.unknownError;
+    }
   }
 
   void _showSuccessSnackBar(String message) {
@@ -1141,15 +1453,15 @@ class _FullScreenVideoPlayerState extends State<FullScreenVideoPlayer> {
   String _getDownloadStatusText() {
     switch (_downloadStatus) {
       case DownloadStatus.notStarted:
-        return 'ویډیو ډاونلوډ نشوی';
+        return context.l.videoNotDownloaded;
       case DownloadStatus.downloading:
-        return 'ډاونلوډ کیږي...';
+        return context.l.downloadInProgress;
       case DownloadStatus.paused:
-        return 'ډاونلوډ ودرول شو';
+        return context.l.downloadCancelledStatus;
       case DownloadStatus.completed:
-        return 'ویډیو ډاونلوډ شوی';
+        return context.l.videoDownloaded;
       case DownloadStatus.failed:
-        return 'د ډاونلوډ کې ستونزه';
+        return context.l.downloadError;
     }
   }
 
@@ -1242,9 +1554,9 @@ class _FullScreenVideoPlayerState extends State<FullScreenVideoPlayer> {
                                 size: 48,
                               ),
                               const SizedBox(height: 16),
-                              const Text(
-                                'د ویډیو په غږولو کې ستونزه',
-                                style: TextStyle(
+                              Text(
+                                context.l.videoPlaybackError,
+                                style: const TextStyle(
                                   color: Colors.white,
                                   fontSize: 16,
                                   fontFamily: 'Bahij Badr Light',
@@ -1291,6 +1603,7 @@ class _FullScreenVideoPlayerState extends State<FullScreenVideoPlayer> {
   void dispose() {
     _chewieController?.dispose();
     _videoPlayerController.dispose();
+    _rotationController.dispose();
     super.dispose();
   }
 } 
