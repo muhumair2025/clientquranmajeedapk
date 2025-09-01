@@ -1300,13 +1300,13 @@ class _QuranReaderScreenState extends State<QuranReaderScreen> {
                               isAvailable: LughatService.hasTextData(surahIndex, ayahIndex),
                             ),
                             OptionData(
-                              icon: Icons.play_circle_outline_rounded, 
+                              icon: Icons.play_circle_rounded, 
                               label: context.l.audio, 
                               type: 'lughat_audio',
                               isAvailable: LughatService.hasAudioData(surahIndex, ayahIndex),
                             ),
                             OptionData(
-                              icon: Icons.videocam_outlined, 
+                              icon: Icons.videocam_rounded, 
                               label: context.l.video, 
                               type: 'lughat_video',
                               isAvailable: LughatService.hasVideoData(surahIndex, ayahIndex),
@@ -1330,13 +1330,13 @@ class _QuranReaderScreenState extends State<QuranReaderScreen> {
                               isAvailable: false, // TODO: Add tafseer data
                             ),
                             OptionData(
-                              icon: Icons.play_circle_outline_rounded, 
+                              icon: Icons.play_circle_rounded, 
                               label: context.l.audio, 
                               type: 'tafseer_audio',
                               isAvailable: false, // TODO: Add tafseer data
                             ),
                             OptionData(
-                              icon: Icons.videocam_outlined, 
+                              icon: Icons.videocam_rounded, 
                               label: context.l.video, 
                               type: 'tafseer_video',
                               isAvailable: false, // TODO: Add tafseer data
@@ -1360,13 +1360,13 @@ class _QuranReaderScreenState extends State<QuranReaderScreen> {
                               isAvailable: false, // TODO: Add faidi data
                             ),
                             OptionData(
-                              icon: Icons.play_circle_outline_rounded, 
+                              icon: Icons.play_circle_rounded, 
                               label: context.l.audio, 
                               type: 'faidi_audio',
                               isAvailable: false, // TODO: Add faidi data
                             ),
                             OptionData(
-                              icon: Icons.videocam_outlined, 
+                              icon: Icons.videocam_rounded, 
                               label: context.l.video, 
                               type: 'faidi_video',
                               isAvailable: false, // TODO: Add faidi data
@@ -1966,7 +1966,7 @@ class _QuranReaderScreenState extends State<QuranReaderScreen> {
             Icon(
               icon,
               color: isAvailable ? AppTheme.primaryGreen : Colors.grey,
-              size: 18,
+              size: 24,
             ),
             const SizedBox(height: 3),
             Text(

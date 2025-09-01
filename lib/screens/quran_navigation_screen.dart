@@ -360,35 +360,60 @@ class _QuranNavigationScreenState extends State<QuranNavigationScreen>
               child: Padding(
                 padding: const EdgeInsets.all(16),
                 child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    // Para number on the left
+                    // Para number on the left with badge background
                     Container(
-                      width: 45,
-                      height: 45,
-                      decoration: BoxDecoration(
-                        color: AppTheme.primaryGreen.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Center(
-                        child: Text(
-                          '$paraNumber',
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.bold,
-                            color: AppTheme.primaryGreen,
+                      width: 40,
+                      height: 40,
+                      child: Stack(
+                        children: [
+                          // Badge background image (smaller)
+                          Center(
+                            child: Image.asset(
+                              'assets/images/badge.png',
+                              width: 35,
+                              height: 35,
+                              fit: BoxFit.contain,
+                              errorBuilder: (context, error, stackTrace) {
+                                // Fallback to custom style if badge image fails to load
+                                return Container(
+                                  width: 35,
+                                  height: 35,
+                                  decoration: BoxDecoration(
+                                    color: AppTheme.primaryGreen.withValues(alpha: 0.1),
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                );
+                              },
+                            ),
                           ),
-                        ),
+                          // Para number text
+                          Positioned.fill(
+                            child: Center(
+                              child: Text(
+                                '$paraNumber',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w900,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                     const SizedBox(width: 16),
                     // Para content
                     Expanded(
                       child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
                         crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
                           // Para name on the right side (RTL)
                           Container(
-                            height: 30,
+                            height: 28,
                             alignment: Alignment.centerRight,
                             child: ColorFiltered(
                               colorFilter: isDark 
@@ -412,15 +437,16 @@ class _QuranNavigationScreenState extends State<QuranNavigationScreen>
                               ),
                             ),
                           ),
-                          const SizedBox(height: 4),
+                          const SizedBox(height: 2),
                           // Ayah count
                           Text(
                             context.l.ayahsCount.replaceAll('{count}', _getParaAyahCount(paraNumber).toString()),
                             style: TextStyle(
-                              fontSize: 13,
+                              fontSize: 12,
                               color: isDark ? Colors.white60 : Colors.grey[600],
                             ),
                             textDirection: TextDirection.rtl,
+                            textAlign: TextAlign.right,
                           ),
                         ],
                       ),
@@ -498,35 +524,60 @@ class _QuranNavigationScreenState extends State<QuranNavigationScreen>
               child: Padding(
                 padding: const EdgeInsets.all(16),
                 child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    // Surah number on the left
+                    // Surah number on the left with badge background
                     Container(
-                      width: 45,
-                      height: 45,
-                      decoration: BoxDecoration(
-                        color: AppTheme.primaryGreen.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Center(
-                        child: Text(
-                          '$surahNumber',
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.bold,
-                            color: AppTheme.primaryGreen,
+                      width: 40,
+                      height: 40,
+                      child: Stack(
+                        children: [
+                          // Badge background image (smaller)
+                          Center(
+                            child: Image.asset(
+                              'assets/images/badge.png',
+                              width: 35,
+                              height: 35,
+                              fit: BoxFit.contain,
+                              errorBuilder: (context, error, stackTrace) {
+                                // Fallback to custom style if badge image fails to load
+                                return Container(
+                                  width: 35,
+                                  height: 35,
+                                  decoration: BoxDecoration(
+                                    color: AppTheme.primaryGreen.withValues(alpha: 0.1),
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                );
+                              },
+                            ),
                           ),
-                        ),
+                          // Surah number text
+                          Positioned.fill(
+                            child: Center(
+                              child: Text(
+                                '$surahNumber',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w900,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                     const SizedBox(width: 16),
                     // Surah content
                     Expanded(
                       child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
                         crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
                           // Surah name on the right side (RTL)
                           Container(
-                            height: 30,
+                            height: 28,
                             alignment: Alignment.centerRight,
                             child: ColorFiltered(
                               colorFilter: isDark 
@@ -550,37 +601,50 @@ class _QuranNavigationScreenState extends State<QuranNavigationScreen>
                               ),
                             ),
                           ),
-                          const SizedBox(height: 4),
+                          const SizedBox(height: 2),
                           // Ayah count
                           Text(
                             context.l.ayahsCount.replaceAll('{count}', surah['ayahCount'].toString()),
                             style: TextStyle(
-                              fontSize: 13,
+                              fontSize: 12,
                               color: isDark ? Colors.white60 : Colors.grey[600],
                             ),
                             textDirection: TextDirection.rtl,
+                            textAlign: TextAlign.right,
                           ),
                         ],
                       ),
                     ),
                     const SizedBox(width: 12),
-                    // Send icon button
-                    IconButton(
-                      onPressed: () => _showSurahModal(context, surah),
-                      icon: Icon(
-                        Icons.send_rounded,
-                        color: AppTheme.primaryGreen,
-                        size: 20,
+                    // Navigation icon button (larger)
+                    Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        color: AppTheme.primaryGreen.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(10),
                       ),
-                      padding: const EdgeInsets.all(8),
-                      constraints: const BoxConstraints(
-                        minWidth: 36,
-                        minHeight: 36,
-                      ),
-                      style: IconButton.styleFrom(
-                        backgroundColor: AppTheme.primaryGreen.withValues(alpha: 0.1),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
+                      child: Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(10),
+                          onTap: () => _showSurahModal(context, surah),
+                          child: Center(
+                            child: Image.asset(
+                              'assets/images/navigation.png',
+                              width: 24,
+                              height: 24,
+                              fit: BoxFit.contain,
+                              errorBuilder: (context, error, stackTrace) {
+                                // Fallback to original icon if image fails to load
+                                return Icon(
+                                  Icons.send_rounded,
+                                  color: AppTheme.primaryGreen,
+                                  size: 24,
+                                );
+                              },
+                            ),
+                          ),
                         ),
                       ),
                     ),
@@ -594,9 +658,20 @@ class _QuranNavigationScreenState extends State<QuranNavigationScreen>
                             : Colors.blue.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(8),
                       ),
-                      child: Text(
-                        surah['isMakki'] ? '🕋' : '🕌',
-                        style: const TextStyle(fontSize: 16),
+                      child: Image.asset(
+                        surah['isMakki'] 
+                            ? 'assets/images/kaaba.png'  // Makki surahs use Kaaba image
+                            : 'assets/images/masjid-al-nabawi.png',  // Madani surahs use Masjid Al-Nabawi image
+                        width: 16,
+                        height: 16,
+                        fit: BoxFit.contain,
+                        errorBuilder: (context, error, stackTrace) {
+                          // Fallback to emoji if image fails to load
+                          return Text(
+                            surah['isMakki'] ? '🕋' : '🕌',
+                            style: const TextStyle(fontSize: 16),
+                          );
+                        },
                       ),
                     ),
                   ],
@@ -1087,6 +1162,110 @@ class _SurahAyahModalState extends State<SurahAyahModal> {
     );
   }
   
+  // Create truncated highlighted text widget for ayah modal (one line with ellipsis)
+  Widget _buildTruncatedHighlightedText(String text, String? searchTerm, bool isHighlighted, TextStyle baseStyle) {
+    if (!isHighlighted || searchTerm == null || searchTerm.isEmpty) {
+      return Text(
+        text,
+        style: baseStyle,
+        textDirection: TextDirection.rtl,
+        textAlign: TextAlign.right,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+      );
+    }
+    
+    final cleanSearchTerm = searchTerm.trim();
+    if (cleanSearchTerm.length < 2) {
+      return Text(
+        text,
+        style: baseStyle,
+        textDirection: TextDirection.rtl,
+        textAlign: TextAlign.right,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+      );
+    }
+    
+    // Find all possible matches with different strategies
+    List<_NavHighlightMatch> allMatches = [];
+    
+    // 1. Try exact match first
+    allMatches.addAll(_findExactMatches(text, cleanSearchTerm));
+    
+    // 2. If no exact matches, try case-insensitive
+    if (allMatches.isEmpty) {
+      allMatches.addAll(_findCaseInsensitiveMatches(text, cleanSearchTerm));
+    }
+    
+    // 3. If no matches, try converted query (Urdu/Pashto to Arabic)
+    if (allMatches.isEmpty) {
+      String convertedQuery = _convertToArabicSearch(cleanSearchTerm);
+      if (convertedQuery != cleanSearchTerm && convertedQuery.isNotEmpty) {
+        allMatches.addAll(_findCaseInsensitiveMatches(text, convertedQuery));
+      }
+    }
+    
+    // 4. If still no matches, try without diacritics
+    if (allMatches.isEmpty && cleanSearchTerm.length >= 2) {
+      allMatches.addAll(_findDiacriticsFreMatches(text, cleanSearchTerm));
+    }
+    
+    if (allMatches.isEmpty) {
+      return Text(
+        text,
+        style: baseStyle,
+        textDirection: TextDirection.rtl,
+        textAlign: TextAlign.right,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+      );
+    }
+    
+    // Sort and merge overlapping matches
+    allMatches.sort((a, b) => a.start.compareTo(b.start));
+    allMatches = _mergeOverlappingMatches(allMatches);
+    
+    // Build spans with highlighting
+    List<TextSpan> spans = [];
+    int lastEnd = 0;
+    
+    for (final match in allMatches) {
+      // Add text before match
+      if (match.start > lastEnd) {
+        spans.add(TextSpan(
+          text: text.substring(lastEnd, match.start),
+          style: baseStyle,
+        ));
+      }
+      
+      // Add highlighted match
+      spans.add(TextSpan(
+        text: text.substring(match.start, match.end),
+        style: baseStyle.copyWith(
+          backgroundColor: AppTheme.primaryGold.withValues(alpha: 0.3),
+          color: AppTheme.primaryGreen,
+          fontWeight: FontWeight.bold,
+        ),
+      ));
+      
+      lastEnd = match.end;
+    }
+    
+    // Add remaining text
+    if (lastEnd < text.length) {
+      spans.add(TextSpan(text: text.substring(lastEnd), style: baseStyle));
+    }
+    
+    return RichText(
+      text: TextSpan(children: spans),
+      textDirection: TextDirection.rtl,
+      textAlign: TextAlign.right,
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
+    );
+  }
+
   // Create highlighted text widget for search results (optimized for complete word highlighting)
   Widget _buildHighlightedText(String text, String? searchTerm, bool isHighlighted, TextStyle baseStyle) {
     if (!isHighlighted || searchTerm == null || searchTerm.isEmpty) {
@@ -1450,37 +1629,60 @@ class _SurahAyahModalState extends State<SurahAyahModal> {
                                   child: Row(
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
-                                      // Ayah number
+                                      // Ayah number with badge background
                                       Container(
                                         width: 32,
                                         height: 32,
-                                        decoration: BoxDecoration(
-                                          color: AppTheme.primaryGreen.withValues(alpha: 0.1),
-                                          borderRadius: BorderRadius.circular(16),
-                                        ),
-                                        child: Center(
-                                          child: Text(
-                                            '$ayahIndex',
-                                            style: TextStyle(
-                                              fontSize: 12,
-                                              fontWeight: FontWeight.bold,
-                                              color: AppTheme.primaryGreen,
+                                        child: Stack(
+                                          children: [
+                                            // Badge background image
+                                            Center(
+                                              child: Image.asset(
+                                                'assets/images/badge.png',
+                                                width: 28,
+                                                height: 28,
+                                                fit: BoxFit.contain,
+                                                errorBuilder: (context, error, stackTrace) {
+                                                  // Fallback to custom style if badge image fails to load
+                                                  return Container(
+                                                    width: 28,
+                                                    height: 28,
+                                                    decoration: BoxDecoration(
+                                                      color: AppTheme.primaryGreen.withValues(alpha: 0.1),
+                                                      borderRadius: BorderRadius.circular(14),
+                                                    ),
+                                                  );
+                                                },
+                                              ),
                                             ),
-                                          ),
+                                            // Ayah number text
+                                            Positioned.fill(
+                                              child: Center(
+                                                child: Text(
+                                                  '$ayahIndex',
+                                                  style: TextStyle(
+                                                    fontSize: 12,
+                                                    fontWeight: FontWeight.w900,
+                                                    color: Colors.white,
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                          ],
                                         ),
                                       ),
                                       
                                       const SizedBox(width: 12),
                                       
-                                      // Ayah text with highlighting and font settings
+                                      // Ayah text with highlighting and font settings (truncated to one line)
                                       Expanded(
-                                        child: _buildHighlightedText(
+                                        child: _buildTruncatedHighlightedText(
                                           ayahText,
                                           ayah['searchTerm'],
                                           ayah['highlighted'] ?? false,
                                           TextStyle(
                                             fontSize: 18.0, // Fixed 18 pixel font size
-                                            height: 1.8,
+                                            height: 1.4,
                                             color: isDark ? Colors.white : Colors.black,
                                             fontFamily: fontProvider.selectedFontOption.family,
                                           ),

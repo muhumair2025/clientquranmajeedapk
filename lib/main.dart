@@ -293,204 +293,162 @@ class QuranMajeedHomePage extends StatefulWidget {
 class _QuranMajeedHomePageState extends State<QuranMajeedHomePage> {
   @override
   Widget build(BuildContext context) {
-    return Consumer<LanguageProvider>(
-      builder: (context, languageProvider, child) {
-        return Padding(
-      padding: const EdgeInsets.all(12), // Reduced from 16
-      child: Column(
-        children: [
-          // Top row: عقیده (right), تفسیر او ترجمه (left)
-          Expanded(
-            flex: 1, // Equal height for all rows
-            child: Row(
-              textDirection: TextDirection.rtl,
-              children: [
-                Expanded(
-                  child: _buildMenuCard(
-                    context,
-                    title: context.l.aqeedah,
-                    subtitle: context.l.aqeedahSubtitle,
-                    icon: Icons.star_rounded,
-                    onTap: () {
-                      // Navigate to Aqeedah section
-                    },
-                  ),
-                ),
-                const SizedBox(width: 8), // Reduced from 12
-                Expanded(
-                  child: _buildMenuCard(
-                    context,
-                    title: context.l.tafseerTranslation,
-                    subtitle: context.l.tafseerSubtitle,
-                    icon: Icons.book_rounded,
-                    onTap: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (context) => const QuranNavigationScreen(),
-                        ),
-                      );
-                    },
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 8), // Reduced from 12
-          // Middle row: فقه (right), حدیث (left)
-          Expanded(
-            flex: 1, // Equal height for all rows
-            child: Row(
-              textDirection: TextDirection.rtl,
-              children: [
-                Expanded(
-                  child: _buildMenuCard(
-                    context,
-                    title: context.l.fiqh,
-                    subtitle: context.l.fiqhSubtitle,
-                    icon: Icons.balance_rounded,
-                    onTap: () {
-                      // Navigate to Fiqh section
-                    },
-                  ),
-                ),
-                const SizedBox(width: 8), // Reduced from 12
-                Expanded(
-                  child: _buildMenuCard(
-                    context,
-                    title: context.l.hadith,
-                    subtitle: context.l.hadithSubtitle,
-                    icon: Icons.chat_bubble_rounded,
-                    onTap: () {
-                      // Navigate to Hadith section
-                    },
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 8), // Reduced from 12
-          // Bottom row: سوال خواب (right), کتابونه (left)
-          Expanded(
-            flex: 1, // Equal height for all rows
-            child: Row(
-              textDirection: TextDirection.rtl,
-              children: [
-                Expanded(
-                  child: _buildMenuCard(
-                    context,
-                    title: context.l.questionAnswer,
-                    subtitle: context.l.questionAnswerSubtitle,
-                    icon: Icons.help_rounded,
-                    onTap: () {
-                      // Navigate to Q&A section
-                    },
-                  ),
-                ),
-                const SizedBox(width: 8), // Reduced from 12
-                Expanded(
-                  child: _buildMenuCard(
-                    context,
-                    title: context.l.books,
-                    subtitle: context.l.booksSubtitle,
-                    icon: Icons.library_books_rounded,
-                    onTap: () {
-                      // Navigate to Books section
-                    },
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
+    return Container(
+      decoration: const BoxDecoration(
+        image: DecorationImage(
+          image: AssetImage('assets/images/pattern_back_homepage.PNG'),
+          fit: BoxFit.cover,
+        ),
       ),
-    );
-      },
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            // Top row: عقیده (left), تفسیر او ترجمه (right) - MIRRORED
+            SizedBox(
+              height: MediaQuery.of(context).size.height * 0.18,
+              child: Row(
+                textDirection: TextDirection.rtl,
+                children: [
+                  Expanded(
+                    child: _buildImageCard(
+                      context,
+                      imagePath: 'assets/images/tarjumatafseer_card1.png',
+                      onTap: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (context) => const QuranNavigationScreen(),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _buildImageCard(
+                      context,
+                      imagePath: 'assets/images/aqeeda_card2.png',
+                      onTap: () {
+                        // Navigate to Aqeedah section
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            // Middle row: حدیث (right), فقه (left) - MIRRORED
+            SizedBox(
+              height: MediaQuery.of(context).size.height * 0.18,
+              child: Row(
+                textDirection: TextDirection.rtl,
+                children: [
+                  Expanded(
+                    child: _buildImageCard(
+                      context,
+                      imagePath: 'assets/images/hadeeth_card_3.png',
+                      onTap: () {
+                        // Navigate to Hadith section
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _buildImageCard(
+                      context,
+                      imagePath: 'assets/images/fiqah_card4.png',
+                      onTap: () {
+                        // Navigate to Fiqh section
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            // Bottom row: کتابونه (right), سوال جواب (left) - MIRRORED
+            SizedBox(
+              height: MediaQuery.of(context).size.height * 0.18,
+              child: Row(
+                textDirection: TextDirection.rtl,
+                children: [
+                  Expanded(
+                    child: _buildImageCard(
+                      context,
+                      imagePath: 'assets/images/kitaboona_card5.png',
+                      onTap: () {
+                        // Navigate to Books section
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _buildImageCard(
+                      context,
+                      imagePath: 'assets/images/sawal_jawab_card6.png',
+                      onTap: () {
+                        // Navigate to Q&A section
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
-  Widget _buildMenuCard(
+  Widget _buildImageCard(
     BuildContext context, {
-    required String title,
-    required String subtitle,
-    required IconData icon,
+    required String imagePath,
     required VoidCallback onTap,
   }) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-    
     return Container(
       decoration: BoxDecoration(
-        color: isDark ? AppTheme.darkSurface : Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.08),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
+        borderRadius: BorderRadius.circular(16),
       ),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(16),
+          splashColor: Colors.white.withValues(alpha: 0.3), // White ripple effect
+          highlightColor: Colors.white.withValues(alpha: 0.1), // Subtle highlight
           onTap: onTap,
-          child: Padding(
-            padding: const EdgeInsets.all(16), // Reduced from 20
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                // Flexible icon container
-                Container(
-                  padding: const EdgeInsets.all(14), // Reduced from 18
-                  decoration: BoxDecoration(
-                    color: AppTheme.primaryGreen.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(12), // Reduced from 16
-                  ),
-                  child: Icon(
-                    icon,
-                    size: 28, // Reduced from 36
-                    color: AppTheme.primaryGreen,
-                  ),
-                ),
-                const SizedBox(height: 12), // Reduced from 18
-                
-                // Flexible title with better text handling
-                Flexible(
-                  child: AutoSizeText(
-                    title,
-                    style: TextStyle(
-                      fontSize: 15, // Reduced from 16
-                      fontWeight: FontWeight.bold,
-                      height: 1.1, // Tighter line height
-                      color: isDark ? Colors.white : Colors.black87,
+          child: Ink(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(16),
+                child: Stack(
+                  children: [
+                    // Main image
+                    Image.asset(
+                      imagePath,
+                      fit: BoxFit.contain,
+                      width: double.infinity,
+                      height: double.infinity,
                     ),
-                    textAlign: TextAlign.center,
-                    maxLines: 3, // Increased from 2
-                    minFontSize: 12, // Minimum font size
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-                
-                const SizedBox(height: 6), // Reduced from 8
-                
-                // Flexible subtitle with better text handling
-                Flexible(
-                  child: AutoSizeText(
-                    subtitle,
-                    style: TextStyle(
-                      fontSize: 12, // Reduced from 13
-                      height: 1.2, // Tighter line height
-                      color: isDark ? Colors.white60 : Colors.grey[600],
+                    // Overlay for press effect
+                    Positioned.fill(
+                      child: Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(16),
+                          splashColor: Colors.black.withValues(alpha: 0.1),
+                          highlightColor: Colors.black.withValues(alpha: 0.05),
+                          onTap: onTap,
+                        ),
+                      ),
                     ),
-                    textAlign: TextAlign.center,
-                    maxLines: 3, // Increased from 2
-                    minFontSize: 10, // Minimum font size
-                    overflow: TextOverflow.ellipsis,
-                  ),
+                  ],
                 ),
-              ],
+              ),
             ),
           ),
         ),
