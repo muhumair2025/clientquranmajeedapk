@@ -518,4 +518,45 @@ class AppLocalizationsPs extends AppLocalizations {
   String get playingRange => 'د غږولو حد';
   @override
   String get number => 'شمېره';
+
+  // Additional localization strings
+  @override
+  String get downloads => 'ډاونلوډونه';
+  @override
+  String get reserved => 'ساتل شوی';
+  @override
+  String get downloadContent => 'د آفلاین کارونې لپاره اسلامي مواد ډاونلوډ کړئ';
+  @override
+  String get vocabularyDescription => 'د کلماتو معنی او تشریحات';
+  @override
+  String get commentaryDescription => 'د آیتونو تفصیلي تفسیر';
+  @override
+  String get benefitsDescription => 'روحاني فوائد او درسونه';
+  
+  // Favorites functionality
+  @override
+  String get favorites => 'خوښې';
+  @override
+  String get addedToFavorites => 'خوښو ته ورزیات شو';
+  @override
+  String get removedFromFavorites => 'له خوښو څخه لیرې شو';
+  @override
+  String get noFavorites => 'تر اوسه هیڅ خوښ آیت نشته';
+  @override
+  String get addFavoritesFromReader => 'د قرآن د لوستونکي څخه خوښې ورزیات کړئ';
+  @override
+  String get removeFavorite => 'خوښه لیرې کړئ';
+  @override
+  String get removeFavoriteConfirm => 'ایا تاسو واقعیا غواړئ دا آیت له خوښو څخه لیرې کړئ؟';
+  @override
+  String get remove => 'لیرې کړئ';
+  
+  // Notes functionality
+  @override
+  String get addNote => 'دلته خپله یادښت ولیکئ...';
+  @override
+  String get noteSaved => 'یادښت ساتل شو';
+  @override
+  String get noteRemoved => 'یادښت لیرې شو';
+
 } 

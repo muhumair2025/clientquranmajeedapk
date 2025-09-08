@@ -6,6 +6,9 @@ import 'dart:async';
 import '../themes/app_theme.dart';
 import '../localization/app_localizations_extension.dart';
 import '../services/lughat_service.dart';
+import '../services/tafseer_service.dart';
+import '../services/faidi_service.dart';
+import '../services/common_models.dart';
 import '../providers/font_provider.dart';
 
 enum PlaybackMode { single, sequential, repeat }
@@ -14,12 +17,14 @@ class BulkAudioPlayerScreen extends StatefulWidget {
   final int initialSurahIndex;
   final int initialAyahIndex;
   final String surahName;
+  final String sectionType; // lughat, tafseer, or faidi
 
   const BulkAudioPlayerScreen({
     super.key,
     required this.initialSurahIndex,
     required this.initialAyahIndex,
     required this.surahName,
+    this.sectionType = 'lughat', // Default to lughat for backward compatibility
   });
 
   @override
@@ -174,6 +179,136 @@ class _BulkAudioPlayerScreenState extends State<BulkAudioPlayerScreen>
     });
   }
 
+  // Helper methods to use appropriate service based on section type
+  Future<bool> _hasAudioData(int surahIndex, int ayahIndex) async {
+    switch (widget.sectionType) {
+      case 'lughat':
+        return await LughatService.hasAudioData(surahIndex, ayahIndex);
+      case 'tafseer':
+        return await TafseerService.hasAudioData(surahIndex, ayahIndex);
+      case 'faidi':
+        return await FaidiService.hasAudioData(surahIndex, ayahIndex);
+      default:
+        return await LughatService.hasAudioData(surahIndex, ayahIndex);
+    }
+  }
+
+  Future<dynamic> _getAudioData(int surahIndex, int ayahIndex) async {
+    switch (widget.sectionType) {
+      case 'lughat':
+        return await LughatService.getAudioData(surahIndex, ayahIndex);
+      case 'tafseer':
+        return await TafseerService.getAudioData(surahIndex, ayahIndex);
+      case 'faidi':
+        return await FaidiService.getAudioData(surahIndex, ayahIndex);
+      default:
+        return await LughatService.getAudioData(surahIndex, ayahIndex);
+    }
+  }
+
+  DownloadStatus _getDownloadStatus(int surahIndex, int ayahIndex) {
+    switch (widget.sectionType) {
+      case 'lughat':
+        return LughatService.getDownloadStatus(surahIndex, ayahIndex, LughatType.audio);
+      case 'tafseer':
+        return TafseerService.getDownloadStatus(surahIndex, ayahIndex, TafseerType.audio);
+      case 'faidi':
+        return FaidiService.getDownloadStatus(surahIndex, ayahIndex, FaidiType.audio);
+      default:
+        return LughatService.getDownloadStatus(surahIndex, ayahIndex, LughatType.audio);
+    }
+  }
+
+  double _getDownloadProgress(int surahIndex, int ayahIndex) {
+    switch (widget.sectionType) {
+      case 'lughat':
+        return LughatService.getDownloadProgress(surahIndex, ayahIndex, LughatType.audio);
+      case 'tafseer':
+        return TafseerService.getDownloadProgress(surahIndex, ayahIndex, TafseerType.audio);
+      case 'faidi':
+        return FaidiService.getDownloadProgress(surahIndex, ayahIndex, FaidiType.audio);
+      default:
+        return LughatService.getDownloadProgress(surahIndex, ayahIndex, LughatType.audio);
+    }
+  }
+
+  Future<String?> _getLocalFilePath(int surahIndex, int ayahIndex) async {
+    switch (widget.sectionType) {
+      case 'lughat':
+        return await LughatService.getLocalFilePath(surahIndex, ayahIndex, LughatType.audio);
+      case 'tafseer':
+        return await TafseerService.getLocalFilePath(surahIndex, ayahIndex, TafseerType.audio);
+      case 'faidi':
+        return await FaidiService.getLocalFilePath(surahIndex, ayahIndex, FaidiType.audio);
+      default:
+        return await LughatService.getLocalFilePath(surahIndex, ayahIndex, LughatType.audio);
+    }
+  }
+
+  Future<String> _downloadFile(int surahIndex, int ayahIndex, Function(double) onProgress, Function(String) onError) async {
+    switch (widget.sectionType) {
+      case 'lughat':
+        return await LughatService.downloadFile(surahIndex, ayahIndex, LughatType.audio, onProgress, onError);
+      case 'tafseer':
+        return await TafseerService.downloadFile(surahIndex, ayahIndex, TafseerType.audio, onProgress, onError);
+      case 'faidi':
+        return await FaidiService.downloadFile(surahIndex, ayahIndex, FaidiType.audio, onProgress, onError);
+      default:
+        return await LughatService.downloadFile(surahIndex, ayahIndex, LughatType.audio, onProgress, onError);
+    }
+  }
+
+  void _pauseDownload(int surahIndex, int ayahIndex) {
+    switch (widget.sectionType) {
+      case 'lughat':
+        LughatService.pauseDownload(surahIndex, ayahIndex, LughatType.audio);
+        break;
+      case 'tafseer':
+        TafseerService.pauseDownload(surahIndex, ayahIndex, TafseerType.audio);
+        break;
+      case 'faidi':
+        FaidiService.pauseDownload(surahIndex, ayahIndex, FaidiType.audio);
+        break;
+      default:
+        LughatService.pauseDownload(surahIndex, ayahIndex, LughatType.audio);
+        break;
+    }
+  }
+
+  Future<void> _resumeDownload(int surahIndex, int ayahIndex, Function(double) onProgress, Function(String) onError) async {
+    switch (widget.sectionType) {
+      case 'lughat':
+        await LughatService.resumeDownload(surahIndex, ayahIndex, LughatType.audio, onProgress, onError);
+        break;
+      case 'tafseer':
+        await TafseerService.resumeDownload(surahIndex, ayahIndex, TafseerType.audio, onProgress, onError);
+        break;
+      case 'faidi':
+        await FaidiService.resumeDownload(surahIndex, ayahIndex, FaidiType.audio, onProgress, onError);
+        break;
+      default:
+        await LughatService.resumeDownload(surahIndex, ayahIndex, LughatType.audio, onProgress, onError);
+        break;
+    }
+  }
+
+  Future<void> _deleteDownload(int surahIndex, int ayahIndex) async {
+    switch (widget.sectionType) {
+      case 'lughat':
+        await LughatService.deleteDownload(surahIndex, ayahIndex, LughatType.audio);
+        break;
+      case 'tafseer':
+        await TafseerService.deleteDownload(surahIndex, ayahIndex, TafseerType.audio);
+        break;
+      case 'faidi':
+        await FaidiService.deleteDownload(surahIndex, ayahIndex, FaidiType.audio);
+        break;
+      default:
+        await LughatService.deleteDownload(surahIndex, ayahIndex, LughatType.audio);
+        break;
+    }
+  }
+
   Future<void> _loadAvailableAyahs() async {
     setState(() {
       _isLoadingAyahs = true;
@@ -181,15 +316,19 @@ class _BulkAudioPlayerScreenState extends State<BulkAudioPlayerScreen>
 
     List<Map<String, dynamic>> ayahs = [];
     
-    // For now, load ayahs for the current surah
-    // In a real implementation, you'd load from your data source
+    // Load ayahs for the current surah
     for (int i = 1; i <= 286; i++) { // Assuming max ayahs in any surah
-      if (LughatService.hasAudioData(_fromSurahIndex, i)) {
-        ayahs.add({
-          'surahIndex': _fromSurahIndex,
-          'ayahIndex': i,
-          'hasAudio': true,
-        });
+      try {
+        final hasAudio = await _hasAudioData(_fromSurahIndex, i);
+        if (hasAudio) {
+          ayahs.add({
+            'surahIndex': _fromSurahIndex,
+            'ayahIndex': i,
+            'hasAudio': true,
+          });
+        }
+      } catch (e) {
+        debugPrint('Error checking audio data for ${_fromSurahIndex}_$i: $e');
       }
     }
 
@@ -208,8 +347,8 @@ class _BulkAudioPlayerScreenState extends State<BulkAudioPlayerScreen>
   }
 
   Future<void> _checkDownloadStatus() async {
-    final status = LughatService.getDownloadStatus(_currentSurahIndex, _currentAyahIndex, LughatType.audio);
-    final progress = LughatService.getDownloadProgress(_currentSurahIndex, _currentAyahIndex, LughatType.audio);
+    final status = _getDownloadStatus(_currentSurahIndex, _currentAyahIndex);
+    final progress = _getDownloadProgress(_currentSurahIndex, _currentAyahIndex);
     
     setState(() {
       _downloadStatus = status;
@@ -217,7 +356,7 @@ class _BulkAudioPlayerScreenState extends State<BulkAudioPlayerScreen>
     });
     
     if (_downloadStatus == DownloadStatus.completed) {
-      final localPath = await LughatService.getLocalFilePath(_currentSurahIndex, _currentAyahIndex, LughatType.audio);
+      final localPath = await _getLocalFilePath(_currentSurahIndex, _currentAyahIndex);
       if (mounted && localPath != null) {
         setState(() {
           _localFilePath = localPath;
@@ -229,27 +368,32 @@ class _BulkAudioPlayerScreenState extends State<BulkAudioPlayerScreen>
   Future<void> _playCurrentAyah() async {
     await _checkDownloadStatus(); // Check download status for current ayah
     
-    final audioData = LughatService.getAudioData(_currentSurahIndex, _currentAyahIndex);
-    if (audioData != null) {
-      try {
-        setState(() {
-          _isLoading = true;
-        });
-        
-        // Use local file if available, otherwise stream
-        if (_localFilePath != null) {
-          debugPrint('Playing local audio file: $_localFilePath');
-          await _audioPlayer.play(DeviceFileSource(_localFilePath!));
-        } else {
-          debugPrint('Streaming audio from URL: ${audioData.content}');
-          await _audioPlayer.play(UrlSource(audioData.content));
+    try {
+      final audioData = await _getAudioData(_currentSurahIndex, _currentAyahIndex);
+      if (audioData != null) {
+        try {
+          setState(() {
+            _isLoading = true;
+          });
+          
+          // Use local file if available, otherwise stream
+          if (_localFilePath != null) {
+            debugPrint('Playing local audio file: $_localFilePath');
+            await _audioPlayer.play(DeviceFileSource(_localFilePath!));
+          } else {
+            debugPrint('Streaming audio from URL: ${audioData.content}');
+            await _audioPlayer.play(UrlSource(audioData.content));
+          }
+        } catch (e) {
+          debugPrint('Audio playback error: $e');
+          _showError('Audio playback error: $e');
         }
-      } catch (e) {
-        debugPrint('Audio playback error: $e');
-        _showError('Audio playback error: $e');
+      } else {
+        _showError(context.l.vocabularyAudioNotAvailable);
       }
-    } else {
-      _showError(context.l.vocabularyAudioNotAvailable);
+    } catch (e) {
+      debugPrint('Error getting audio data: $e');
+      _showError('Error loading audio: $e');
     }
   }
 
@@ -340,10 +484,9 @@ class _BulkAudioPlayerScreenState extends State<BulkAudioPlayerScreen>
     });
 
     try {
-      final localPath = await LughatService.downloadFile(
+      final localPath = await _downloadFile(
         _currentSurahIndex,
         _currentAyahIndex,
-        LughatType.audio,
         (progress) {
           if (mounted) {
             setState(() {
@@ -357,7 +500,7 @@ class _BulkAudioPlayerScreenState extends State<BulkAudioPlayerScreen>
             if (progress >= 1.0) {
               _showSuccessSnackBar(context.l.audioDownloadSuccess);
               
-              LughatService.getLocalFilePath(_currentSurahIndex, _currentAyahIndex, LughatType.audio).then((localPath) {
+              _getLocalFilePath(_currentSurahIndex, _currentAyahIndex).then((localPath) {
                 if (mounted && localPath != null) {
                   setState(() {
                     _localFilePath = localPath;
@@ -395,23 +538,22 @@ class _BulkAudioPlayerScreenState extends State<BulkAudioPlayerScreen>
     }
   }
 
-  void _pauseDownload() {
-    LughatService.pauseDownload(_currentSurahIndex, _currentAyahIndex, LughatType.audio);
+  void _pauseDownloadCurrent() {
+    _pauseDownload(_currentSurahIndex, _currentAyahIndex);
     setState(() {
       _downloadStatus = DownloadStatus.paused;
     });
   }
 
-  Future<void> _resumeDownload() async {
+  Future<void> _resumeDownloadCurrent() async {
     setState(() {
       _downloadStatus = DownloadStatus.downloading;
     });
 
     try {
-      await LughatService.resumeDownload(
+      await _resumeDownload(
         _currentSurahIndex,
         _currentAyahIndex,
-        LughatType.audio,
         (progress) {
           if (mounted) {
             setState(() {
@@ -425,7 +567,7 @@ class _BulkAudioPlayerScreenState extends State<BulkAudioPlayerScreen>
             if (progress >= 1.0) {
               _showSuccessSnackBar(context.l.audioDownloadSuccess);
               
-              LughatService.getLocalFilePath(_currentSurahIndex, _currentAyahIndex, LughatType.audio).then((localPath) {
+              _getLocalFilePath(_currentSurahIndex, _currentAyahIndex).then((localPath) {
                 if (mounted && localPath != null) {
                   setState(() {
                     _localFilePath = localPath;
@@ -451,9 +593,9 @@ class _BulkAudioPlayerScreenState extends State<BulkAudioPlayerScreen>
     }
   }
 
-  Future<void> _deleteDownload() async {
+  Future<void> _deleteDownloadCurrent() async {
     try {
-      await LughatService.deleteDownload(_currentSurahIndex, _currentAyahIndex, LughatType.audio);
+      await _deleteDownload(_currentSurahIndex, _currentAyahIndex);
       setState(() {
         _downloadStatus = DownloadStatus.notStarted;
         _downloadProgress = 0.0;
@@ -1365,19 +1507,19 @@ class _BulkAudioPlayerScreenState extends State<BulkAudioPlayerScreen>
         );
       case DownloadStatus.downloading:
         return IconButton(
-          onPressed: _pauseDownload,
+          onPressed: _pauseDownloadCurrent,
           icon: const Icon(Icons.pause_rounded),
           color: AppTheme.primaryGreen,
         );
       case DownloadStatus.paused:
         return IconButton(
-          onPressed: _resumeDownload,
+          onPressed: _resumeDownloadCurrent,
           icon: const Icon(Icons.play_arrow_rounded),
           color: AppTheme.primaryGreen,
         );
       case DownloadStatus.completed:
         return IconButton(
-          onPressed: _deleteDownload,
+          onPressed: _deleteDownloadCurrent,
           icon: const Icon(Icons.delete_rounded),
           color: Colors.red,
         );

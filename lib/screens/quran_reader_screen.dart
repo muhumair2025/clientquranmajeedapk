@@ -4,6 +4,10 @@ import 'package:xml/xml.dart';
 import 'package:provider/provider.dart';
 import '../themes/app_theme.dart';
 import '../services/lughat_service.dart';
+import '../services/tafseer_service.dart';
+import '../services/faidi_service.dart';
+import '../services/favorites_service.dart';
+import '../services/quran_api_service.dart';
 import '../widgets/media_viewers.dart';
 import '../providers/font_provider.dart';
 import '../localization/app_localizations_extension.dart';
@@ -1127,7 +1131,7 @@ class _QuranReaderScreenState extends State<QuranReaderScreen> {
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
       useSafeArea: true,
-      builder: (context) => _buildTranslationModal(surahIndex, ayahIndex, ayahText, translation),
+      builder: (context) => _buildAsyncTranslationModal(surahIndex, ayahIndex, ayahText, translation),
     ).then((_) {
       // Remove highlight after 1 second when modal is closed
       highlightTimer?.cancel();
@@ -1139,256 +1143,354 @@ class _QuranReaderScreenState extends State<QuranReaderScreen> {
     });
   }
 
-  Widget _buildTranslationModal(int surahIndex, int ayahIndex, String ayahText, String? translation) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-    final screenHeight = MediaQuery.of(context).size.height;
-    
-    return Container(
-      margin: const EdgeInsets.all(16),
-      constraints: BoxConstraints(
-        maxHeight: screenHeight * 0.9, // Limit to 90% of screen height
-      ),
-      decoration: BoxDecoration(
-        color: isDark ? AppTheme.darkSurface : Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.1),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
+
+  Widget _buildAsyncTranslationModal(int surahIndex, int ayahIndex, String ayahText, String? translation) {
+    return StatefulBuilder(
+      builder: (context, setModalState) {
+        Future<Map<String, bool>>? availabilityFuture;
+        
+        void refreshData() {
+          availabilityFuture = _loadAvailabilityData(surahIndex, ayahIndex, refresh: true);
+          setModalState(() {});
+        }
+        
+        availabilityFuture ??= _loadAvailabilityData(surahIndex, ayahIndex);
+        
+        return FutureBuilder<Map<String, bool>>(
+          future: availabilityFuture,
+          builder: (context, snapshot) {
+        final theme = Theme.of(context);
+        final isDark = theme.brightness == Brightness.dark;
+        final screenHeight = MediaQuery.of(context).size.height;
+        
+        // Default availability (all false) while loading
+        Map<String, bool> availability = {
+          'lughat_text': false,
+          'lughat_audio': false,
+          'lughat_video': false,
+          'tafseer_text': false,
+          'tafseer_audio': false,
+          'tafseer_video': false,
+          'faidi_text': false,
+          'faidi_audio': false,
+          'faidi_video': false,
+        };
+        
+        if (snapshot.hasData) {
+          availability = snapshot.data!;
+        }
+        
+        return Container(
+          margin: const EdgeInsets.all(16),
+          constraints: BoxConstraints(
+            maxHeight: screenHeight * 0.9,
           ),
-        ],
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // Header with ayah number and navigation
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: AppTheme.primaryGreen.withValues(alpha: 0.1),
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                // Previous button
-                _buildNavigationButton(
-                  icon: Icons.arrow_back_ios_rounded,
-                  onPressed: () {
-                    final previousAyah = _getPreviousAyah(surahIndex, ayahIndex);
-                    if (previousAyah != null) {
-                      _navigateToAyah(previousAyah['surahIndex']!, previousAyah['ayahIndex']!);
-                    }
-                  },
-                  isEnabled: _getPreviousAyah(surahIndex, ayahIndex) != null,
-                  isDark: isDark,
+          decoration: BoxDecoration(
+            color: isDark ? AppTheme.darkSurface : Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.1),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Header with navigation
+              Container(
+                padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
+                child: Row(
+                  children: [
+                    // Previous ayah button
+                    _buildNavigationButton(
+                      icon: Icons.keyboard_arrow_left,
+                      onPressed: () {
+                        final prevAyah = _getPreviousAyah(surahIndex, ayahIndex);
+                        if (prevAyah != null) {
+                          _navigateToAyah(prevAyah['surahIndex']!, prevAyah['ayahIndex']!);
+                        }
+                      },
+                      isEnabled: _getPreviousAyah(surahIndex, ayahIndex) != null,
+                      isDark: isDark,
+                    ),
+                    
+                    const SizedBox(width: 12),
+                    
+                    // Surah and Ayah info
+                    Expanded(
+                      child: Column(
+                        children: [
+                          Text(
+                            '${surahsData[surahIndex]?.name ?? 'Surah $surahIndex'}',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: isDark ? Colors.white : Colors.black87,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            'آیت ${_convertToArabicNumeral(ayahIndex)}',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: isDark ? Colors.white70 : Colors.black54,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
+                      ),
+                    ),
+                    
+                    const SizedBox(width: 12),
+                    
+                    // Next ayah button
+                    _buildNavigationButton(
+                      icon: Icons.keyboard_arrow_right,
+                      onPressed: () {
+                        final nextAyah = _getNextAyah(surahIndex, ayahIndex);
+                        if (nextAyah != null) {
+                          _navigateToAyah(nextAyah['surahIndex']!, nextAyah['ayahIndex']!);
+                        }
+                      },
+                      isEnabled: _getNextAyah(surahIndex, ayahIndex) != null,
+                      isDark: isDark,
+                    ),
+                    
+                    const SizedBox(width: 8),
+                    
+                    // Favorite button
+                    _buildFavoriteButton(surahIndex, ayahIndex, isDark),
+                    
+                    const SizedBox(width: 8),
+                    
+                    // Refresh button
+                    _buildNavigationButton(
+                      icon: Icons.refresh_rounded,
+                      onPressed: refreshData,
+                      isEnabled: true,
+                      isDark: isDark,
+                    ),
+                  ],
                 ),
-                
-                // Ayah number and surah info
-                Expanded(
+              ),
+              
+              Flexible(
+                child: SingleChildScrollView(
                   child: Column(
                     children: [
-                      Text(
-                        'آیت ${_convertToArabicNumeral(ayahIndex)}',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: AppTheme.primaryGreen,
-                          fontFamily: 'Bahij Badr Bold',
-                        ),
-                      ),
-                      if (surahsData.containsKey(surahIndex))
-                        Text(
-                          surahsData[surahIndex]!.name,
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: AppTheme.primaryGreen.withValues(alpha: 0.7),
-                            fontFamily: 'Bahij Badr Light',
+                      // Arabic text
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+                        child: Container(
+                          padding: const EdgeInsets.all(20),
+                          decoration: BoxDecoration(
+                            color: isDark 
+                                ? AppTheme.primaryGreen.withValues(alpha: 0.08)
+                                : AppTheme.primaryGreen.withValues(alpha: 0.05),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Text(
+                            ayahText,
+                            style: TextStyle(
+                              fontFamily: 'Uthmanic Hafs',
+                              fontSize: 24,
+                              color: isDark ? Colors.white : Colors.black87,
+                              height: 1.8,
+                            ),
+                            textAlign: TextAlign.center,
+                            textDirection: TextDirection.rtl,
                           ),
                         ),
+                      ),
+                      
+                      // Translation
+                      if (translation != null)
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+                          child: Container(
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: AppTheme.primaryGreen.withValues(alpha: 0.05),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Text(
+                              translation,
+                              style: TextStyle(
+                                fontFamily: 'Bahij Badr Light',
+                                fontSize: 15,
+                                color: isDark ? Colors.white70 : Colors.black87,
+                                height: 1.5,
+                              ),
+                              textAlign: TextAlign.right,
+                              textDirection: TextDirection.rtl,
+                            ),
+                          ),
+                        ),
+                      
+                      // Options sections
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
+                          children: [
+                            // Lughat section
+                            _buildOptionSection(
+                              title: context.l.verseVocabulary,
+                              options: [
+                                OptionData(
+                                  icon: Icons.text_fields_rounded, 
+                                  label: context.l.text, 
+                                  type: 'lughat_text',
+                                  isAvailable: availability['lughat_text'] ?? false,
+                                ),
+                                OptionData(
+                                  icon: Icons.play_circle_rounded, 
+                                  label: context.l.audio, 
+                                  type: 'lughat_audio',
+                                  isAvailable: availability['lughat_audio'] ?? false,
+                                ),
+                                OptionData(
+                                  icon: Icons.videocam_rounded, 
+                                  label: context.l.video, 
+                                  type: 'lughat_video',
+                                  isAvailable: availability['lughat_video'] ?? false,
+                                ),
+                              ],
+                              surahIndex: surahIndex,
+                              ayahIndex: ayahIndex,
+                              isDark: isDark,
+                            ),
+                            
+                            const SizedBox(height: 12),
+                            
+                            // Tafseer section
+                            _buildOptionSection(
+                              title: context.l.verseCommentary,
+                              options: [
+                                OptionData(
+                                  icon: Icons.text_fields_rounded, 
+                                  label: context.l.text, 
+                                  type: 'tafseer_text',
+                                  isAvailable: availability['tafseer_text'] ?? false,
+                                ),
+                                OptionData(
+                                  icon: Icons.play_circle_rounded, 
+                                  label: context.l.audio, 
+                                  type: 'tafseer_audio',
+                                  isAvailable: availability['tafseer_audio'] ?? false,
+                                ),
+                                OptionData(
+                                  icon: Icons.videocam_rounded, 
+                                  label: context.l.video, 
+                                  type: 'tafseer_video',
+                                  isAvailable: availability['tafseer_video'] ?? false,
+                                ),
+                              ],
+                              surahIndex: surahIndex,
+                              ayahIndex: ayahIndex,
+                              isDark: isDark,
+                            ),
+                            
+                            const SizedBox(height: 12),
+                            
+                            // Faidi section
+                            _buildOptionSection(
+                              title: context.l.verseBenefits,
+                              options: [
+                                OptionData(
+                                  icon: Icons.text_fields_rounded, 
+                                  label: context.l.text, 
+                                  type: 'faidi_text',
+                                  isAvailable: availability['faidi_text'] ?? false,
+                                ),
+                                OptionData(
+                                  icon: Icons.play_circle_rounded, 
+                                  label: context.l.audio, 
+                                  type: 'faidi_audio',
+                                  isAvailable: availability['faidi_audio'] ?? false,
+                                ),
+                                OptionData(
+                                  icon: Icons.videocam_rounded, 
+                                  label: context.l.video, 
+                                  type: 'faidi_video',
+                                  isAvailable: availability['faidi_video'] ?? false,
+                                ),
+                              ],
+                              surahIndex: surahIndex,
+                              ayahIndex: ayahIndex,
+                              isDark: isDark,
+                            ),
+                            
+                            const SizedBox(height: 20),
+                          ],
+                        ),
+                      ),
                     ],
                   ),
                 ),
-                
-                // Next button
-                _buildNavigationButton(
-                  icon: Icons.arrow_forward_ios_rounded,
-                  onPressed: () {
-                    final nextAyah = _getNextAyah(surahIndex, ayahIndex);
-                    if (nextAyah != null) {
-                      _navigateToAyah(nextAyah['surahIndex']!, nextAyah['ayahIndex']!);
-                    }
-                  },
-                  isEnabled: _getNextAyah(surahIndex, ayahIndex) != null,
-                  isDark: isDark,
-                ),
-                
-                // Close button
-                IconButton(
-                  onPressed: () => Navigator.pop(context),
-                  icon: Icon(
-                    Icons.close_rounded,
-                    color: isDark ? Colors.white70 : Colors.black54,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          
-          // Scrollable content
-          Expanded(
-            child: SingleChildScrollView(
-              child: Column(
-                children: [
-                  // Arabic text
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(20),
-                    child: Text(
-                      ayahText,
-                      style: TextStyle(
-                        fontFamily: 'Al Qalam Quran Majeed',
-                        fontSize: 24, // Slightly reduced for better fit
-                        color: isDark ? Colors.white : Colors.black,
-                        height: 1.6,
-                      ),
-                      textAlign: TextAlign.center,
-                      textDirection: TextDirection.rtl,
-                    ),
-                  ),
-                  
-                  // Translation
-                  if (translation != null)
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-                      child: Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: AppTheme.primaryGreen.withValues(alpha: 0.05),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Text(
-                          translation,
-                          style: TextStyle(
-                            fontFamily: 'Bahij Badr Light', // Keep Pashto font for translation
-                            fontSize: 15, // Slightly reduced
-                            color: isDark ? Colors.white70 : Colors.black87,
-                            height: 1.5,
-                          ),
-                          textAlign: TextAlign.right,
-                          textDirection: TextDirection.rtl,
-                        ),
-                      ),
-                    ),
-                  
-                  // Options sections
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      children: [
-                        // Lughat Tashreeh section
-                        _buildOptionSection(
-                          title: context.l.verseVocabulary,
-                          options: [
-                            OptionData(
-                              icon: Icons.text_fields_rounded, 
-                              label: context.l.text, 
-                              type: 'lughat_text',
-                              isAvailable: LughatService.hasTextData(surahIndex, ayahIndex),
-                            ),
-                            OptionData(
-                              icon: Icons.play_circle_rounded, 
-                              label: context.l.audio, 
-                              type: 'lughat_audio',
-                              isAvailable: LughatService.hasAudioData(surahIndex, ayahIndex),
-                            ),
-                            OptionData(
-                              icon: Icons.videocam_rounded, 
-                              label: context.l.video, 
-                              type: 'lughat_video',
-                              isAvailable: LughatService.hasVideoData(surahIndex, ayahIndex),
-                            ),
-                          ],
-                          surahIndex: surahIndex,
-                          ayahIndex: ayahIndex,
-                          isDark: isDark,
-                        ),
-                        
-                        const SizedBox(height: 12),
-                        
-                        // Tarjuma/Tafseer section
-                        _buildOptionSection(
-                          title: context.l.verseCommentary,
-                          options: [
-                            OptionData(
-                              icon: Icons.text_fields_rounded, 
-                              label: context.l.text, 
-                              type: 'tafseer_text',
-                              isAvailable: false, // TODO: Add tafseer data
-                            ),
-                            OptionData(
-                              icon: Icons.play_circle_rounded, 
-                              label: context.l.audio, 
-                              type: 'tafseer_audio',
-                              isAvailable: false, // TODO: Add tafseer data
-                            ),
-                            OptionData(
-                              icon: Icons.videocam_rounded, 
-                              label: context.l.video, 
-                              type: 'tafseer_video',
-                              isAvailable: false, // TODO: Add tafseer data
-                            ),
-                          ],
-                          surahIndex: surahIndex,
-                          ayahIndex: ayahIndex,
-                          isDark: isDark,
-                        ),
-                        
-                        const SizedBox(height: 12),
-                        
-                        // Faidi section
-                        _buildOptionSection(
-                          title: context.l.verseBenefits,
-                          options: [
-                            OptionData(
-                              icon: Icons.text_fields_rounded, 
-                              label: context.l.text, 
-                              type: 'faidi_text',
-                              isAvailable: false, // TODO: Add faidi data
-                            ),
-                            OptionData(
-                              icon: Icons.play_circle_rounded, 
-                              label: context.l.audio, 
-                              type: 'faidi_audio',
-                              isAvailable: false, // TODO: Add faidi data
-                            ),
-                            OptionData(
-                              icon: Icons.videocam_rounded, 
-                              label: context.l.video, 
-                              type: 'faidi_video',
-                              isAvailable: false, // TODO: Add faidi data
-                            ),
-                          ],
-                          surahIndex: surahIndex,
-                          ayahIndex: ayahIndex,
-                          isDark: isDark,
-                        ),
-                        
-                        // Add some bottom padding for scroll
-                        const SizedBox(height: 20),
-                      ],
-                    ),
-                  ),
-                ],
               ),
-            ),
+            ],
           ),
-        ],
-      ),
+        );
+          },
+        );
+      },
     );
+  }
+
+  Future<Map<String, bool>> _loadAvailabilityData(int surahIndex, int ayahIndex, {bool refresh = false}) async {
+    try {
+      // Clear API cache if refresh is requested
+      if (refresh) {
+        QuranApiService.clearCacheForAyah(surahIndex, ayahIndex);
+      }
+      
+      // Load availability data for all sections
+      final results = await Future.wait([
+        // Lughat
+        Future.value(LughatService.hasTextData(surahIndex, ayahIndex)),
+        LughatService.hasAudioData(surahIndex, ayahIndex),
+        LughatService.hasVideoData(surahIndex, ayahIndex),
+        // Tafseer
+        Future.value(TafseerService.hasTextData(surahIndex, ayahIndex)),
+        TafseerService.hasAudioData(surahIndex, ayahIndex),
+        TafseerService.hasVideoData(surahIndex, ayahIndex),
+        // Faidi
+        Future.value(FaidiService.hasTextData(surahIndex, ayahIndex)),
+        FaidiService.hasAudioData(surahIndex, ayahIndex),
+        FaidiService.hasVideoData(surahIndex, ayahIndex),
+      ]);
+
+      return {
+        'lughat_text': results[0],
+        'lughat_audio': results[1],
+        'lughat_video': results[2],
+        'tafseer_text': results[3],
+        'tafseer_audio': results[4],
+        'tafseer_video': results[5],
+        'faidi_text': results[6],
+        'faidi_audio': results[7],
+        'faidi_video': results[8],
+      };
+    } catch (e) {
+      debugPrint('Error loading availability data: $e');
+      return {
+        'lughat_text': false,
+        'lughat_audio': false,
+        'lughat_video': false,
+        'tafseer_text': false,
+        'tafseer_audio': false,
+        'tafseer_video': false,
+        'faidi_text': false,
+        'faidi_audio': false,
+        'faidi_video': false,
+      };
+    }
   }
 
   Widget _buildNavigationButton({
@@ -1497,22 +1599,22 @@ class _QuranReaderScreenState extends State<QuranReaderScreen> {
         _showLughatVideo(surahIndex, ayahIndex);
         break;
       case 'tafseer_text':
-        _showComingSoon(context.l.tafseerText);
+        _showTafseerText(surahIndex, ayahIndex);
         break;
       case 'tafseer_audio':
-        _showComingSoon(context.l.tafseerAudio);
+        _showTafseerAudio(surahIndex, ayahIndex);
         break;
       case 'tafseer_video':
-        _showComingSoon(context.l.tafseerVideo);
+        _showTafseerVideo(surahIndex, ayahIndex);
         break;
       case 'faidi_text':
-        _showComingSoon(context.l.faidiText);
+        _showFaidiText(surahIndex, ayahIndex);
         break;
       case 'faidi_audio':
-        _showComingSoon(context.l.faidiAudio);
+        _showFaidiAudio(surahIndex, ayahIndex);
         break;
       case 'faidi_video':
-        _showComingSoon(context.l.faidiVideo);
+        _showFaidiVideo(surahIndex, ayahIndex);
         break;
     }
   }
@@ -1534,41 +1636,182 @@ class _QuranReaderScreenState extends State<QuranReaderScreen> {
     }
   }
 
-  void _showLughatAudio(int surahIndex, int ayahIndex) {
-    final audioData = LughatService.getAudioData(surahIndex, ayahIndex);
-    if (audioData != null) {
-      // Directly open bulk audio player
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => BulkAudioPlayerScreen(
-            initialSurahIndex: surahIndex,
-            initialAyahIndex: ayahIndex,
-            surahName: surahsData[surahIndex]?.name ?? 'Surah $surahIndex',
+  void _showLughatAudio(int surahIndex, int ayahIndex) async {
+    try {
+      final audioData = await LughatService.getAudioData(surahIndex, ayahIndex);
+      if (audioData != null) {
+        // Directly open bulk audio player
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => BulkAudioPlayerScreen(
+              initialSurahIndex: surahIndex,
+              initialAyahIndex: ayahIndex,
+              surahName: surahsData[surahIndex]?.name ?? 'Surah $surahIndex',
+            ),
           ),
-        ),
-      );
-    } else {
-      _showError(context.l.vocabularyAudioNotAvailable);
+        );
+      } else {
+        _showError(context.l.vocabularyAudioNotAvailable);
+      }
+    } catch (e) {
+      _showError('Error loading audio: $e');
     }
   }
 
-  void _showLughatVideo(int surahIndex, int ayahIndex) {
-    final videoData = LughatService.getVideoData(surahIndex, ayahIndex);
-    if (videoData != null) {
+  void _showLughatVideo(int surahIndex, int ayahIndex) async {
+    try {
+      final videoData = await LughatService.getVideoData(surahIndex, ayahIndex);
+      if (videoData != null) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => FullScreenVideoPlayer(
+              videoUrl: videoData.content,
+              title: context.l.verseVocabularyTitle.replaceAll('{verse}', _convertToArabicNumeral(ayahIndex)),
+              surahIndex: surahIndex,
+              ayahIndex: ayahIndex,
+              sectionType: 'lughat',
+            ),
+          ),
+        );
+      } else {
+        _showError(context.l.vocabularyVideoNotAvailable);
+      }
+    } catch (e) {
+      _showError('Error loading video: $e');
+    }
+  }
+
+  // Tafseer methods
+  void _showTafseerText(int surahIndex, int ayahIndex) {
+    final textData = TafseerService.getTextData(surahIndex, ayahIndex);
+    if (textData != null) {
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (context) => FullScreenVideoPlayer(
-            videoUrl: videoData.content,
-            title: context.l.verseVocabularyTitle.replaceAll('{verse}', _convertToArabicNumeral(ayahIndex)),
-            surahIndex: surahIndex,
-            ayahIndex: ayahIndex,
+          builder: (context) => FullScreenTextViewer(
+            content: textData.content,
+            title: 'Tafseer - Verse ${_convertToArabicNumeral(ayahIndex)}',
           ),
         ),
       );
     } else {
-      _showError(context.l.vocabularyVideoNotAvailable);
+      _showError('Tafseer text not available for this verse.');
+    }
+  }
+
+  void _showTafseerAudio(int surahIndex, int ayahIndex) async {
+    try {
+      final audioData = await TafseerService.getAudioData(surahIndex, ayahIndex);
+      if (audioData != null) {
+        // Use the same bulk audio player as lughat
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => BulkAudioPlayerScreen(
+              initialSurahIndex: surahIndex,
+              initialAyahIndex: ayahIndex,
+              surahName: surahsData[surahIndex]?.name ?? 'Surah $surahIndex',
+              sectionType: 'tafseer', // Add section type parameter
+            ),
+          ),
+        );
+      } else {
+        _showError('Tafseer audio not available for this verse.');
+      }
+    } catch (e) {
+      _showError('Error loading tafseer audio: $e');
+    }
+  }
+
+  void _showTafseerVideo(int surahIndex, int ayahIndex) async {
+    try {
+      final videoData = await TafseerService.getVideoData(surahIndex, ayahIndex);
+      if (videoData != null) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => FullScreenVideoPlayer(
+              videoUrl: videoData.content,
+              title: 'Tafseer Video - Verse ${_convertToArabicNumeral(ayahIndex)}',
+              surahIndex: surahIndex,
+              ayahIndex: ayahIndex,
+              sectionType: 'tafseer',
+            ),
+          ),
+        );
+      } else {
+        _showError('Tafseer video not available for this verse.');
+      }
+    } catch (e) {
+      _showError('Error loading tafseer video: $e');
+    }
+  }
+
+  // Faidi methods
+  void _showFaidiText(int surahIndex, int ayahIndex) {
+    final textData = FaidiService.getTextData(surahIndex, ayahIndex);
+    if (textData != null) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => FullScreenTextViewer(
+            content: textData.content,
+            title: 'Faidi - Verse ${_convertToArabicNumeral(ayahIndex)}',
+          ),
+        ),
+      );
+    } else {
+      _showError('Faidi text not available for this verse.');
+    }
+  }
+
+  void _showFaidiAudio(int surahIndex, int ayahIndex) async {
+    try {
+      final audioData = await FaidiService.getAudioData(surahIndex, ayahIndex);
+      if (audioData != null) {
+        // Use the same bulk audio player as lughat
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => BulkAudioPlayerScreen(
+              initialSurahIndex: surahIndex,
+              initialAyahIndex: ayahIndex,
+              surahName: surahsData[surahIndex]?.name ?? 'Surah $surahIndex',
+              sectionType: 'faidi', // Add section type parameter
+            ),
+          ),
+        );
+      } else {
+        _showError('Faidi audio not available for this verse.');
+      }
+    } catch (e) {
+      _showError('Error loading faidi audio: $e');
+    }
+  }
+
+  void _showFaidiVideo(int surahIndex, int ayahIndex) async {
+    try {
+      final videoData = await FaidiService.getVideoData(surahIndex, ayahIndex);
+      if (videoData != null) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => FullScreenVideoPlayer(
+              videoUrl: videoData.content,
+              title: 'Faidi Video - Verse ${_convertToArabicNumeral(ayahIndex)}',
+              surahIndex: surahIndex,
+              ayahIndex: ayahIndex,
+              sectionType: 'faidi',
+            ),
+          ),
+        );
+      } else {
+        _showError('Faidi video not available for this verse.');
+      }
+    } catch (e) {
+      _showError('Error loading faidi video: $e');
     }
   }
 
@@ -1934,6 +2177,65 @@ class _QuranReaderScreenState extends State<QuranReaderScreen> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildFavoriteButton(int surahIndex, int ayahIndex, bool isDark) {
+    return FutureBuilder<bool>(
+      future: FavoritesService.isFavorite(surahIndex, ayahIndex),
+      builder: (context, snapshot) {
+        final isFavorite = snapshot.data ?? false;
+        return Container(
+          width: 36,
+          height: 36,
+          decoration: BoxDecoration(
+            color: isFavorite 
+                ? AppTheme.primaryGold.withValues(alpha: 0.1)
+                : (isDark ? Colors.white.withValues(alpha: 0.05) : Colors.grey.withValues(alpha: 0.1)),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: IconButton(
+            onPressed: () async {
+              try {
+                final newFavoriteStatus = await FavoritesService.toggleFavorite(surahIndex, ayahIndex);
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        newFavoriteStatus 
+                            ? context.l.addedToFavorites ?? 'Added to favorites'
+                            : context.l.removedFromFavorites ?? 'Removed from favorites',
+                        style: const TextStyle(fontFamily: 'Bahij Badr Light'),
+                      ),
+                      duration: const Duration(seconds: 2),
+                      backgroundColor: AppTheme.primaryGreen,
+                    ),
+                  );
+                  // Trigger rebuild to update heart icon
+                  setState(() {});
+                }
+              } catch (e) {
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Error: $e'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
+              }
+            },
+            icon: Icon(
+              isFavorite ? Icons.favorite : Icons.favorite_border,
+              size: 16,
+              color: isFavorite
+                  ? AppTheme.primaryGold
+                  : (isDark ? Colors.white.withValues(alpha: 0.6) : Colors.grey),
+            ),
+            padding: EdgeInsets.zero,
+          ),
+        );
+      },
     );
   }
 

@@ -9,10 +9,8 @@ import 'package:crypto/crypto.dart';
 import 'quran_api_service.dart';
 import 'common_models.dart';
 
-class LughatService {
-  static Map<String, LughatData> _textData = {};
-  static Map<String, LughatData> _audioData = {};
-  static Map<String, LughatData> _videoData = {};
+class FaidiService {
+  static Map<String, FaidiData> _textData = {};
   static final Dio _dio = Dio();
   
   // Download management
@@ -20,41 +18,27 @@ class LughatService {
   static final Map<String, double> _downloadProgress = {};
   static final Map<String, DownloadStatus> _downloadStatus = {};
 
-  static Future<void> loadLughatData() async {
+  static Future<void> loadFaidiData() async {
     try {
-      // Load text data from XML (keeping XML for text content)
-      final String textXml = await rootBundle.loadString('assets/quran_data/lughaat_tashreeh_text.xml');
-      _textData = _parseXmlData(textXml, 'text');
-      debugPrint('Loaded ${_textData.length} text entries from XML');
-
-      // Note: Audio and video data will now be fetched dynamically from API
-      // Keep the old XML loading as fallback
+      // Load text data from XML if available (keeping XML for text content)
       try {
-        final String audioXml = await rootBundle.loadString('assets/quran_data/lughaat_tashreeh_text_audio.xml');
-        _audioData = _parseXmlData(audioXml, 'audio');
-        debugPrint('Loaded ${_audioData.length} audio entries from XML as fallback');
-
-        final String videoXml = await rootBundle.loadString('assets/quran_data/lughaat_tashreeh_text_video.xml');
-        _videoData = _parseXmlData(videoXml, 'video');
-        debugPrint('Loaded ${_videoData.length} video entries from XML as fallback');
+        final String textXml = await rootBundle.loadString('assets/quran_data/faidi_text.xml');
+        _textData = _parseXmlData(textXml, 'text');
+        debugPrint('Loaded ${_textData.length} faidi text entries from XML');
       } catch (e) {
-        debugPrint('XML fallback loading failed (this is expected with API integration): $e');
+        debugPrint('No faidi text XML found, will use API for all data: $e');
       }
       
       // Initialize download statuses
       await _initializeDownloadStatuses();
       
-      // Debug: Print sample data
-      debugPrint('Sample text data for 1_1: ${_textData['1_1']?.content}');
-      
     } catch (e) {
-      // Handle error silently or use proper logging
-      debugPrint('Error loading lughat data: $e');
+      debugPrint('Error loading faidi data: $e');
     }
   }
 
-  static Map<String, LughatData> _parseXmlData(String xmlString, String type) {
-    Map<String, LughatData> data = {};
+  static Map<String, FaidiData> _parseXmlData(String xmlString, String type) {
+    Map<String, FaidiData> data = {};
     final document = XmlDocument.parse(xmlString);
 
     for (var suraElement in document.findAllElements('sura')) {
@@ -64,40 +48,16 @@ class LughatService {
         int ayahIndex = int.parse(ayaElement.getAttribute('index')!);
         String key = '${surahIndex}_$ayahIndex';
         
-        switch (type) {
-          case 'text':
-            String? tashreeh = ayaElement.getAttribute('tashreeh');
-            if (tashreeh != null) {
-              data[key] = LughatData(
-                surahIndex: surahIndex,
-                ayahIndex: ayahIndex,
-                content: tashreeh,
-                type: LughatType.text,
-              );
-            }
-            break;
-          case 'audio':
-            String? audioLink = ayaElement.getAttribute('audiolink');
-            if (audioLink != null) {
-              data[key] = LughatData(
-                surahIndex: surahIndex,
-                ayahIndex: ayahIndex,
-                content: audioLink,
-                type: LughatType.audio,
-              );
-            }
-            break;
-          case 'video':
-            String? videoLink = ayaElement.getAttribute('vidoelink'); // Note: typo in XML
-            if (videoLink != null) {
-              data[key] = LughatData(
-                surahIndex: surahIndex,
-                ayahIndex: ayahIndex,
-                content: videoLink,
-                type: LughatType.video,
-              );
-            }
-            break;
+        if (type == 'text') {
+          String? faidi = ayaElement.getAttribute('faidi');
+          if (faidi != null) {
+            data[key] = FaidiData(
+              surahIndex: surahIndex,
+              ayahIndex: ayahIndex,
+              content: faidi,
+              type: FaidiType.text,
+            );
+          }
         }
       }
     }
@@ -107,11 +67,11 @@ class LughatService {
   static Future<void> _initializeDownloadStatuses() async {
     try {
       final directory = await getApplicationDocumentsDirectory();
-      final lughatDir = Directory('${directory.path}/lughat');
+      final faidiDir = Directory('${directory.path}/faidi');
       
-      if (await lughatDir.exists()) {
-        // Scan all files in lughat directory and update status based on existing files
-        final files = await lughatDir.list().toList();
+      if (await faidiDir.exists()) {
+        // Scan all files in faidi directory and update status based on existing files
+        final files = await faidiDir.list().toList();
         for (var file in files) {
           if (file is File) {
             final fileName = file.path.split('/').last;
@@ -127,22 +87,22 @@ class LughatService {
           }
         }
         
-        debugPrint('Initialized ${_downloadStatus.length} download statuses from existing files');
+        debugPrint('Initialized ${_downloadStatus.length} faidi download statuses from existing files');
       }
     } catch (e) {
-      debugPrint('Error initializing download statuses: $e');
+      debugPrint('Error initializing faidi download statuses: $e');
     }
   }
 
-  static Future<String> _getLocalFilePath(String key, LughatType type, [String? url]) async {
+  static Future<String> _getLocalFilePath(String key, FaidiType type, [String? url]) async {
     final directory = await getApplicationDocumentsDirectory();
-    final lughatDir = Directory('${directory.path}/lughat');
+    final faidiDir = Directory('${directory.path}/faidi');
     
-    if (!await lughatDir.exists()) {
-      await lughatDir.create(recursive: true);
+    if (!await faidiDir.exists()) {
+      await faidiDir.create(recursive: true);
     }
     
-    final extension = type == LughatType.audio ? 'mp3' : 'mp4';
+    final extension = type == FaidiType.audio ? 'mp3' : 'mp4';
     
     // Create unique filename including URL hash to avoid conflicts
     String filename = '${key}_${type.name}';
@@ -151,13 +111,13 @@ class LughatService {
       filename = '${key}_${type.name}_$urlHash';
     }
     
-    return '${lughatDir.path}/$filename.$extension';
+    return '${faidiDir.path}/$filename.$extension';
   }
 
   static Future<String> downloadFile(
     int surahIndex, 
     int ayahIndex, 
-    LughatType type,
+    FaidiType type,
     Function(double) onProgress,
     Function(String) onError,
   ) async {
@@ -165,12 +125,12 @@ class LughatService {
     final downloadKey = '${key}_${type.name}';
     
     try {
-      // Get the remote URL first
+      // Get the remote URL from API first
       String? remoteUrl;
-      if (type == LughatType.audio) {
-        remoteUrl = _audioData[key]?.content;
-      } else if (type == LughatType.video) {
-        remoteUrl = _videoData[key]?.content;
+      if (type == FaidiType.audio) {
+        remoteUrl = await QuranApiService.getAudioUrl(surahIndex, ayahIndex, 'faidi');
+      } else if (type == FaidiType.video) {
+        remoteUrl = await QuranApiService.getVideoUrl(surahIndex, ayahIndex, 'faidi');
       }
       
       if (remoteUrl == null) {
@@ -203,15 +163,10 @@ class LughatService {
         },
       );
       
-      // Ensure 100% progress is reported
       _downloadProgress[downloadKey] = 1.0;
       onProgress(1.0);
-      
       _downloadStatus[downloadKey] = DownloadStatus.completed;
       _downloadTokens.remove(downloadKey);
-      
-      // Keep progress at 1.0 for completed downloads instead of removing
-      _downloadProgress[downloadKey] = 1.0;
       
       return localPath;
       
@@ -228,7 +183,7 @@ class LughatService {
     }
   }
 
-  static void pauseDownload(int surahIndex, int ayahIndex, LughatType type) {
+  static void pauseDownload(int surahIndex, int ayahIndex, FaidiType type) {
     final downloadKey = '${surahIndex}_${ayahIndex}_${type.name}';
     final token = _downloadTokens[downloadKey];
     if (token != null && !token.isCancelled) {
@@ -240,24 +195,24 @@ class LughatService {
   static Future<void> resumeDownload(
     int surahIndex, 
     int ayahIndex, 
-    LughatType type,
+    FaidiType type,
     Function(double) onProgress,
     Function(String) onError,
   ) async {
     await downloadFile(surahIndex, ayahIndex, type, onProgress, onError);
   }
 
-  static Future<void> deleteDownload(int surahIndex, int ayahIndex, LughatType type) async {
+  static Future<void> deleteDownload(int surahIndex, int ayahIndex, FaidiType type) async {
     final key = '${surahIndex}_$ayahIndex';
     final downloadKey = '${key}_${type.name}';
     
     try {
       // Get the URL to generate correct file path
       String? remoteUrl;
-      if (type == LughatType.audio) {
+      if (type == FaidiType.audio) {
         final audioData = await getAudioData(surahIndex, ayahIndex);
         remoteUrl = audioData?.content;
-      } else if (type == LughatType.video) {
+      } else if (type == FaidiType.video) {
         final videoData = await getVideoData(surahIndex, ayahIndex);
         remoteUrl = videoData?.content;
       }
@@ -275,20 +230,20 @@ class LughatService {
       _downloadProgress.remove(downloadKey);
       _downloadTokens.remove(downloadKey);
     } catch (e) {
-      debugPrint('Error deleting download: $e');
+      debugPrint('Error deleting faidi download: $e');
     }
   }
 
-  static Future<String?> getLocalFilePath(int surahIndex, int ayahIndex, LughatType type) async {
+  static Future<String?> getLocalFilePath(int surahIndex, int ayahIndex, FaidiType type) async {
     final downloadKey = '${surahIndex}_${ayahIndex}_${type.name}';
     final key = '${surahIndex}_$ayahIndex';
     
     // Get the URL to generate correct file path
     String? remoteUrl;
-    if (type == LughatType.audio) {
+    if (type == FaidiType.audio) {
       final audioData = await getAudioData(surahIndex, ayahIndex);
       remoteUrl = audioData?.content;
-    } else if (type == LughatType.video) {
+    } else if (type == FaidiType.video) {
       final videoData = await getVideoData(surahIndex, ayahIndex);
       remoteUrl = videoData?.content;
     }
@@ -297,37 +252,32 @@ class LughatService {
       return null;
     }
     
-    // First check if status is completed
     if (_downloadStatus[downloadKey] == DownloadStatus.completed) {
       return await _getLocalFilePath(key, type, remoteUrl);
     }
     
-    // Fallback: Check if file actually exists even if status is not completed
-    // This handles cases where status might not be properly restored
     try {
       final localPath = await _getLocalFilePath(key, type, remoteUrl);
       if (await File(localPath).exists()) {
-        // Update status to completed since file exists
         _downloadStatus[downloadKey] = DownloadStatus.completed;
         return localPath;
       }
     } catch (e) {
-      debugPrint('Error checking local file existence: $e');
+      debugPrint('Error checking faidi local file existence: $e');
     }
     
     return null;
   }
 
-  static DownloadStatus getDownloadStatus(int surahIndex, int ayahIndex, LughatType type) {
+  static DownloadStatus getDownloadStatus(int surahIndex, int ayahIndex, FaidiType type) {
     final downloadKey = '${surahIndex}_${ayahIndex}_${type.name}';
     return _downloadStatus[downloadKey] ?? DownloadStatus.notStarted;
   }
 
-  static double getDownloadProgress(int surahIndex, int ayahIndex, LughatType type) {
+  static double getDownloadProgress(int surahIndex, int ayahIndex, FaidiType type) {
     final downloadKey = '${surahIndex}_${ayahIndex}_${type.name}';
     final status = _downloadStatus[downloadKey] ?? DownloadStatus.notStarted;
     
-    // Always return 1.0 for completed downloads
     if (status == DownloadStatus.completed) {
       return 1.0;
     }
@@ -335,107 +285,89 @@ class LughatService {
     return _downloadProgress[downloadKey] ?? 0.0;
   }
 
-  static bool isDownloaded(int surahIndex, int ayahIndex, LughatType type) {
+  static bool isDownloaded(int surahIndex, int ayahIndex, FaidiType type) {
     return getDownloadStatus(surahIndex, ayahIndex, type) == DownloadStatus.completed;
   }
 
-  static LughatData? getTextData(int surahIndex, int ayahIndex) {
+  static FaidiData? getTextData(int surahIndex, int ayahIndex) {
     return _textData['${surahIndex}_$ayahIndex'];
   }
 
-  static Future<LughatData?> getAudioData(int surahIndex, int ayahIndex) async {
-    // Try to get from API first
+  static Future<FaidiData?> getAudioData(int surahIndex, int ayahIndex) async {
+    // Try to get from API
     try {
-      final audioUrl = await QuranApiService.getAudioUrl(surahIndex, ayahIndex, 'lughat');
+      final audioUrl = await QuranApiService.getAudioUrl(surahIndex, ayahIndex, 'faidi');
       if (audioUrl != null) {
-        return LughatData(
+        return FaidiData(
           surahIndex: surahIndex,
           ayahIndex: ayahIndex,
           content: audioUrl,
-          type: LughatType.audio,
+          type: FaidiType.audio,
         );
       }
     } catch (e) {
-      debugPrint('Error getting audio from API, falling back to XML: $e');
+      debugPrint('Error getting faidi audio from API: $e');
     }
     
-    // Fallback to XML data if API fails
-    return _audioData['${surahIndex}_$ayahIndex'];
+    return null;
   }
 
-  static Future<LughatData?> getVideoData(int surahIndex, int ayahIndex) async {
-    // Try to get from API first
+  static Future<FaidiData?> getVideoData(int surahIndex, int ayahIndex) async {
+    // Try to get from API
     try {
-      final videoUrl = await QuranApiService.getVideoUrl(surahIndex, ayahIndex, 'lughat');
+      final videoUrl = await QuranApiService.getVideoUrl(surahIndex, ayahIndex, 'faidi');
       if (videoUrl != null) {
-        return LughatData(
+        return FaidiData(
           surahIndex: surahIndex,
           ayahIndex: ayahIndex,
           content: videoUrl,
-          type: LughatType.video,
+          type: FaidiType.video,
         );
       }
     } catch (e) {
-      debugPrint('Error getting video from API, falling back to XML: $e');
+      debugPrint('Error getting faidi video from API: $e');
     }
     
-    // Fallback to XML data if API fails
-    return _videoData['${surahIndex}_$ayahIndex'];
+    return null;
   }
 
   static bool hasTextData(int surahIndex, int ayahIndex) {
     final key = '${surahIndex}_$ayahIndex';
     final hasData = _textData.containsKey(key);
-    debugPrint('hasTextData for $key: $hasData');
+    debugPrint('hasFaidiTextData for $key: $hasData');
     return hasData;
   }
 
   static Future<bool> hasAudioData(int surahIndex, int ayahIndex) async {
-    // Try API first
     try {
-      final hasApiData = await QuranApiService.hasAudioData(surahIndex, ayahIndex, 'lughat');
-      if (hasApiData) {
-        debugPrint('hasAudioData for ${surahIndex}_$ayahIndex: true (from API)');
-        return true;
-      }
+      final hasApiData = await QuranApiService.hasAudioData(surahIndex, ayahIndex, 'faidi');
+      debugPrint('hasFaidiAudioData for ${surahIndex}_$ayahIndex: $hasApiData (from API)');
+      return hasApiData;
     } catch (e) {
-      debugPrint('Error checking audio data from API: $e');
+      debugPrint('Error checking faidi audio data from API: $e');
+      return false;
     }
-    
-    // Fallback to XML
-    final key = '${surahIndex}_$ayahIndex';
-    final hasData = _audioData.containsKey(key);
-    debugPrint('hasAudioData for $key: $hasData (from XML fallback)');
-    return hasData;
   }
 
   static Future<bool> hasVideoData(int surahIndex, int ayahIndex) async {
-    // Try API first
     try {
-      final hasApiData = await QuranApiService.hasVideoData(surahIndex, ayahIndex, 'lughat');
-      if (hasApiData) {
-        debugPrint('hasVideoData for ${surahIndex}_$ayahIndex: true (from API)');
-        return true;
-      }
+      final hasApiData = await QuranApiService.hasVideoData(surahIndex, ayahIndex, 'faidi');
+      debugPrint('hasFaidiVideoData for ${surahIndex}_$ayahIndex: $hasApiData (from API)');
+      return hasApiData;
     } catch (e) {
-      debugPrint('Error checking video data from API: $e');
+      debugPrint('Error checking faidi video data from API: $e');
+      return false;
     }
-    
-    // Fallback to XML
-    final key = '${surahIndex}_$ayahIndex';
-    final hasData = _videoData.containsKey(key);
-    debugPrint('hasVideoData for $key: $hasData (from XML fallback)');
-    return hasData;
   }
 }
 
-class LughatData {
+class FaidiData {
   final int surahIndex;
   final int ayahIndex;
   final String content;
-  final LughatType type;
+  final FaidiType type;
 
-  LughatData({
+  FaidiData({
     required this.surahIndex,
     required this.ayahIndex,
     required this.content,
@@ -443,8 +375,9 @@ class LughatData {
   });
 }
 
-enum LughatType {
+enum FaidiType {
   text,
   audio,
   video,
 }
+

@@ -4,6 +4,9 @@ import 'package:audioplayers/audioplayers.dart';
 import 'package:chewie/chewie.dart';
 import '../themes/app_theme.dart';
 import '../services/lughat_service.dart';
+import '../services/tafseer_service.dart';
+import '../services/faidi_service.dart';
+import '../services/common_models.dart';
 import '../localization/app_localizations_extension.dart';
 import 'dart:io';
 
@@ -229,6 +232,7 @@ class FullScreenAudioPlayer extends StatefulWidget {
   final bool autoPlay;
   final int surahIndex;
   final int ayahIndex;
+  final String sectionType; // lughat, tafseer, or faidi
 
   const FullScreenAudioPlayer({
     super.key,
@@ -237,6 +241,7 @@ class FullScreenAudioPlayer extends StatefulWidget {
     required this.surahIndex,
     required this.ayahIndex,
     this.autoPlay = true,
+    this.sectionType = 'lughat', // Default to lughat for backward compatibility
   });
 
   @override
@@ -283,9 +288,28 @@ class _FullScreenAudioPlayerState extends State<FullScreenAudioPlayer>
   }
 
   Future<void> _checkDownloadStatus() async {
-    // First check the status from service
-    final status = LughatService.getDownloadStatus(widget.surahIndex, widget.ayahIndex, LughatType.audio);
-    final progress = LughatService.getDownloadProgress(widget.surahIndex, widget.ayahIndex, LughatType.audio);
+    // Check the status from appropriate service based on section type
+    DownloadStatus status;
+    double progress;
+    
+    switch (widget.sectionType) {
+      case 'lughat':
+        status = LughatService.getDownloadStatus(widget.surahIndex, widget.ayahIndex, LughatType.audio);
+        progress = LughatService.getDownloadProgress(widget.surahIndex, widget.ayahIndex, LughatType.audio);
+        break;
+      case 'tafseer':
+        status = TafseerService.getDownloadStatus(widget.surahIndex, widget.ayahIndex, TafseerType.audio);
+        progress = TafseerService.getDownloadProgress(widget.surahIndex, widget.ayahIndex, TafseerType.audio);
+        break;
+      case 'faidi':
+        status = FaidiService.getDownloadStatus(widget.surahIndex, widget.ayahIndex, FaidiType.audio);
+        progress = FaidiService.getDownloadProgress(widget.surahIndex, widget.ayahIndex, FaidiType.audio);
+        break;
+      default:
+        status = LughatService.getDownloadStatus(widget.surahIndex, widget.ayahIndex, LughatType.audio);
+        progress = LughatService.getDownloadProgress(widget.surahIndex, widget.ayahIndex, LughatType.audio);
+        break;
+    }
     
     setState(() {
       _downloadStatus = status;
@@ -295,7 +319,23 @@ class _FullScreenAudioPlayerState extends State<FullScreenAudioPlayer>
     // Always try to get local file path if status indicates completed
     // This ensures we get the correct path even after app restart
     if (_downloadStatus == DownloadStatus.completed) {
-      final localPath = await LughatService.getLocalFilePath(widget.surahIndex, widget.ayahIndex, LughatType.audio);
+      String? localPath;
+      
+      switch (widget.sectionType) {
+        case 'lughat':
+          localPath = await LughatService.getLocalFilePath(widget.surahIndex, widget.ayahIndex, LughatType.audio);
+          break;
+        case 'tafseer':
+          localPath = await TafseerService.getLocalFilePath(widget.surahIndex, widget.ayahIndex, TafseerType.audio);
+          break;
+        case 'faidi':
+          localPath = await FaidiService.getLocalFilePath(widget.surahIndex, widget.ayahIndex, FaidiType.audio);
+          break;
+        default:
+          localPath = await LughatService.getLocalFilePath(widget.surahIndex, widget.ayahIndex, LughatType.audio);
+          break;
+      }
+      
       if (mounted && localPath != null) {
         setState(() {
           _localFilePath = localPath;
@@ -403,42 +443,46 @@ class _FullScreenAudioPlayerState extends State<FullScreenAudioPlayer>
     });
 
     try {
-      final localPath = await LughatService.downloadFile(
-        widget.surahIndex,
-        widget.ayahIndex,
-        LughatType.audio,
-        (progress) {
-          if (mounted) {
-            setState(() {
-              _downloadProgress = progress;
-              
-              // Check if download is completed (100%)
-              if (progress >= 1.0) {
-                _downloadStatus = DownloadStatus.completed;
-              }
-            });
-            
-            // Show success message when download reaches 100%
-            if (progress >= 1.0) {
-              _showSuccessSnackBar(context.l.audioDownloadSuccess);
-              
-              // Get the local file path for completed download
-              LughatService.getLocalFilePath(widget.surahIndex, widget.ayahIndex, LughatType.audio).then((localPath) {
-                if (mounted && localPath != null) {
-                  setState(() {
-                    _localFilePath = localPath;
-                  });
-                }
-              });
-            }
-          }
-        },
-        (error) {
-          if (mounted) {
-            _showUserFriendlyError(context.l.downloadError, error);
-          }
-        },
-      );
+      String localPath;
+      
+      switch (widget.sectionType) {
+        case 'lughat':
+          localPath = await LughatService.downloadFile(
+            widget.surahIndex,
+            widget.ayahIndex,
+            LughatType.audio,
+            _onDownloadProgress,
+            _onDownloadError,
+          );
+          break;
+        case 'tafseer':
+          localPath = await TafseerService.downloadFile(
+            widget.surahIndex,
+            widget.ayahIndex,
+            TafseerType.audio,
+            _onDownloadProgress,
+            _onDownloadError,
+          );
+          break;
+        case 'faidi':
+          localPath = await FaidiService.downloadFile(
+            widget.surahIndex,
+            widget.ayahIndex,
+            FaidiType.audio,
+            _onDownloadProgress,
+            _onDownloadError,
+          );
+          break;
+        default:
+          localPath = await LughatService.downloadFile(
+            widget.surahIndex,
+            widget.ayahIndex,
+            LughatType.audio,
+            _onDownloadProgress,
+            _onDownloadError,
+          );
+          break;
+      }
 
       // Ensure final state is set even if progress callback didn't reach 100%
       if (mounted) {
@@ -462,9 +506,68 @@ class _FullScreenAudioPlayerState extends State<FullScreenAudioPlayer>
       }
     }
   }
+  
+  void _onDownloadProgress(double progress) {
+    if (mounted) {
+      setState(() {
+        _downloadProgress = progress;
+        
+        // Check if download is completed (100%)
+        if (progress >= 1.0) {
+          _downloadStatus = DownloadStatus.completed;
+        }
+      });
+      
+      // Show success message when download reaches 100%
+      if (progress >= 1.0) {
+        _showSuccessSnackBar(context.l.audioDownloadSuccess);
+        
+        // Get the local file path for completed download
+        _getLocalFilePathForSection().then((localPath) {
+          if (mounted && localPath != null) {
+            setState(() {
+              _localFilePath = localPath;
+            });
+          }
+        });
+      }
+    }
+  }
+  
+  void _onDownloadError(String error) {
+    if (mounted) {
+      _showUserFriendlyError(context.l.downloadError, error);
+    }
+  }
+  
+  Future<String?> _getLocalFilePathForSection() async {
+    switch (widget.sectionType) {
+      case 'lughat':
+        return await LughatService.getLocalFilePath(widget.surahIndex, widget.ayahIndex, LughatType.audio);
+      case 'tafseer':
+        return await TafseerService.getLocalFilePath(widget.surahIndex, widget.ayahIndex, TafseerType.audio);
+      case 'faidi':
+        return await FaidiService.getLocalFilePath(widget.surahIndex, widget.ayahIndex, FaidiType.audio);
+      default:
+        return await LughatService.getLocalFilePath(widget.surahIndex, widget.ayahIndex, LughatType.audio);
+    }
+  }
 
   void _pauseDownload() {
-    LughatService.pauseDownload(widget.surahIndex, widget.ayahIndex, LughatType.audio);
+    switch (widget.sectionType) {
+      case 'lughat':
+        LughatService.pauseDownload(widget.surahIndex, widget.ayahIndex, LughatType.audio);
+        break;
+      case 'tafseer':
+        TafseerService.pauseDownload(widget.surahIndex, widget.ayahIndex, TafseerType.audio);
+        break;
+      case 'faidi':
+        FaidiService.pauseDownload(widget.surahIndex, widget.ayahIndex, FaidiType.audio);
+        break;
+      default:
+        LughatService.pauseDownload(widget.surahIndex, widget.ayahIndex, LughatType.audio);
+        break;
+    }
     setState(() {
       _downloadStatus = DownloadStatus.paused;
     });
@@ -476,42 +579,44 @@ class _FullScreenAudioPlayerState extends State<FullScreenAudioPlayer>
     });
 
     try {
-      await LughatService.resumeDownload(
-        widget.surahIndex,
-        widget.ayahIndex,
-        LughatType.audio,
-        (progress) {
-          if (mounted) {
-            setState(() {
-              _downloadProgress = progress;
-              
-              // Check if download is completed (100%)
-              if (progress >= 1.0) {
-                _downloadStatus = DownloadStatus.completed;
-              }
-            });
-            
-            // Show success message when download reaches 100%
-            if (progress >= 1.0) {
-              _showSuccessSnackBar(context.l.audioDownloadSuccess);
-              
-              // Get the local file path for completed download
-              LughatService.getLocalFilePath(widget.surahIndex, widget.ayahIndex, LughatType.audio).then((localPath) {
-                if (mounted && localPath != null) {
-                  setState(() {
-                    _localFilePath = localPath;
-                  });
-                }
-              });
-            }
-          }
-        },
-        (error) {
-          if (mounted) {
-            _showUserFriendlyError(context.l.downloadError, error);
-          }
-        },
-      );
+      switch (widget.sectionType) {
+        case 'lughat':
+          await LughatService.resumeDownload(
+            widget.surahIndex,
+            widget.ayahIndex,
+            LughatType.audio,
+            _onDownloadProgress,
+            _onDownloadError,
+          );
+          break;
+        case 'tafseer':
+          await TafseerService.resumeDownload(
+            widget.surahIndex,
+            widget.ayahIndex,
+            TafseerType.audio,
+            _onDownloadProgress,
+            _onDownloadError,
+          );
+          break;
+        case 'faidi':
+          await FaidiService.resumeDownload(
+            widget.surahIndex,
+            widget.ayahIndex,
+            FaidiType.audio,
+            _onDownloadProgress,
+            _onDownloadError,
+          );
+          break;
+        default:
+          await LughatService.resumeDownload(
+            widget.surahIndex,
+            widget.ayahIndex,
+            LughatType.audio,
+            _onDownloadProgress,
+            _onDownloadError,
+          );
+          break;
+      }
     } catch (e) {
       if (mounted) {
         setState(() {
@@ -523,7 +628,20 @@ class _FullScreenAudioPlayerState extends State<FullScreenAudioPlayer>
   }
 
   Future<void> _deleteDownload() async {
-    await LughatService.deleteDownload(widget.surahIndex, widget.ayahIndex, LughatType.audio);
+    switch (widget.sectionType) {
+      case 'lughat':
+        await LughatService.deleteDownload(widget.surahIndex, widget.ayahIndex, LughatType.audio);
+        break;
+      case 'tafseer':
+        await TafseerService.deleteDownload(widget.surahIndex, widget.ayahIndex, TafseerType.audio);
+        break;
+      case 'faidi':
+        await FaidiService.deleteDownload(widget.surahIndex, widget.ayahIndex, FaidiType.audio);
+        break;
+      default:
+        await LughatService.deleteDownload(widget.surahIndex, widget.ayahIndex, LughatType.audio);
+        break;
+    }
     if (mounted) {
       setState(() {
         _downloadStatus = DownloadStatus.notStarted;
@@ -986,6 +1104,7 @@ class FullScreenVideoPlayer extends StatefulWidget {
   final bool autoPlay;
   final int surahIndex;
   final int ayahIndex;
+  final String sectionType; // lughat, tafseer, or faidi
 
   const FullScreenVideoPlayer({
     super.key,
@@ -994,6 +1113,7 @@ class FullScreenVideoPlayer extends StatefulWidget {
     required this.surahIndex,
     required this.ayahIndex,
     this.autoPlay = true,
+    this.sectionType = 'lughat', // Default to lughat for backward compatibility
   });
 
   @override
@@ -1034,9 +1154,28 @@ class _FullScreenVideoPlayerState extends State<FullScreenVideoPlayer>
   }
 
   Future<void> _checkDownloadStatus() async {
-    // First check the status from service  
-    final status = LughatService.getDownloadStatus(widget.surahIndex, widget.ayahIndex, LughatType.video);
-    final progress = LughatService.getDownloadProgress(widget.surahIndex, widget.ayahIndex, LughatType.video);
+    // Check the status from appropriate service based on section type
+    DownloadStatus status;
+    double progress;
+    
+    switch (widget.sectionType) {
+      case 'lughat':
+        status = LughatService.getDownloadStatus(widget.surahIndex, widget.ayahIndex, LughatType.video);
+        progress = LughatService.getDownloadProgress(widget.surahIndex, widget.ayahIndex, LughatType.video);
+        break;
+      case 'tafseer':
+        status = TafseerService.getDownloadStatus(widget.surahIndex, widget.ayahIndex, TafseerType.video);
+        progress = TafseerService.getDownloadProgress(widget.surahIndex, widget.ayahIndex, TafseerType.video);
+        break;
+      case 'faidi':
+        status = FaidiService.getDownloadStatus(widget.surahIndex, widget.ayahIndex, FaidiType.video);
+        progress = FaidiService.getDownloadProgress(widget.surahIndex, widget.ayahIndex, FaidiType.video);
+        break;
+      default:
+        status = LughatService.getDownloadStatus(widget.surahIndex, widget.ayahIndex, LughatType.video);
+        progress = LughatService.getDownloadProgress(widget.surahIndex, widget.ayahIndex, LughatType.video);
+        break;
+    }
     
     setState(() {
       _downloadStatus = status;
@@ -1046,7 +1185,23 @@ class _FullScreenVideoPlayerState extends State<FullScreenVideoPlayer>
     // Always try to get local file path if status indicates completed
     // This ensures we get the correct path even after app restart
     if (_downloadStatus == DownloadStatus.completed) {
-      final localPath = await LughatService.getLocalFilePath(widget.surahIndex, widget.ayahIndex, LughatType.video);
+      String? localPath;
+      
+      switch (widget.sectionType) {
+        case 'lughat':
+          localPath = await LughatService.getLocalFilePath(widget.surahIndex, widget.ayahIndex, LughatType.video);
+          break;
+        case 'tafseer':
+          localPath = await TafseerService.getLocalFilePath(widget.surahIndex, widget.ayahIndex, TafseerType.video);
+          break;
+        case 'faidi':
+          localPath = await FaidiService.getLocalFilePath(widget.surahIndex, widget.ayahIndex, FaidiType.video);
+          break;
+        default:
+          localPath = await LughatService.getLocalFilePath(widget.surahIndex, widget.ayahIndex, LughatType.video);
+          break;
+      }
+      
       if (mounted && localPath != null) {
         setState(() {
           _localFilePath = localPath;
@@ -1173,42 +1328,46 @@ class _FullScreenVideoPlayerState extends State<FullScreenVideoPlayer>
     });
 
     try {
-      final localPath = await LughatService.downloadFile(
-        widget.surahIndex,
-        widget.ayahIndex,
-        LughatType.video,
-        (progress) {
-          if (mounted) {
-            setState(() {
-              _downloadProgress = progress;
-              
-              // Check if download is completed (100%)
-              if (progress >= 1.0) {
-                _downloadStatus = DownloadStatus.completed;
-              }
-            });
-            
-            // Show success message when download reaches 100%
-            if (progress >= 1.0) {
-              _showSuccessSnackBar(context.l.videoDownloadSuccess);
-              
-              // Get the local file path for completed download
-              LughatService.getLocalFilePath(widget.surahIndex, widget.ayahIndex, LughatType.video).then((localPath) {
-                if (mounted && localPath != null) {
-                  setState(() {
-                    _localFilePath = localPath;
-                  });
-                }
-              });
-            }
-          }
-        },
-        (error) {
-          if (mounted) {
-            _showUserFriendlyError(context.l.downloadError, error);
-          }
-        },
-      );
+      String localPath;
+      
+      switch (widget.sectionType) {
+        case 'lughat':
+          localPath = await LughatService.downloadFile(
+            widget.surahIndex,
+            widget.ayahIndex,
+            LughatType.video,
+            _onVideoDownloadProgress,
+            _onVideoDownloadError,
+          );
+          break;
+        case 'tafseer':
+          localPath = await TafseerService.downloadFile(
+            widget.surahIndex,
+            widget.ayahIndex,
+            TafseerType.video,
+            _onVideoDownloadProgress,
+            _onVideoDownloadError,
+          );
+          break;
+        case 'faidi':
+          localPath = await FaidiService.downloadFile(
+            widget.surahIndex,
+            widget.ayahIndex,
+            FaidiType.video,
+            _onVideoDownloadProgress,
+            _onVideoDownloadError,
+          );
+          break;
+        default:
+          localPath = await LughatService.downloadFile(
+            widget.surahIndex,
+            widget.ayahIndex,
+            LughatType.video,
+            _onVideoDownloadProgress,
+            _onVideoDownloadError,
+          );
+          break;
+      }
 
       // Ensure final state is set even if progress callback didn't reach 100%
       if (mounted) {
@@ -1232,9 +1391,68 @@ class _FullScreenVideoPlayerState extends State<FullScreenVideoPlayer>
       }
     }
   }
+  
+  void _onVideoDownloadProgress(double progress) {
+    if (mounted) {
+      setState(() {
+        _downloadProgress = progress;
+        
+        // Check if download is completed (100%)
+        if (progress >= 1.0) {
+          _downloadStatus = DownloadStatus.completed;
+        }
+      });
+      
+      // Show success message when download reaches 100%
+      if (progress >= 1.0) {
+        _showSuccessSnackBar(context.l.videoDownloadSuccess);
+        
+        // Get the local file path for completed download
+        _getLocalVideoFilePathForSection().then((localPath) {
+          if (mounted && localPath != null) {
+            setState(() {
+              _localFilePath = localPath;
+            });
+          }
+        });
+      }
+    }
+  }
+  
+  void _onVideoDownloadError(String error) {
+    if (mounted) {
+      _showUserFriendlyError(context.l.downloadError, error);
+    }
+  }
+  
+  Future<String?> _getLocalVideoFilePathForSection() async {
+    switch (widget.sectionType) {
+      case 'lughat':
+        return await LughatService.getLocalFilePath(widget.surahIndex, widget.ayahIndex, LughatType.video);
+      case 'tafseer':
+        return await TafseerService.getLocalFilePath(widget.surahIndex, widget.ayahIndex, TafseerType.video);
+      case 'faidi':
+        return await FaidiService.getLocalFilePath(widget.surahIndex, widget.ayahIndex, FaidiType.video);
+      default:
+        return await LughatService.getLocalFilePath(widget.surahIndex, widget.ayahIndex, LughatType.video);
+    }
+  }
 
   void _pauseDownload() {
-    LughatService.pauseDownload(widget.surahIndex, widget.ayahIndex, LughatType.video);
+    switch (widget.sectionType) {
+      case 'lughat':
+        LughatService.pauseDownload(widget.surahIndex, widget.ayahIndex, LughatType.video);
+        break;
+      case 'tafseer':
+        TafseerService.pauseDownload(widget.surahIndex, widget.ayahIndex, TafseerType.video);
+        break;
+      case 'faidi':
+        FaidiService.pauseDownload(widget.surahIndex, widget.ayahIndex, FaidiType.video);
+        break;
+      default:
+        LughatService.pauseDownload(widget.surahIndex, widget.ayahIndex, LughatType.video);
+        break;
+    }
     setState(() {
       _downloadStatus = DownloadStatus.paused;
     });
@@ -1246,42 +1464,44 @@ class _FullScreenVideoPlayerState extends State<FullScreenVideoPlayer>
     });
 
     try {
-      await LughatService.resumeDownload(
-        widget.surahIndex,
-        widget.ayahIndex,
-        LughatType.video,
-        (progress) {
-          if (mounted) {
-            setState(() {
-              _downloadProgress = progress;
-              
-              // Check if download is completed (100%)
-              if (progress >= 1.0) {
-                _downloadStatus = DownloadStatus.completed;
-              }
-            });
-            
-            // Show success message when download reaches 100%
-            if (progress >= 1.0) {
-              _showSuccessSnackBar(context.l.videoDownloadSuccess);
-              
-              // Get the local file path for completed download
-              LughatService.getLocalFilePath(widget.surahIndex, widget.ayahIndex, LughatType.video).then((localPath) {
-                if (mounted && localPath != null) {
-                  setState(() {
-                    _localFilePath = localPath;
-                  });
-                }
-              });
-            }
-          }
-        },
-        (error) {
-          if (mounted) {
-            _showUserFriendlyError(context.l.downloadError, error);
-          }
-        },
-      );
+      switch (widget.sectionType) {
+        case 'lughat':
+          await LughatService.resumeDownload(
+            widget.surahIndex,
+            widget.ayahIndex,
+            LughatType.video,
+            _onVideoDownloadProgress,
+            _onVideoDownloadError,
+          );
+          break;
+        case 'tafseer':
+          await TafseerService.resumeDownload(
+            widget.surahIndex,
+            widget.ayahIndex,
+            TafseerType.video,
+            _onVideoDownloadProgress,
+            _onVideoDownloadError,
+          );
+          break;
+        case 'faidi':
+          await FaidiService.resumeDownload(
+            widget.surahIndex,
+            widget.ayahIndex,
+            FaidiType.video,
+            _onVideoDownloadProgress,
+            _onVideoDownloadError,
+          );
+          break;
+        default:
+          await LughatService.resumeDownload(
+            widget.surahIndex,
+            widget.ayahIndex,
+            LughatType.video,
+            _onVideoDownloadProgress,
+            _onVideoDownloadError,
+          );
+          break;
+      }
     } catch (e) {
       if (mounted) {
         setState(() {
@@ -1293,7 +1513,20 @@ class _FullScreenVideoPlayerState extends State<FullScreenVideoPlayer>
   }
 
   Future<void> _deleteDownload() async {
-    await LughatService.deleteDownload(widget.surahIndex, widget.ayahIndex, LughatType.video);
+    switch (widget.sectionType) {
+      case 'lughat':
+        await LughatService.deleteDownload(widget.surahIndex, widget.ayahIndex, LughatType.video);
+        break;
+      case 'tafseer':
+        await TafseerService.deleteDownload(widget.surahIndex, widget.ayahIndex, TafseerType.video);
+        break;
+      case 'faidi':
+        await FaidiService.deleteDownload(widget.surahIndex, widget.ayahIndex, FaidiType.video);
+        break;
+      default:
+        await LughatService.deleteDownload(widget.surahIndex, widget.ayahIndex, LughatType.video);
+        break;
+    }
     if (mounted) {
       setState(() {
         _downloadStatus = DownloadStatus.notStarted;

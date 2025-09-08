@@ -6,8 +6,10 @@ import 'dart:async';
 import '../themes/app_theme.dart';
 import '../localization/app_localizations_extension.dart';
 import '../providers/font_provider.dart';
+import '../services/favorites_service.dart';
 import 'quran_reader_screen.dart';
 import 'quran_search_screen.dart';
+import 'favorites_screen.dart';
 
 class QuranNavigationScreen extends StatefulWidget {
   const QuranNavigationScreen({super.key});
@@ -308,6 +310,7 @@ class _QuranNavigationScreenState extends State<QuranNavigationScreen>
           ),
         ],
       ),
+      floatingActionButton: _buildFavoritesFloatingButtonWithBadge(),
     );
   }
 
@@ -415,25 +418,28 @@ class _QuranNavigationScreenState extends State<QuranNavigationScreen>
                           Container(
                             height: 28,
                             alignment: Alignment.centerRight,
-                            child: ColorFiltered(
-                              colorFilter: isDark 
-                                  ? const ColorFilter.mode(Colors.white, BlendMode.srcIn)
-                                  : const ColorFilter.mode(Colors.transparent, BlendMode.multiply),
-                              child: Image.asset(
-                                'assets/drawable/para_$paraNumber.png',
-                                fit: BoxFit.contain,
-                                errorBuilder: (context, error, stackTrace) {
-                                  return Text(
-                                    _getParaName(paraNumber),
-                                    style: TextStyle(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.bold,
-                                      color: isDark ? Colors.white : Colors.black,
-                                    ),
-                                    textDirection: TextDirection.rtl,
-                                    textAlign: TextAlign.right,
-                                  );
-                                },
+                            child: Directionality(
+                              textDirection: TextDirection.ltr, // Force LTR for images to prevent mirroring
+                              child: ColorFiltered(
+                                colorFilter: isDark 
+                                    ? const ColorFilter.mode(Colors.white, BlendMode.srcIn)
+                                    : const ColorFilter.mode(Colors.transparent, BlendMode.multiply),
+                                child: Image.asset(
+                                  'assets/drawable/para_$paraNumber.png',
+                                  fit: BoxFit.contain,
+                                  errorBuilder: (context, error, stackTrace) {
+                                    return Text(
+                                      _getParaName(paraNumber),
+                                      style: TextStyle(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.bold,
+                                        color: isDark ? Colors.white : Colors.black,
+                                      ),
+                                      textDirection: TextDirection.rtl,
+                                      textAlign: TextAlign.right,
+                                    );
+                                  },
+                                ),
                               ),
                             ),
                           ),
@@ -579,25 +585,28 @@ class _QuranNavigationScreenState extends State<QuranNavigationScreen>
                           Container(
                             height: 28,
                             alignment: Alignment.centerRight,
-                            child: ColorFiltered(
-                              colorFilter: isDark 
-                                  ? const ColorFilter.mode(Colors.white, BlendMode.srcIn)
-                                  : const ColorFilter.mode(Colors.transparent, BlendMode.multiply),
-                              child: Image.asset(
-                                'assets/drawable/sname_$surahNumber.webp',
-                                fit: BoxFit.contain,
-                                errorBuilder: (context, error, stackTrace) {
-                                  return Text(
-                                    surah['name'],
-                                    style: TextStyle(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.bold,
-                                      color: isDark ? Colors.white : Colors.black,
-                                    ),
-                                    textDirection: TextDirection.rtl,
-                                    textAlign: TextAlign.right,
-                                  );
-                                },
+                            child: Directionality(
+                              textDirection: TextDirection.ltr, // Force LTR for images to prevent mirroring
+                              child: ColorFiltered(
+                                colorFilter: isDark 
+                                    ? const ColorFilter.mode(Colors.white, BlendMode.srcIn)
+                                    : const ColorFilter.mode(Colors.transparent, BlendMode.multiply),
+                                child: Image.asset(
+                                  'assets/drawable/sname_$surahNumber.webp',
+                                  fit: BoxFit.contain,
+                                  errorBuilder: (context, error, stackTrace) {
+                                    return Text(
+                                      surah['name'],
+                                      style: TextStyle(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.bold,
+                                        color: isDark ? Colors.white : Colors.black,
+                                      ),
+                                      textDirection: TextDirection.rtl,
+                                      textAlign: TextAlign.right,
+                                    );
+                                  },
+                                ),
                               ),
                             ),
                           ),
@@ -911,6 +920,94 @@ class _QuranNavigationScreenState extends State<QuranNavigationScreen>
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (context) => SurahAyahModal(surah: surah),
+    );
+  }
+
+  Widget _buildFavoritesFloatingButton() {
+    // Build favorites floating action button
+    return FutureBuilder<int>(
+      future: FavoritesService.getFavoritesCount(),
+      builder: (context, snapshot) {
+        final favoritesCount = snapshot.data ?? 0;
+        return FloatingActionButton(
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const FavoritesScreen(),
+              ),
+            );
+          },
+          backgroundColor: AppTheme.primaryGold,
+          child: const Icon(
+            Icons.favorite,
+            color: Colors.white,
+            size: 24,
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildFavoritesFloatingButtonWithBadge() {
+    return FutureBuilder<int>(
+      future: FavoritesService.getFavoritesCount(),
+      builder: (context, snapshot) {
+        final favoritesCount = snapshot.data ?? 0;
+        return Stack(
+          children: [
+            FloatingActionButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const FavoritesScreen(),
+                  ),
+                );
+              },
+              backgroundColor: AppTheme.primaryGold,
+              child: const Icon(
+                Icons.favorite,
+                color: Colors.white,
+                size: 24,
+              ),
+            ),
+            if (favoritesCount > 0)
+              Positioned(
+                right: 0,
+                top: 0,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: AppTheme.primaryGreen,
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: Colors.white, width: 2),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.3),
+                        blurRadius: 4,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  constraints: const BoxConstraints(
+                    minWidth: 20,
+                    minHeight: 20,
+                  ),
+                  child: Text(
+                    favoritesCount > 99 ? '99+' : favoritesCount.toString(),
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ),
+          ],
+        );
+      },
     );
   }
 }

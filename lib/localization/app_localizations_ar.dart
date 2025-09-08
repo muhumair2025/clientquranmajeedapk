@@ -559,4 +559,44 @@ class AppLocalizationsAr extends AppLocalizations {
   String get playingRange => 'نطاق التشغيل';
   @override
   String get number => 'رقم';
+
+  // Additional localization strings
+  @override
+  String get downloads => 'التحميلات';
+  @override
+  String get reserved => 'محجوز';
+  @override
+  String get downloadContent => 'تحميل المحتوى الإسلامي للوصول دون اتصال';
+  @override
+  String get vocabularyDescription => 'معاني الكلمات والتفسيرات';
+  @override
+  String get commentaryDescription => 'تفسير مفصل للآيات';
+  @override
+  String get benefitsDescription => 'الفوائد الروحية والدروس';
+  
+  // Favorites functionality
+  @override
+  String get favorites => 'المفضلة';
+  @override
+  String get addedToFavorites => 'تمت إضافته إلى المفضلة';
+  @override
+  String get removedFromFavorites => 'تم حذفه من المفضلة';
+  @override
+  String get noFavorites => 'لا توجد آيات مفضلة بعد';
+  @override
+  String get addFavoritesFromReader => 'أضف المفضلة من قارئ القرآن';
+  @override
+  String get removeFavorite => 'إزالة من المفضلة';
+  @override
+  String get removeFavoriteConfirm => 'هل أنت متأكد من أنك تريد إزالة هذه الآية من المفضلة؟';
+  @override
+  String get remove => 'إزالة';
+  
+  // Notes functionality
+  @override
+  String get addNote => 'أضف ملاحظتك هنا...';
+  @override
+  String get noteSaved => 'تم حفظ الملاحظة';
+  @override
+  String get noteRemoved => 'تم حذف الملاحظة';
 } 

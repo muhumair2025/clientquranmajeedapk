@@ -513,6 +513,32 @@ class AppLocalizationsUr extends AppLocalizations {
   // Media type labels
   @override
   String get vocabularyVideo => 'لغات کا ویڈیو';
+  
+  // Favorites functionality
+  @override
+  String get favorites => 'پسندیدہ';
+  @override
+  String get addedToFavorites => 'پسندیدہ میں شامل کر دیا گیا';
+  @override
+  String get removedFromFavorites => 'پسندیدہ سے ہٹا دیا گیا';
+  @override
+  String get noFavorites => 'ابھی تک کوئی پسندیدہ آیت نہیں';
+  @override
+  String get addFavoritesFromReader => 'قرآن ریڈر سے پسندیدہ شامل کریں';
+  @override
+  String get removeFavorite => 'پسندیدہ ہٹائیں';
+  @override
+  String get removeFavoriteConfirm => 'کیا آپ واقعی اس آیت کو پسندیدہ سے ہٹانا چاہتے ہیں؟';
+  @override
+  String get remove => 'ہٹائیں';
+  
+  // Notes functionality
+  @override
+  String get addNote => 'یہاں اپنا نوٹ لکھیں...';
+  @override
+  String get noteSaved => 'نوٹ محفوظ ہو گیا';
+  @override
+  String get noteRemoved => 'نوٹ ہٹا دیا گیا';
 
   // Additional Methods (not in base class) - keeping them without @override
   String get done => 'مکمل';
@@ -559,4 +585,18 @@ class AppLocalizationsUr extends AppLocalizations {
   String get playingRange => 'چلانے کی رینج';
   @override
   String get number => 'نمبر';
+
+  // Additional localization strings
+  @override
+  String get downloads => 'ڈاؤن لوڈز';
+  @override
+  String get reserved => 'محفوظ';
+  @override
+  String get downloadContent => 'آف لائن استعمال کے لیے اسلامی مواد ڈاؤن لوڈ کریں';
+  @override
+  String get vocabularyDescription => 'الفاظ کے معانی اور وضاحتیں';
+  @override
+  String get commentaryDescription => 'آیات کی تفصیلی تفسیر';
+  @override
+  String get benefitsDescription => 'روحانی فوائد اور سبق';
 } 

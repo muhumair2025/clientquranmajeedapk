@@ -10,7 +10,12 @@ import 'providers/language_provider.dart';
 import 'screens/quran_navigation_screen.dart';
 import 'screens/audio_downloads_screen.dart';
 import 'screens/video_downloads_screen.dart';
+import 'screens/major_downloads_screen.dart';
 import 'services/lughat_service.dart';
+import 'services/tafseer_service.dart';
+import 'services/faidi_service.dart';
+import 'services/favorites_service.dart';
+import 'services/notes_service.dart';
 import 'localization/app_localizations_delegate.dart';
 import 'localization/app_localizations_extension.dart';
 import 'widgets/language_selection_modal.dart';
@@ -20,8 +25,14 @@ import 'widgets/first_launch_language_modal.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
-  // Initialize LughatService data
-  await LughatService.loadLughatData();
+  // Initialize all services data
+  await Future.wait([
+    LughatService.loadLughatData(),
+    TafseerService.loadTafseerData(),
+    FaidiService.loadFaidiData(),
+    FavoritesService.initialize(),
+    NotesService.initialize(),
+  ]);
   
   // Setup system UI
   SystemChrome.setEnabledSystemUIMode(SystemUiMode.manual, overlays: []);
@@ -106,8 +117,8 @@ class _MainScreenState extends State<MainScreen> {
     _pages = [
       const PlaceholderPage(), // Other tools
       const PlaceholderPage(), // Documents
-      const AudioDownloadsScreen(), // Download Audio
-      const VideoDownloadsScreen(), // Download Video
+      const MajorDownloadsScreen(), // Major Downloads
+      const PlaceholderPage(), // Reserved for future use
       const QuranMajeedHomePage(), // Home page - shows all 6 cards ONLY here
     ];
     
@@ -152,9 +163,9 @@ class _MainScreenState extends State<MainScreen> {
       case 1:
         return context.l.documents;
       case 2:
-        return context.l.audioDownloads;
+        return context.l.downloads;
       case 3:
-        return context.l.videoDownloads;
+        return context.l.reserved;
       case 4:
         return context.l.quranMajeed;
       default:
@@ -191,7 +202,13 @@ class _MainScreenState extends State<MainScreen> {
         ],
       ),
       body: _pages[_selectedIndex],
-      drawer: const QuranMajeedDrawer(),
+      drawer: QuranMajeedDrawer(
+        onNavigateToHome: () {
+          setState(() {
+            _selectedIndex = 4;
+          });
+        },
+      ),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
           color: AppTheme.primaryGreen,
@@ -211,8 +228,8 @@ class _MainScreenState extends State<MainScreen> {
               // RTL order - reversed
               children: [
                 _buildBottomNavItem(4, Icons.home_rounded), // Home page
-                _buildBottomNavItem(3, Icons.video_library_rounded), // Download Video
-                _buildBottomNavItem(2, Icons.library_music_rounded), // Download Audio
+                _buildBottomNavItem(3, Icons.more_horiz_rounded), // Reserved
+                _buildBottomNavItem(2, Icons.download_rounded), // Major Downloads
                 _buildBottomNavItem(1, Icons.description_rounded), // Documents
                 _buildBottomNavItem(0, Icons.apps_rounded), // Other tools - grid icon
               ],
@@ -458,7 +475,12 @@ class _QuranMajeedHomePageState extends State<QuranMajeedHomePage> {
 }
 
 class QuranMajeedDrawer extends StatelessWidget {
-  const QuranMajeedDrawer({super.key});
+  final VoidCallback onNavigateToHome;
+  
+  const QuranMajeedDrawer({
+    super.key,
+    required this.onNavigateToHome,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -527,6 +549,8 @@ class QuranMajeedDrawer extends StatelessWidget {
                     title: context.l.home,
                     onTap: () {
                       Navigator.of(context).pop();
+                      // Navigate to home page (index 4)
+                      onNavigateToHome();
                     },
                   ),
                   _buildDrawerItem(
@@ -535,6 +559,13 @@ class QuranMajeedDrawer extends StatelessWidget {
                     title: context.l.quranKareem,
                     onTap: () {
                       Navigator.of(context).pop();
+                      // Navigate to Quran Navigation screen
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const QuranNavigationScreen(),
+                        ),
+                      );
                     },
                   ),
                   _buildDrawerItem(
@@ -543,6 +574,8 @@ class QuranMajeedDrawer extends StatelessWidget {
                     title: context.l.aqeedah,
                     onTap: () {
                       Navigator.of(context).pop();
+                      // TODO: Navigate to Aqeedah screen when available
+                      _showComingSoonDialog(context, context.l.aqeedah);
                     },
                   ),
                   _buildDrawerItem(
@@ -551,6 +584,8 @@ class QuranMajeedDrawer extends StatelessWidget {
                     title: context.l.tafseerTranslation,
                     onTap: () {
                       Navigator.of(context).pop();
+                      // TODO: Navigate to Tafseer/Translation screen when available
+                      _showComingSoonDialog(context, context.l.tafseerTranslation);
                     },
                   ),
                   _buildDrawerItem(
@@ -559,6 +594,8 @@ class QuranMajeedDrawer extends StatelessWidget {
                     title: context.l.fiqh,
                     onTap: () {
                       Navigator.of(context).pop();
+                      // TODO: Navigate to Fiqh screen when available
+                      _showComingSoonDialog(context, context.l.fiqh);
                     },
                   ),
                   _buildDrawerItem(
@@ -567,6 +604,8 @@ class QuranMajeedDrawer extends StatelessWidget {
                     title: context.l.hadith,
                     onTap: () {
                       Navigator.of(context).pop();
+                      // TODO: Navigate to Hadith screen when available
+                      _showComingSoonDialog(context, context.l.hadith);
                     },
                   ),
                   _buildDrawerItem(
@@ -575,6 +614,8 @@ class QuranMajeedDrawer extends StatelessWidget {
                     title: context.l.questionAnswer,
                     onTap: () {
                       Navigator.of(context).pop();
+                      // TODO: Navigate to Question & Answer screen when available
+                      _showComingSoonDialog(context, context.l.questionAnswer);
                     },
                   ),
                   _buildDrawerItem(
@@ -583,6 +624,8 @@ class QuranMajeedDrawer extends StatelessWidget {
                     title: context.l.books,
                     onTap: () {
                       Navigator.of(context).pop();
+                      // TODO: Navigate to Books screen when available
+                      _showComingSoonDialog(context, context.l.books);
                     },
                   ),
                   const Divider(color: Colors.white54),
@@ -618,6 +661,8 @@ class QuranMajeedDrawer extends StatelessWidget {
                     title: context.l.aboutUs,
                     onTap: () {
                       Navigator.of(context).pop();
+                      // TODO: Navigate to About Us screen when available
+                      _showComingSoonDialog(context, context.l.aboutUs);
                     },
                   ),
                 ],
@@ -656,6 +701,42 @@ class QuranMajeedDrawer extends StatelessWidget {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
       ),
+    );
+  }
+
+  void _showComingSoonDialog(BuildContext context, String featureName) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text(
+            context.l.comingSoon,
+            style: const TextStyle(
+              fontFamily: 'Bahij Badr Bold',
+            ),
+          ),
+          content: Text(
+            '$featureName ${context.l.featureNotAvailable}',
+            style: const TextStyle(
+              fontFamily: 'Bahij Badr Light',
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: Text(
+                context.l.ok,
+                style: TextStyle(
+                  color: AppTheme.primaryGreen,
+                  fontFamily: 'Bahij Badr Medium',
+                ),
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 }

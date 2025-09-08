@@ -487,6 +487,32 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get vocabularyVideo => 'Vocabulary - Video';
   
+  // Favorites functionality
+  @override
+  String get favorites => 'Favorites';
+  @override
+  String get addedToFavorites => 'Added to favorites';
+  @override
+  String get removedFromFavorites => 'Removed from favorites';
+  @override
+  String get noFavorites => 'No favorite ayahs yet';
+  @override
+  String get addFavoritesFromReader => 'Add favorites from the Quran reader';
+  @override
+  String get removeFavorite => 'Remove Favorite';
+  @override
+  String get removeFavoriteConfirm => 'Are you sure you want to remove this ayah from favorites?';
+  @override
+  String get remove => 'Remove';
+  
+  // Notes functionality
+  @override
+  String get addNote => 'Add your note here...';
+  @override
+  String get noteSaved => 'Note saved';
+  @override
+  String get noteRemoved => 'Note removed';
+  
   // Surah Modal
   @override
   String get searchByAyahNumber => 'Search by ayah number or text...';
@@ -518,4 +544,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get playingRange => 'Playing Range';
   @override
   String get number => 'Number';
+
+  // Additional localization strings
+  @override
+  String get downloads => 'Downloads';
+  @override
+  String get reserved => 'Reserved';
+  @override
+  String get downloadContent => 'Download Islamic content for offline access';
+  @override
+  String get vocabularyDescription => 'Word meanings and explanations';
+  @override
+  String get commentaryDescription => 'Detailed verse commentary';
+  @override
+  String get benefitsDescription => 'Spiritual benefits and lessons';
+
 } 

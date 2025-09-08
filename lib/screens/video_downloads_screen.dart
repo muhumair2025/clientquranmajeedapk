@@ -6,7 +6,12 @@ import '../localization/app_localizations_extension.dart';
 import 'dart:io';
 
 class VideoDownloadsScreen extends StatefulWidget {
-  const VideoDownloadsScreen({super.key});
+  final String sectionType;
+  
+  const VideoDownloadsScreen({
+    super.key,
+    this.sectionType = 'lughat',
+  });
 
   @override
   State<VideoDownloadsScreen> createState() => _VideoDownloadsScreenState();
@@ -27,18 +32,19 @@ class _VideoDownloadsScreenState extends State<VideoDownloadsScreen> {
     
     try {
       final directory = await getApplicationDocumentsDirectory();
-      final lughatDir = Directory('${directory.path}/lughat');
+      final sectionDir = Directory('${directory.path}/${widget.sectionType}');
       
-      if (await lughatDir.exists()) {
-        final files = lughatDir.listSync();
+      if (await sectionDir.exists()) {
+        final files = sectionDir.listSync();
         
         for (var file in files) {
-          if (file is File && file.path.endsWith('_video.mp4')) {
-            // Extract surah and ayah from filename (e.g., "1_1_video.mp4")
+          if (file is File && file.path.endsWith('.mp4')) {
+            // Extract surah and ayah from filename (e.g., "1_1_video_abc12345.mp4")
             final filename = file.path.split('/').last;
             final parts = filename.split('_');
             
-            if (parts.length >= 3) {
+            // Expected pattern: surahIndex_ayahIndex_video_urlhash.mp4
+            if (parts.length >= 3 && parts[2] == 'video') {
               final surahIndex = int.tryParse(parts[0]);
               final ayahIndex = int.tryParse(parts[1]);
               
@@ -158,6 +164,18 @@ class _VideoDownloadsScreenState extends State<VideoDownloadsScreen> {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
+    return Scaffold(
+      backgroundColor: isDark ? AppTheme.darkBackground : AppTheme.lightBackground,
+      appBar: AppBar(
+        title: Text(context.l.videoDownloads),
+        backgroundColor: AppTheme.primaryGreen,
+        foregroundColor: Colors.white,
+      ),
+      body: _buildBody(context, isDark),
+    );
+  }
+
+  Widget _buildBody(BuildContext context, bool isDark) {
     if (isLoading) {
       return Center(
         child: Column(
@@ -236,6 +254,7 @@ class _VideoDownloadsScreenState extends State<VideoDownloadsScreen> {
                         paraNumber: paraNumber,
                         paraName: _getParaName(paraNumber, context),
                         videos: downloadedVideoByPara[paraNumber]!,
+                        sectionType: widget.sectionType,
                       ),
                     ),
                   );
@@ -307,12 +326,14 @@ class ParaVideoDetailScreen extends StatelessWidget {
   final int paraNumber;
   final String paraName;
   final List<DownloadedVideo> videos;
+  final String sectionType;
 
   const ParaVideoDetailScreen({
     super.key,
     required this.paraNumber,
     required this.paraName,
     required this.videos,
+    required this.sectionType,
   });
 
   Map<int, List<DownloadedVideo>> _groupVideosBySurah() {
@@ -445,6 +466,7 @@ class ParaVideoDetailScreen extends StatelessWidget {
                             surahIndex: video.surahIndex,
                             ayahIndex: video.ayahIndex,
                             autoPlay: true,
+                            sectionType: sectionType,
                           ),
                         ),
                       );

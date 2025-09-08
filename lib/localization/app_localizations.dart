@@ -224,6 +224,18 @@ abstract class AppLocalizations {
   String get downloadIssue;
   String get downloadedFileDeleted;
 
+  // Additional localization strings
+  String get downloads;
+  String get reserved;
+  String get downloadContent;
+  String get vocabularyDescription;
+  String get commentaryDescription;
+  String get benefitsDescription;
+  String get verseVocabularyTitle;
+  String get vocabularyTextNotAvailable;
+  String get vocabularyAudioNotAvailable;
+  String get vocabularyVideoNotAvailable;
+
   // Error messages for media viewers
   String get audioPlaybackError;
   String get videoPlaybackError;
@@ -253,11 +265,7 @@ abstract class AppLocalizations {
   String get downloadAudiosFromVerses;
   String get downloadVideosFromVerses;
 
-  // Verse-specific messages
-  String get verseVocabularyTitle;
-  String get vocabularyTextNotAvailable;
-  String get vocabularyAudioNotAvailable;
-  String get vocabularyVideoNotAvailable;
+  // Verse-specific messages (removed duplicates)
 
   // Para-related
   String get paraNumber;
@@ -276,6 +284,21 @@ abstract class AppLocalizations {
 
   // Media type labels
   String get vocabularyVideo;
+  
+  // Favorites functionality
+  String get favorites;
+  String get addedToFavorites;
+  String get removedFromFavorites;
+  String get noFavorites;
+  String get addFavoritesFromReader;
+  String get removeFavorite;
+  String get removeFavoriteConfirm;
+  String get remove;
+  
+  // Notes functionality
+  String get addNote;
+  String get noteSaved;
+  String get noteRemoved;
   
   // Surah Modal
   String get searchByAyahNumber;
