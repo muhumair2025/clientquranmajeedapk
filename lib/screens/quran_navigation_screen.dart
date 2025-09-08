@@ -7,6 +7,7 @@ import '../themes/app_theme.dart';
 import '../localization/app_localizations_extension.dart';
 import '../providers/font_provider.dart';
 import '../services/favorites_service.dart';
+import '../services/reading_progress_service.dart';
 import 'quran_reader_screen.dart';
 import 'quran_search_screen.dart';
 import 'favorites_screen.dart';
@@ -19,11 +20,15 @@ class QuranNavigationScreen extends StatefulWidget {
 }
 
 class _QuranNavigationScreenState extends State<QuranNavigationScreen>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   late TabController _tabController;
+  late AnimationController _floatingButtonsAnimationController;
+  Animation<double>? _floatingButtonsAnimation;
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
   Timer? _searchDebounceTimer;
+  Timer? _scrollTimer;
+  bool _isScrolling = false;
   
   // Cache for expensive operations
   List<Map<String, dynamic>>? _cachedParaNames;
@@ -123,6 +128,23 @@ class _QuranNavigationScreenState extends State<QuranNavigationScreen>
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this, initialIndex: 1); // Start with Surah tab
+    
+    // Initialize floating buttons animation controller
+    _floatingButtonsAnimationController = AnimationController(
+      duration: const Duration(milliseconds: 300),
+      vsync: this,
+    );
+    
+    _floatingButtonsAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(
+      parent: _floatingButtonsAnimationController,
+      curve: Curves.easeInOut,
+    ));
+    
+    // Show buttons initially
+    _floatingButtonsAnimationController.forward();
   }
 
   @override
@@ -130,7 +152,29 @@ class _QuranNavigationScreenState extends State<QuranNavigationScreen>
     _tabController.dispose();
     _searchController.dispose();
     _searchDebounceTimer?.cancel();
+    _scrollTimer?.cancel();
+    _floatingButtonsAnimationController.dispose();
     super.dispose();
+  }
+
+  // Handle scroll start - hide buttons
+  void _onScrollStart() {
+    if (!_isScrolling) {
+      _isScrolling = true;
+      _scrollTimer?.cancel();
+      _floatingButtonsAnimationController.reverse();
+    }
+  }
+
+  // Handle scroll end - show buttons after delay
+  void _onScrollEnd() {
+    _scrollTimer?.cancel();
+    _scrollTimer = Timer(const Duration(milliseconds: 800), () {
+      if (_isScrolling && mounted) {
+        _isScrolling = false;
+        _floatingButtonsAnimationController.forward();
+      }
+    });
   }
 
 
@@ -140,7 +184,9 @@ class _QuranNavigationScreenState extends State<QuranNavigationScreen>
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     
-    return Scaffold(
+    return Stack(
+      children: [
+        Scaffold(
       backgroundColor: isDark ? AppTheme.darkBackground : AppTheme.lightBackground,
       appBar: AppBar(
         title: Text(context.l.quranKareem),
@@ -310,7 +356,14 @@ class _QuranNavigationScreenState extends State<QuranNavigationScreen>
           ),
         ],
       ),
-      floatingActionButton: _buildFavoritesFloatingButtonWithBadge(),
+        ),
+        
+        // Heart Favorites Button - Positioned above continue reading button
+        _buildPositionedFavoritesButton(),
+        
+        // Continue Reading Button - Positioned at bottom
+        _buildContinueReadingButton(),
+      ],
     );
   }
 
@@ -325,10 +378,19 @@ class _QuranNavigationScreenState extends State<QuranNavigationScreen>
     }
     final filteredParas = _filteredParas!;
     
-    return ListView.builder(
-      padding: const EdgeInsets.all(16),
-      itemCount: filteredParas.length,
-      itemBuilder: (context, index) {
+    return NotificationListener<ScrollNotification>(
+      onNotification: (ScrollNotification notification) {
+        if (notification is ScrollStartNotification) {
+          _onScrollStart();
+        } else if (notification is ScrollEndNotification) {
+          _onScrollEnd();
+        }
+        return false;
+      },
+      child: ListView.builder(
+        padding: const EdgeInsets.all(16),
+        itemCount: filteredParas.length,
+        itemBuilder: (context, index) {
         final paraNumber = filteredParas[index]['number'] as int;
         return Container(
           margin: const EdgeInsets.only(bottom: 12),
@@ -476,7 +538,8 @@ class _QuranNavigationScreenState extends State<QuranNavigationScreen>
             ),
           ),
         );
-      },
+        },
+      ),
     );
   }
 
@@ -492,10 +555,19 @@ class _QuranNavigationScreenState extends State<QuranNavigationScreen>
     }
     final filteredSurahs = _filteredSurahs!;
     
-    return ListView.builder(
-      padding: const EdgeInsets.all(16),
-      itemCount: filteredSurahs.length,
-      itemBuilder: (context, index) {
+    return NotificationListener<ScrollNotification>(
+      onNotification: (ScrollNotification notification) {
+        if (notification is ScrollStartNotification) {
+          _onScrollStart();
+        } else if (notification is ScrollEndNotification) {
+          _onScrollEnd();
+        }
+        return false;
+      },
+      child: ListView.builder(
+        padding: const EdgeInsets.all(16),
+        itemCount: filteredSurahs.length,
+        itemBuilder: (context, index) {
         final surah = filteredSurahs[index];
         final surahNumber = surah['number'] as int;
         
@@ -689,7 +761,8 @@ class _QuranNavigationScreenState extends State<QuranNavigationScreen>
             ),
           ),
         );
-      },
+        },
+      ),
     );
   }
 
@@ -949,6 +1022,118 @@ class _QuranNavigationScreenState extends State<QuranNavigationScreen>
     );
   }
 
+  Widget _buildContinueReadingButton() {
+    if (_floatingButtonsAnimation == null) {
+      return const SizedBox.shrink();
+    }
+    
+    return AnimatedBuilder(
+      animation: _floatingButtonsAnimation!,
+      builder: (context, child) {
+        return Positioned(
+          right: 16,
+          bottom: 76, // Position at bottom (moved up by 60px: 16 + 60 = 76)
+          child: Opacity(
+            opacity: _floatingButtonsAnimation!.value,
+            child: Transform.scale(
+              scale: 0.8 + (0.2 * _floatingButtonsAnimation!.value),
+              child: FutureBuilder<bool>(
+                future: ReadingProgressService.hasProgress(),
+                builder: (context, snapshot) {
+                  final hasProgress = snapshot.data ?? false;
+                  if (!hasProgress) return const SizedBox.shrink();
+                  
+                  return FutureBuilder<ReadingProgress?>(
+                    future: ReadingProgressService.getCurrentProgress(),
+                    builder: (context, progressSnapshot) {
+                      final progress = progressSnapshot.data;
+                      if (progress == null) return const SizedBox.shrink();
+                      
+                      return Container(
+                        constraints: const BoxConstraints(
+                          maxWidth: 200, // Limit width to prevent overflow
+                        ),
+                        child: FloatingActionButton.extended(
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => QuranReaderScreen(
+                                  surahIndex: progress.surahIndex,
+                                  surahName: progress.surahName,
+                                  initialAyahIndex: progress.ayahIndex,
+                                  paraIndex: progress.paraIndex,
+                                  paraName: progress.paraName,
+                                ),
+                              ),
+                            );
+                          },
+                          backgroundColor: AppTheme.primaryGreen,
+                          foregroundColor: Colors.white,
+                          elevation: 6,
+                          heroTag: "continueReading", // Unique hero tag to avoid conflicts
+                          icon: const Icon(
+                            Icons.play_circle_filled,
+                            size: 20,
+                          ),
+                          label: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Text(
+                                'Continue Reading',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              Text(
+                                '${progress.surahName} - Ayah ${progress.ayahIndex}',
+                                style: const TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w400,
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                                maxLines: 1,
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                  );
+                },
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildPositionedFavoritesButton() {
+    if (_floatingButtonsAnimation == null) {
+      return const SizedBox.shrink();
+    }
+    
+    return AnimatedBuilder(
+      animation: _floatingButtonsAnimation!,
+      builder: (context, child) {
+        return Positioned(
+          right: 16,
+          bottom: 150, // Position above the continue reading button (moved up by 60px: 90 + 60 = 150)
+          child: Opacity(
+            opacity: _floatingButtonsAnimation!.value,
+            child: Transform.scale(
+              scale: 0.8 + (0.2 * _floatingButtonsAnimation!.value),
+              child: _buildFavoritesFloatingButtonWithBadge(),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   Widget _buildFavoritesFloatingButtonWithBadge() {
     return FutureBuilder<int>(
       future: FavoritesService.getFavoritesCount(),
@@ -971,16 +1156,16 @@ class _QuranNavigationScreenState extends State<QuranNavigationScreen>
                 color: Colors.white,
                 size: 24,
               ),
-            ),
-            if (favoritesCount > 0)
-              Positioned(
-                right: 0,
-                top: 0,
-                child: Container(
+              ),
+              if (favoritesCount > 0)
+                Positioned(
+                  right: 0,
+                  top: 0,
+                  child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                  decoration: BoxDecoration(
-                    color: AppTheme.primaryGreen,
-                    borderRadius: BorderRadius.circular(10),
+                    decoration: BoxDecoration(
+                      color: AppTheme.primaryGreen,
+                      borderRadius: BorderRadius.circular(10),
                     border: Border.all(color: Colors.white, width: 2),
                     boxShadow: [
                       BoxShadow(
@@ -989,23 +1174,23 @@ class _QuranNavigationScreenState extends State<QuranNavigationScreen>
                         offset: const Offset(0, 2),
                       ),
                     ],
-                  ),
-                  constraints: const BoxConstraints(
+                    ),
+                    constraints: const BoxConstraints(
                     minWidth: 20,
                     minHeight: 20,
-                  ),
-                  child: Text(
-                    favoritesCount > 99 ? '99+' : favoritesCount.toString(),
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 10,
-                      fontWeight: FontWeight.bold,
                     ),
-                    textAlign: TextAlign.center,
+                    child: Text(
+                      favoritesCount > 99 ? '99+' : favoritesCount.toString(),
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
                   ),
                 ),
-              ),
-          ],
+            ],
         );
       },
     );

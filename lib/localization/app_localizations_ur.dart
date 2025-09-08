@@ -34,6 +34,10 @@ class AppLocalizationsUr extends AppLocalizations {
   String get videoDownloads => 'ویڈیو ڈاؤن لوڈز';
   @override
   String get quranMajeed => 'قرآن مجید';
+  @override
+  String get more => 'مزید';
+  @override
+  String get latest => 'تازہ ترین';
 
   // Home Page Cards (in Urdu)
   @override

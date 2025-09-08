@@ -106,7 +106,7 @@ class MainScreen extends StatefulWidget {
 }
 
 class _MainScreenState extends State<MainScreen> {
-  int _selectedIndex = 4; // Default to home page with 6 cards
+  int _selectedIndex = 3; // Default to home page with 6 cards
 
   late final List<Widget> _pages;
   bool _hasCheckedFirstLaunch = false; // Add flag to prevent multiple checks
@@ -114,12 +114,12 @@ class _MainScreenState extends State<MainScreen> {
   @override
   void initState() {
     super.initState();
+    // Updated pages array - removed reserved page (index 3 was reserved)
     _pages = [
-      const PlaceholderPage(), // Other tools
-      const PlaceholderPage(), // Documents
-      const MajorDownloadsScreen(), // Major Downloads
-      const PlaceholderPage(), // Reserved for future use
-      const QuranMajeedHomePage(), // Home page - shows all 6 cards ONLY here
+      const PlaceholderPage(), // Index 0: Other tools
+      const PlaceholderPage(), // Index 1: Documents  
+      const MajorDownloadsScreen(), // Index 2: Major Downloads
+      const QuranMajeedHomePage(), // Index 3: Home page with 6 cards
     ];
     
     // Check for first launch after the frame is built with a small delay
@@ -161,14 +161,12 @@ class _MainScreenState extends State<MainScreen> {
       case 0:
         return context.l.otherTools;
       case 1:
-        return context.l.documents;
+        return context.l.latest;
       case 2:
         return context.l.downloads;
       case 3:
-        return context.l.reserved;
-      case 4:
         return context.l.quranMajeed;
-      default:
+default:
         return context.l.quranMajeed;
     }
   }
@@ -205,7 +203,7 @@ class _MainScreenState extends State<MainScreen> {
       drawer: QuranMajeedDrawer(
         onNavigateToHome: () {
           setState(() {
-            _selectedIndex = 4;
+            _selectedIndex = 3;
           });
         },
       ),
@@ -222,15 +220,14 @@ class _MainScreenState extends State<MainScreen> {
         ),
         child: SafeArea(
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               // RTL order - reversed
               children: [
-                _buildBottomNavItem(4, Icons.home_rounded), // Home page
-                _buildBottomNavItem(3, Icons.more_horiz_rounded), // Reserved
+                _buildBottomNavItem(3, Icons.home_rounded), // Home page
                 _buildBottomNavItem(2, Icons.download_rounded), // Major Downloads
-                _buildBottomNavItem(1, Icons.description_rounded), // Documents
+                _buildBottomNavItem(1, Icons.schedule_rounded), // Latest content
                 _buildBottomNavItem(0, Icons.apps_rounded), // Other tools - grid icon
               ],
             ),
@@ -243,6 +240,22 @@ class _MainScreenState extends State<MainScreen> {
   Widget _buildBottomNavItem(int index, IconData icon) {
     final isSelected = _selectedIndex == index;
     
+    // Get the appropriate label for each index
+    String getLabel(int index) {
+      switch (index) {
+        case 0:
+          return context.l.more; // Other tools = More
+        case 1:
+          return context.l.latest; // Latest content
+        case 2:
+          return context.l.downloads;
+        case 3:
+          return context.l.home;
+        default:
+          return '';
+      }
+    }
+    
     return GestureDetector(
       onTap: () {
         setState(() {
@@ -250,15 +263,29 @@ class _MainScreenState extends State<MainScreen> {
         });
       },
       child: Container(
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
         decoration: BoxDecoration(
           color: isSelected ? Colors.white.withValues(alpha: 0.2) : Colors.transparent,
           borderRadius: BorderRadius.circular(12),
         ),
-        child: Icon(
-          icon,
-          color: isSelected ? Colors.white : Colors.white.withValues(alpha: 0.7),
-          size: 28,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              icon,
+              color: isSelected ? Colors.white : Colors.white.withValues(alpha: 0.7),
+              size: 24,
+            ),
+            const SizedBox(height: 4),
+            Text(
+              getLabel(index),
+              style: TextStyle(
+                color: isSelected ? Colors.white : Colors.white.withValues(alpha: 0.7),
+                fontSize: 10,
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+              ),
+            ),
+          ],
         ),
       ),
     );

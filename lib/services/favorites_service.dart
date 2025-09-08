@@ -4,7 +4,7 @@ import 'package:flutter/foundation.dart';
 
 class FavoritesService {
   static const String _favoritesKey = 'favorite_ayahs';
-  static Set<String> _favoriteAyahs = {};
+  static List<String> _favoriteAyahs = [];
   static bool _isLoaded = false;
 
   /// Initialize the favorites service by loading data from SharedPreferences
@@ -16,15 +16,80 @@ class FavoritesService {
       final favoritesJson = prefs.getString(_favoritesKey);
       
       if (favoritesJson != null) {
-        final List<dynamic> favoritesList = json.decode(favoritesJson);
-        _favoriteAyahs = favoritesList.cast<String>().toSet();
+        debugPrint('FavoritesService: Found existing data, attempting to load...');
+        
+        // Try multiple approaches to handle the data
+        bool dataLoaded = false;
+        
+        // Approach 1: Decode JSON and handle different data types
+        try {
+          final dynamic rawData = json.decode(favoritesJson);
+          debugPrint('FavoritesService: Raw data type: ${rawData.runtimeType}');
+          debugPrint('FavoritesService: Raw data content: $rawData');
+          
+          if (rawData is List) {
+            // Handle List<dynamic> - convert to List<String>
+            _favoriteAyahs = List<String>.from(rawData.map((item) => item.toString()));
+            dataLoaded = true;
+            debugPrint('FavoritesService: Successfully loaded as List with ${_favoriteAyahs.length} items');
+          } else if (rawData is Set) {
+            // Handle Set - convert to List<String>
+            _favoriteAyahs = List<String>.from(rawData.map((item) => item.toString()));
+            dataLoaded = true;
+            debugPrint('FavoritesService: Successfully converted Set to List with ${_favoriteAyahs.length} items');
+          } else if (rawData is Map) {
+            // Handle Map - use values and convert to List<String>
+            _favoriteAyahs = List<String>.from(rawData.values.map((item) => item.toString()));
+            dataLoaded = true;
+            debugPrint('FavoritesService: Successfully converted Map to List with ${_favoriteAyahs.length} items');
+          } else {
+            // Handle other types - try to convert to string and split if needed
+            final stringData = rawData.toString();
+            if (stringData.startsWith('[') && stringData.endsWith(']')) {
+              // Looks like a list string representation
+              final cleanString = stringData.substring(1, stringData.length - 1);
+              _favoriteAyahs = cleanString.split(',').map((s) => s.trim()).where((s) => s.isNotEmpty).toList();
+              dataLoaded = true;
+              debugPrint('FavoritesService: Successfully parsed string representation to List with ${_favoriteAyahs.length} items');
+            }
+          }
+        } catch (e1) {
+          debugPrint('FavoritesService: Failed to decode JSON: $e1');
+          debugPrint('FavoritesService: Raw JSON string: $favoritesJson');
+          
+          // Fallback: Try to parse as string if it looks like a simple list
+          try {
+            if (favoritesJson.startsWith('[') && favoritesJson.endsWith(']')) {
+              final cleanString = favoritesJson.substring(1, favoritesJson.length - 1);
+              _favoriteAyahs = cleanString.split(',')
+                  .map((s) => s.trim().replaceAll('"', ''))
+                  .where((s) => s.isNotEmpty)
+                  .toList();
+              dataLoaded = true;
+              debugPrint('FavoritesService: Successfully parsed fallback string to List with ${_favoriteAyahs.length} items');
+            }
+          } catch (e2) {
+            debugPrint('FavoritesService: Fallback parsing also failed: $e2');
+          }
+        }
+        
+        // If all approaches failed, reset the data
+        if (!dataLoaded) {
+          debugPrint('FavoritesService: All loading approaches failed, resetting data');
+          _favoriteAyahs = [];
+          await prefs.remove(_favoritesKey);
+          debugPrint('FavoritesService: Cleared corrupted data from SharedPreferences');
+        }
+      } else {
+        debugPrint('FavoritesService: No existing favorites data found');
+        _favoriteAyahs = [];
       }
       
       _isLoaded = true;
-      debugPrint('Loaded ${_favoriteAyahs.length} favorite ayahs');
+      debugPrint('FavoritesService: Initialization complete. Final count: ${_favoriteAyahs.length} favorite ayahs');
     } catch (e) {
-      debugPrint('Error loading favorites: $e');
-      _favoriteAyahs = {};
+      debugPrint('FavoritesService: Critical error during initialization: $e');
+      _favoriteAyahs = [];
       _isLoaded = true;
     }
   }
@@ -33,7 +98,7 @@ class FavoritesService {
   static Future<void> _saveFavorites() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      final favoritesJson = json.encode(_favoriteAyahs.toList());
+      final favoritesJson = json.encode(_favoriteAyahs);
       await prefs.setString(_favoritesKey, favoritesJson);
       debugPrint('Saved ${_favoriteAyahs.length} favorite ayahs');
     } catch (e) {
@@ -50,7 +115,8 @@ class FavoritesService {
       return false; // Already in favorites
     }
     
-    _favoriteAyahs.add(key);
+    // Add to the beginning of the list to show newest first
+    _favoriteAyahs.insert(0, key);
     await _saveFavorites();
     return true;
   }
@@ -110,14 +176,7 @@ class FavoritesService {
       }
     }
     
-    // Sort by surah index, then by ayah index
-    favorites.sort((a, b) {
-      if (a.surahIndex != b.surahIndex) {
-        return a.surahIndex.compareTo(b.surahIndex);
-      }
-      return a.ayahIndex.compareTo(b.ayahIndex);
-    });
-    
+    // Return favorites in the order they were added (newest first)
     return favorites;
   }
 
@@ -132,6 +191,25 @@ class FavoritesService {
     await initialize();
     _favoriteAyahs.clear();
     await _saveFavorites();
+  }
+
+  /// Reset favorites data (useful for fixing corrupted data)
+  static Future<void> resetFavoritesData() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove(_favoritesKey);
+      _favoriteAyahs = [];
+      _isLoaded = false;
+      debugPrint('Favorites data has been reset');
+    } catch (e) {
+      debugPrint('Error resetting favorites data: $e');
+    }
+  }
+
+  /// Force re-initialization (useful when data format changes)
+  static Future<void> forceReInitialize() async {
+    _isLoaded = false;
+    await initialize();
   }
 
   /// Get favorites grouped by surah

@@ -34,6 +34,10 @@ class AppLocalizationsPs extends AppLocalizations {
   String get videoDownloads => 'د ویډیو فایلونو ډاونلوډ';
   @override
   String get quranMajeed => 'قرآن مجید';
+  @override
+  String get more => 'نور';
+  @override
+  String get latest => 'تازه';
 
   // Home Page Cards (in Pashto)
   @override

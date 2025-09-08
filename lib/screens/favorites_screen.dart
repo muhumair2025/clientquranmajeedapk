@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:xml/xml.dart';
 import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
 import '../themes/app_theme.dart';
 import '../services/favorites_service.dart';
 import '../services/notes_service.dart';
 import '../localization/app_localizations_extension.dart';
+import '../providers/font_provider.dart';
 import 'quran_reader_screen.dart';
 
 class FavoritesScreen extends StatefulWidget {
@@ -151,6 +153,19 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
     return FutureBuilder<List<FavoriteAyah>>(
       future: FavoritesService.getAllFavorites(),
       builder: (context, snapshot) {
+        if (snapshot.hasError) {
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.error, color: Colors.red, size: 48),
+                SizedBox(height: 16),
+                Text('Error loading favorites: ${snapshot.error}'),
+              ],
+            ),
+          );
+        }
+        
         if (!snapshot.hasData) {
           return _buildLoadingIndicator(isDark);
         }
@@ -292,9 +307,11 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
   }
 
   Widget _buildFavoriteAyahCard(FavoriteAyah favorite, bool isDark) {
-    final ayahText = _getAyahText(favorite.surahIndex, favorite.ayahIndex);
-    final translation = _getTranslation(favorite.surahIndex, favorite.ayahIndex);
-    final surahName = _getSurahName(favorite.surahIndex);
+    return Consumer<FontProvider>(
+      builder: (context, fontProvider, child) {
+        final ayahText = _getAyahText(favorite.surahIndex, favorite.ayahIndex);
+        final translation = _getTranslation(favorite.surahIndex, favorite.ayahIndex);
+        final surahName = _getSurahName(favorite.surahIndex);
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
@@ -326,7 +343,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                 Expanded(
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                    decoration: BoxDecoration(
+                  decoration: BoxDecoration(
                       gradient: LinearGradient(
                         colors: [
                           AppTheme.primaryGold.withValues(alpha: 0.15),
@@ -351,14 +368,14 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                         ),
                         const SizedBox(width: 6),
                         Flexible(
-                          child: Text(
+                  child: Text(
                             '$surahName',
-                            style: TextStyle(
+                    style: TextStyle(
                               fontSize: 14,
-                              fontWeight: FontWeight.bold,
-                              color: AppTheme.primaryGold,
-                              fontFamily: 'Bahij Badr Bold',
-                            ),
+                      fontWeight: FontWeight.bold,
+                      color: AppTheme.primaryGold,
+                      fontFamily: 'Bahij Badr Bold',
+                    ),
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
@@ -418,14 +435,14 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                   children: [
                     Text(
                       ayahText.isNotEmpty ? ayahText : 'آیت متن دستیاب نہیں',
-                      style: TextStyle(
-                        fontSize: 20,
-                        color: isDark ? Colors.white : Colors.black87,
-                        fontFamily: 'Uthmanic Hafs',
+                  style: TextStyle(
+                        fontSize: 16,
+                    color: isDark ? Colors.white : Colors.black87,
+                    fontFamily: fontProvider.selectedArabicFont,
                         height: 2.0,
                         fontWeight: FontWeight.w500,
-                      ),
-                      textDirection: TextDirection.rtl,
+                  ),
+                  textDirection: TextDirection.rtl,
                       textAlign: TextAlign.justify,
                     ),
                     if (ayahText.isEmpty)
@@ -475,7 +492,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                     ),
                   ],
                 ),
-            ),
+              ),
             
             // Translation
             if (translation.isNotEmpty) ...[
@@ -493,14 +510,14 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                   ),
                 ),
                 child: Text(
-                  translation,
-                  style: TextStyle(
+                translation,
+                style: TextStyle(
                     fontSize: 15,
                     color: isDark ? Colors.white.withValues(alpha: 0.9) : Colors.black87,
-                    fontFamily: 'Bahij Badr Light',
+                  fontFamily: 'Bahij Badr Light',
                     height: 1.5,
-                  ),
-                  textDirection: TextDirection.rtl,
+                ),
+                textDirection: TextDirection.rtl,
                   textAlign: TextAlign.justify,
                 ),
               ),
@@ -654,11 +671,11 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                                 'Your Note:',
                                 style: TextStyle(
                                   fontSize: 11,
-                                  color: AppTheme.primaryGreen,
+                          color: AppTheme.primaryGreen,
                                   fontWeight: FontWeight.bold,
                                   fontFamily: 'Bahij Badr Bold',
                                 ),
-                              ),
+                        ),
                               const SizedBox(height: 2),
                               Text(
                             note,
@@ -684,6 +701,8 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
           ],
         ),
       ),
+    );
+      },
     );
   }
 

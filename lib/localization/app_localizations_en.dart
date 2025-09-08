@@ -34,6 +34,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get videoDownloads => 'Video Downloads';
   @override
   String get quranMajeed => 'Quran Majeed';
+  @override
+  String get more => 'More';
+  @override
+  String get latest => 'Latest';
 
   // Home Page Cards (translated to English)
   @override

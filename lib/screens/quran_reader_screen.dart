@@ -7,6 +7,7 @@ import '../services/lughat_service.dart';
 import '../services/tafseer_service.dart';
 import '../services/faidi_service.dart';
 import '../services/favorites_service.dart';
+import '../services/reading_progress_service.dart';
 import '../services/quran_api_service.dart';
 import '../widgets/media_viewers.dart';
 import '../providers/font_provider.dart';
@@ -397,8 +398,9 @@ class _QuranReaderScreenState extends State<QuranReaderScreen> {
                 }
               });
               
-              // Show translation modal after navigation
+              // Update reading progress and show translation modal after navigation
               Future.delayed(const Duration(milliseconds: 500), () {
+                _updateReadingProgress(widget.surahIndex, widget.initialAyahIndex!);
                 final ayahText = _getAyahText(widget.surahIndex, widget.initialAyahIndex!);
                 _showTranslationModal(widget.surahIndex, widget.initialAyahIndex!, ayahText);
               });
@@ -1060,8 +1062,22 @@ class _QuranReaderScreenState extends State<QuranReaderScreen> {
     // Cancel any existing timer
     highlightTimer?.cancel();
     
+    // Update reading progress
+    _updateReadingProgress(surahIndex, ayahIndex);
+    
     // Show translation modal
     _showTranslationModal(surahIndex, ayahIndex, ayahText);
+  }
+
+  void _updateReadingProgress(int surahIndex, int ayahIndex) {
+    // Update reading progress when user interacts with ayah
+    ReadingProgressService.updateProgress(
+      surahIndex: surahIndex,
+      ayahIndex: ayahIndex,
+      surahName: surahsData[surahIndex]?.name ?? 'Unknown Surah',
+      paraIndex: widget.paraIndex,
+      paraName: widget.paraName,
+    );
   }
 
   // Helper methods for ayah navigation
@@ -1131,7 +1147,9 @@ class _QuranReaderScreenState extends State<QuranReaderScreen> {
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
       useSafeArea: true,
-      builder: (context) => _buildAsyncTranslationModal(surahIndex, ayahIndex, ayahText, translation),
+      builder: (context) => Consumer<FontProvider>(
+        builder: (context, fontProvider, child) => _buildAsyncTranslationModal(surahIndex, ayahIndex, ayahText, translation, fontProvider),
+      ),
     ).then((_) {
       // Remove highlight after 1 second when modal is closed
       highlightTimer?.cancel();
@@ -1144,7 +1162,7 @@ class _QuranReaderScreenState extends State<QuranReaderScreen> {
   }
 
 
-  Widget _buildAsyncTranslationModal(int surahIndex, int ayahIndex, String ayahText, String? translation) {
+  Widget _buildAsyncTranslationModal(int surahIndex, int ayahIndex, String ayahText, String? translation, FontProvider fontProvider) {
     return StatefulBuilder(
       builder: (context, setModalState) {
         Future<Map<String, bool>>? availabilityFuture;
@@ -1297,8 +1315,8 @@ class _QuranReaderScreenState extends State<QuranReaderScreen> {
                           child: Text(
                             ayahText,
                             style: TextStyle(
-                              fontFamily: 'Uthmanic Hafs',
-                              fontSize: 24,
+                              fontFamily: fontProvider.selectedArabicFont,
+                              fontSize: 16,
                               color: isDark ? Colors.white : Colors.black87,
                               height: 1.8,
                             ),

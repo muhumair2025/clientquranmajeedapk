@@ -24,6 +24,8 @@ abstract class AppLocalizations {
   String get audioDownloads;
   String get videoDownloads;
   String get quranMajeed;
+  String get more;
+  String get latest;
 
   // Home Page Cards (Core content - keep in Pashto)
   String get aqeedah;
