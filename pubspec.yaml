@@ -45,6 +45,7 @@ dependencies:
   dio: ^5.4.0
   shared_preferences: ^2.5.3
   crypto: ^3.0.3
+  share_plus: ^10.1.2
   flutter_localizations:
     sdk: flutter
 

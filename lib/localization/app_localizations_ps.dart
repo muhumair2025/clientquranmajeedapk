@@ -38,6 +38,9 @@ class AppLocalizationsPs extends AppLocalizations {
   String get more => 'نور';
   @override
   String get latest => 'تازه';
+  
+  @override
+  String get live => 'ژوندی';
 
   // Home Page Cards (in Pashto)
   @override
@@ -45,7 +48,7 @@ class AppLocalizationsPs extends AppLocalizations {
   @override
   String get aqeedahSubtitle => 'د اسلام بنسټونه';
   @override
-  String get tafseerTranslation => 'تفسیر او ترجمه';
+  String get tafseerTranslation => 'ترجمه او تفسیر';
   @override
   String get tafseerSubtitle => 'د قرآن تشریح';
   @override
@@ -57,13 +60,35 @@ class AppLocalizationsPs extends AppLocalizations {
   @override
   String get hadithSubtitle => 'د پیغمبر وینا';
   @override
-  String get questionAnswer => 'سوال خواب';
+  String get questionAnswer => 'سوال ځواب';
   @override
   String get questionAnswerSubtitle => 'ستاسو پوښتنې';
   @override
   String get books => 'کتابونه';
   @override
   String get booksSubtitle => 'اسلامي کتابونه';
+  
+  // New Home Page Cards
+  @override
+  String get seerahHistory => 'سیرت او تاریخ';
+  @override
+  String get seerahHistorySubtitle => 'د پیغمبر ژوند او تاریخ';
+  @override
+  String get scientificCourses => 'علمي دورې';
+  @override
+  String get scientificCoursesSubtitle => 'علمي درسونه';
+  @override
+  String get ethicsManners => 'اخلاق او اداب';
+  @override
+  String get ethicsMannersSubtitle => 'اسلامي اخالق';
+  @override
+  String get adhkarDuas => 'اذکار او دعاګانې';
+  @override
+  String get adhkarDuasSubtitle => 'روزانه دعاګانې';
+  @override
+  String get variousStatements => 'مختلف بیانونه';
+  @override
+  String get variousStatementsSubtitle => 'مختلف محاضرات';
 
   // Quran Navigation
   @override

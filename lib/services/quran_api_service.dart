@@ -2,29 +2,32 @@ import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 
 class QuranApiService {
-  static final Dio _dio = Dio()
-    ..options.connectTimeout = const Duration(seconds: 10)
-    ..options.receiveTimeout = const Duration(seconds: 15);
+  static final Dio _dio = Dio(
+    BaseOptions(
+      connectTimeout: const Duration(seconds: 5),
+      receiveTimeout: const Duration(seconds: 10),
+    ),
+  );
   static const String baseUrl = 'https://quranxmlmaker.ssatechs.com/api';
   
-  // Cache for API responses to avoid repeated calls
-  static final Map<String, Map<String, dynamic>> _cache = {};
+  // Cache for API responses to avoid repeated calls (nullable for 404s)
+  static final Map<String, Map<String, dynamic>?> _cache = {};
   
   /// Get specific section data for an ayah
   /// Returns null if API call fails or data is not available
   static Future<SectionData?> getSectionData(int surah, int ayah, String section) async {
     final cacheKey = '${surah}_${ayah}_$section';
     
-    // Return cached data if available
+    // Return cached data if available (including null for 404s)
     if (_cache.containsKey(cacheKey)) {
-      return SectionData.fromJson(_cache[cacheKey]!);
+      final cached = _cache[cacheKey];
+      return cached != null ? SectionData.fromJson(cached) : null;
     }
     
     try {
       final response = await _dio.get(
         '$baseUrl/ayah/$surah/$ayah/$section',
         options: Options(
-          receiveTimeout: const Duration(seconds: 15),
           validateStatus: (status) => status != null && status < 500,
         ),
       );
@@ -38,28 +41,35 @@ class QuranApiService {
           _cache[cacheKey] = data;
           return SectionData.fromJson(data);
         } else {
+          // Cache negative result to prevent repeated checks
+          _cache[cacheKey] = null;
           debugPrint('API returned success=false for $surah:$ayah:$section');
         }
       } else if (response.statusCode == 404) {
-        debugPrint('No data found for $surah:$ayah:$section (404)');
+        // Cache 404 as null to prevent repeated failed requests
+        _cache[cacheKey] = null;
+        // debugPrint('No data found for $surah:$ayah:$section (404) - cached');
       } else {
         debugPrint('API returned status ${response.statusCode} for $surah:$ayah:$section');
       }
     } catch (e) {
+      // Cache failures to prevent repeated attempts for the same ayah
+      _cache[cacheKey] = null;
+      
       if (e is DioException) {
         switch (e.type) {
           case DioExceptionType.connectionTimeout:
           case DioExceptionType.receiveTimeout:
-            debugPrint('Timeout fetching section data for $surah:$ayah:$section');
+            debugPrint('Timeout for $surah:$ayah:$section - cached as unavailable');
             break;
           case DioExceptionType.connectionError:
-            debugPrint('Connection error fetching section data for $surah:$ayah:$section');
+            debugPrint('Connection error for $surah:$ayah:$section - cached as unavailable');
             break;
           default:
-            debugPrint('Dio error fetching section data for $surah:$ayah:$section - ${e.message}');
+            debugPrint('Dio error for $surah:$ayah:$section - ${e.message}');
         }
       } else {
-        debugPrint('Error fetching section data for $surah:$ayah:$section - $e');
+        debugPrint('Error for $surah:$ayah:$section - $e');
       }
     }
     

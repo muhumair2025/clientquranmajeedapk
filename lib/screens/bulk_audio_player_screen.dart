@@ -511,6 +511,13 @@ class _BulkAudioPlayerScreenState extends State<BulkAudioPlayerScreen>
           }
         },
         (error) {
+          // Don't show error if download was cancelled by user
+          if (error.toLowerCase().contains('cancelled') || 
+              error.toLowerCase().contains('canceled')) {
+            debugPrint('Download cancelled by user - not showing error');
+            return;
+          }
+          
           if (mounted) {
             _showError('${context.l.downloadError}: $error');
           }
@@ -539,10 +546,18 @@ class _BulkAudioPlayerScreenState extends State<BulkAudioPlayerScreen>
   }
 
   void _pauseDownloadCurrent() {
-    _pauseDownload(_currentSurahIndex, _currentAyahIndex);
-    setState(() {
-      _downloadStatus = DownloadStatus.paused;
-    });
+    try {
+      _pauseDownload(_currentSurahIndex, _currentAyahIndex);
+      if (mounted) {
+        setState(() {
+          _downloadStatus = DownloadStatus.paused;
+          _downloadProgress = 0.0; // Reset progress
+        });
+        _showSuccessSnackBar(context.l.downloadCancelledStatus);
+      }
+    } catch (e) {
+      debugPrint('Error stopping download: $e');
+    }
   }
 
   Future<void> _resumeDownloadCurrent() async {
@@ -578,6 +593,13 @@ class _BulkAudioPlayerScreenState extends State<BulkAudioPlayerScreen>
           }
         },
         (error) {
+          // Don't show error if download was cancelled by user
+          if (error.toLowerCase().contains('cancelled') || 
+              error.toLowerCase().contains('canceled')) {
+            debugPrint('Download cancelled by user - not showing error');
+            return;
+          }
+          
           if (mounted) {
             _showError('${context.l.downloadError}: $error');
           }
@@ -627,251 +649,245 @@ class _BulkAudioPlayerScreenState extends State<BulkAudioPlayerScreen>
             foregroundColor: Colors.white,
             actions: [
               IconButton(
-                icon: Icon(_showSettings ? Icons.close : Icons.settings),
-                onPressed: () {
-                  setState(() {
-                    _showSettings = !_showSettings;
-                  });
-                },
+                icon: const Icon(Icons.settings_rounded),
+                onPressed: () => _showSettingsModal(isDark, fontProvider),
               ),
             ],
           ),
-          body: Column(
-            children: [
-              // Settings Panel (collapsible)
-              AnimatedContainer(
-                duration: const Duration(milliseconds: 300),
-                height: _showSettings ? 300 : 0,
-                child: _showSettings ? _buildSettingsPanel(isDark, fontProvider) : null,
-              ),
-              
-              // Main Player Area
-              Expanded(
-                child: _buildPlayerArea(isDark, fontProvider),
-              ),
-            ],
-          ),
+          body: _buildPlayerArea(isDark, fontProvider),
         );
       },
     );
   }
 
-  Widget _buildSettingsPanel(bool isDark, FontProvider fontProvider) {
+  void _showSettingsModal(bool isDark, FontProvider fontProvider) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (context) => Container(
+        margin: const EdgeInsets.all(16),
+        height: MediaQuery.of(context).size.height * 0.5,
+        decoration: BoxDecoration(
+          color: isDark ? AppTheme.darkSurface : Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.1),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: _buildSettingsContent(isDark, fontProvider),
+      ),
+    );
+  }
+
+  Widget _buildSettingsContent(bool isDark, FontProvider fontProvider) {
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: isDark ? AppTheme.darkSurface : Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.1),
-            blurRadius: 4,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            context.l.playbackSettings,
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: isDark ? Colors.white : Colors.black,
-              fontFamily: fontProvider.selectedFontOption.family,
-            ),
-          ),
-          const SizedBox(height: 16),
-          
-          // From/To Selection
-          Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      context.l.fromAyah,
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: isDark ? Colors.white70 : Colors.grey[600],
-                        fontFamily: fontProvider.selectedFontOption.family,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    GestureDetector(
-                      onTap: () => _showAyahSelector(true), // true for "from"
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-                        decoration: BoxDecoration(
-                          color: isDark ? AppTheme.darkBackground : AppTheme.lightGray,
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(
-                            color: AppTheme.primaryGreen.withValues(alpha: 0.3),
-                          ),
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Expanded(
-                              child: Text(
-                                '${context.l.ayah} $_fromAyahIndex',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  color: isDark ? Colors.white : Colors.black,
-                                  fontFamily: fontProvider.selectedFontOption.family,
-                                ),
-                              ),
-                            ),
-                            Icon(
-                              Icons.arrow_drop_down_rounded,
-                              size: 20,
-                              color: AppTheme.primaryGreen,
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
+      child: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // Settings Header
+            Text(
+              context.l.playbackSettings,
+              style: context.textStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: AppTheme.primaryGreen,
               ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      context.l.toAyah,
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: isDark ? Colors.white70 : Colors.grey[600],
-                        fontFamily: fontProvider.selectedFontOption.family,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    GestureDetector(
-                      onTap: () => _showAyahSelector(false), // false for "to"
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-                        decoration: BoxDecoration(
-                          color: isDark ? AppTheme.darkBackground : AppTheme.lightGray,
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(
-                            color: AppTheme.primaryGreen.withValues(alpha: 0.3),
-                          ),
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Expanded(
-                              child: Text(
-                                '${context.l.ayah} $_toAyahIndex',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  color: isDark ? Colors.white : Colors.black,
-                                  fontFamily: fontProvider.selectedFontOption.family,
-                                ),
-                              ),
-                            ),
-                            Icon(
-                              Icons.arrow_drop_down_rounded,
-                              size: 20,
-                              color: AppTheme.primaryGreen,
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          
-          const SizedBox(height: 16),
-          
-          // Playback Mode
-          Text(
-            context.l.playbackMode,
-            style: TextStyle(
-              fontSize: 14,
-              color: isDark ? Colors.white70 : Colors.grey[600],
-              fontFamily: fontProvider.selectedFontOption.family,
+              textAlign: TextAlign.right,
+              textDirection: TextDirection.rtl,
             ),
-          ),
-          const SizedBox(height: 8),
-          Row(
-            children: PlaybackMode.values.map((mode) {
-              final isSelected = _playbackMode == mode;
-              return Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 4),
-                  child: GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        _playbackMode = mode;
-                      });
-                      _saveSettings(); // Save settings
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(vertical: 8),
-                      decoration: BoxDecoration(
-                        color: isSelected 
-                            ? AppTheme.primaryGreen 
-                            : (isDark ? AppTheme.darkBackground : AppTheme.lightGray),
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(
+            const SizedBox(height: 12),
+            
+            // From/To Selection - More compact
+            Row(
+              textDirection: TextDirection.rtl,
+              children: [
+                Expanded(
+                  child: _buildAyahSelector(
+                    label: context.l.fromAyah,
+                    value: _fromAyahIndex,
+                    onTap: () => _showAyahSelector(true),
+                    isDark: isDark,
+                    fontProvider: fontProvider,
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: _buildAyahSelector(
+                    label: context.l.toAyah,
+                    value: _toAyahIndex,
+                    onTap: () => _showAyahSelector(false),
+                    isDark: isDark,
+                    fontProvider: fontProvider,
+                  ),
+                ),
+              ],
+            ),
+            
+            const SizedBox(height: 12),
+            
+            // Playback Mode - Compact chips
+            Row(
+              textDirection: TextDirection.rtl,
+              children: PlaybackMode.values.map((mode) {
+                final isSelected = _playbackMode == mode;
+                return Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 3),
+                    child: GestureDetector(
+                      onTap: () {
+                        setState(() {
+                          _playbackMode = mode;
+                        });
+                        _saveSettings();
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        decoration: BoxDecoration(
                           color: isSelected 
                               ? AppTheme.primaryGreen 
-                              : AppTheme.primaryGreen.withValues(alpha: 0.3),
+                              : (isDark ? AppTheme.darkBackground : AppTheme.lightGray),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color: isSelected 
+                                ? AppTheme.primaryGreen 
+                                : AppTheme.primaryGreen.withValues(alpha: 0.2),
+                            width: 1.5,
+                          ),
                         ),
-                      ),
-                      child: Text(
-                        _getPlaybackModeText(mode),
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: isSelected 
-                              ? Colors.white 
-                              : (isDark ? Colors.white : Colors.black),
-                          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                          fontFamily: fontProvider.selectedFontOption.family,
+                        child: Text(
+                          _getPlaybackModeText(mode),
+                          textAlign: TextAlign.center,
+                          style: context.textStyle(
+                            fontSize: 12,
+                            color: isSelected ? Colors.white : (isDark ? Colors.white70 : Colors.black87),
+                            fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                          ),
                         ),
                       ),
                     ),
                   ),
-                ),
-              );
-            }).toList(),
-          ),
-          
-          const SizedBox(height: 16),
-          
-          // Auto play next toggle
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                context.l.autoPlayNext,
-                style: TextStyle(
-                  fontSize: 14,
-                  color: isDark ? Colors.white : Colors.black,
-                  fontFamily: fontProvider.selectedFontOption.family,
+                );
+              }).toList(),
+            ),
+            
+            const SizedBox(height: 12),
+            
+            // Auto play next toggle - Compact
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(
+                color: isDark 
+                    ? AppTheme.primaryGreen.withOpacity(0.08)
+                    : AppTheme.primaryGreen.withOpacity(0.05),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: AppTheme.primaryGreen.withOpacity(0.2),
+                  width: 1,
                 ),
               ),
-              Switch(
-                value: _autoPlayNext,
-                onChanged: (value) {
-                  setState(() {
-                    _autoPlayNext = value;
-                  });
-                  _saveSettings(); // Save settings
-                },
-                activeColor: AppTheme.primaryGreen,
+              child: Row(
+                textDirection: TextDirection.rtl,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Switch(
+                    value: _autoPlayNext,
+                    onChanged: (value) {
+                      setState(() {
+                        _autoPlayNext = value;
+                      });
+                      _saveSettings();
+                    },
+                    activeColor: AppTheme.primaryGreen,
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      context.l.autoPlayNext,
+                      style: context.textStyle(
+                        fontSize: 13,
+                        color: AppTheme.primaryGreen,
+                        fontWeight: FontWeight.w600,
+                      ),
+                      textAlign: TextAlign.right,
+                      textDirection: TextDirection.rtl,
+                    ),
+                  ),
+                ],
               ),
-            ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAyahSelector({
+    required String label,
+    required int value,
+    required VoidCallback onTap,
+    required bool isDark,
+    required FontProvider fontProvider,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+        decoration: BoxDecoration(
+          color: isDark 
+              ? AppTheme.primaryGreen.withOpacity(0.08)
+              : AppTheme.primaryGreen.withOpacity(0.05),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(
+            color: AppTheme.primaryGreen.withOpacity(0.3),
+            width: 1.5,
           ),
-        ],
+        ),
+        child: Row(
+          textDirection: TextDirection.rtl,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Icon(
+              Icons.arrow_drop_down_rounded,
+              size: 22,
+              color: AppTheme.primaryGreen,
+            ),
+            const SizedBox(width: 6),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    label,
+                    style: context.textStyle(
+                      fontSize: 11,
+                      color: isDark ? Colors.white60 : Colors.grey[600],
+                    ),
+                    textAlign: TextAlign.right,
+                    textDirection: TextDirection.rtl,
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    '${context.l.ayah} $value',
+                    style: context.textStyle(
+                      fontSize: 13,
+                      color: AppTheme.primaryGreen,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    textAlign: TextAlign.right,
+                    textDirection: TextDirection.rtl,
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -1092,50 +1108,64 @@ class _BulkAudioPlayerScreenState extends State<BulkAudioPlayerScreen>
           
           // Download Section
           Container(
-            padding: const EdgeInsets.all(16),
+            margin: const EdgeInsets.symmetric(horizontal: 16),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: BoxDecoration(
-              color: isDark ? AppTheme.darkSurface : Colors.white,
+              color: isDark 
+                  ? AppTheme.primaryGreen.withOpacity(0.08)
+                  : AppTheme.primaryGreen.withOpacity(0.05),
               borderRadius: BorderRadius.circular(12),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.1),
-                  blurRadius: 8,
-                  offset: const Offset(0, 4),
-                ),
-              ],
+              border: Border.all(
+                color: AppTheme.primaryGreen.withOpacity(0.2),
+                width: 1,
+              ),
             ),
-            child: Column(
+            child: Row(
+              textDirection: TextDirection.rtl,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Row(
-                  children: [
-                    Icon(
-                      Icons.download_rounded,
-                      color: AppTheme.primaryGreen,
-                      size: 20,
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
+                // Download button on the right
+                _buildDownloadButton(),
+                const SizedBox(width: 12),
+                // Status text on the left
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Text(
                         _getDownloadStatusText(),
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: isDark ? Colors.white : Colors.black,
-                          fontFamily: fontProvider.selectedFontOption.family,
+                        style: context.textStyle(
+                          fontSize: 13,
+                          color: AppTheme.primaryGreen,
+                          fontWeight: FontWeight.w600,
                         ),
+                        textAlign: TextAlign.right,
+                        textDirection: TextDirection.rtl,
                       ),
-                    ),
-                    _buildDownloadButton(),
-                  ],
-                ),
-                if (_downloadStatus == DownloadStatus.downloading)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 8),
-                    child: LinearProgressIndicator(
-                      value: _downloadProgress,
-                      backgroundColor: AppTheme.primaryGreen.withValues(alpha: 0.3),
-                      valueColor: AlwaysStoppedAnimation<Color>(AppTheme.primaryGreen),
-                    ),
+                      if (_downloadStatus == DownloadStatus.downloading) ...[
+                        const SizedBox(height: 8),
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(4),
+                          child: LinearProgressIndicator(
+                            value: _downloadProgress,
+                            backgroundColor: AppTheme.primaryGreen.withOpacity(0.2),
+                            valueColor: const AlwaysStoppedAnimation<Color>(AppTheme.primaryGreen),
+                            minHeight: 6,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          '${(_downloadProgress * 100).toInt()}%',
+                          style: context.textStyle(
+                            fontSize: 11,
+                            color: AppTheme.primaryGreen,
+                          ),
+                          textAlign: TextAlign.right,
+                        ),
+                      ],
+                    ],
                   ),
+                ),
               ],
             ),
           ),
@@ -1500,28 +1530,52 @@ class _BulkAudioPlayerScreenState extends State<BulkAudioPlayerScreen>
     switch (_downloadStatus) {
       case DownloadStatus.notStarted:
       case DownloadStatus.failed:
-        return IconButton(
-          onPressed: _startDownload,
-          icon: const Icon(Icons.download_rounded),
-          color: AppTheme.primaryGreen,
+        return Container(
+          decoration: BoxDecoration(
+            color: AppTheme.primaryGreen.withOpacity(0.15),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: IconButton(
+            onPressed: _startDownload,
+            icon: const Icon(Icons.download_rounded),
+            color: AppTheme.primaryGreen,
+          ),
         );
       case DownloadStatus.downloading:
-        return IconButton(
-          onPressed: _pauseDownloadCurrent,
-          icon: const Icon(Icons.pause_rounded),
-          color: AppTheme.primaryGreen,
+        return Container(
+          decoration: BoxDecoration(
+            color: Colors.orange.withOpacity(0.15),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: IconButton(
+            onPressed: _pauseDownloadCurrent,
+            icon: const Icon(Icons.stop_rounded),
+            color: Colors.orange,
+          ),
         );
       case DownloadStatus.paused:
-        return IconButton(
-          onPressed: _resumeDownloadCurrent,
-          icon: const Icon(Icons.play_arrow_rounded),
-          color: AppTheme.primaryGreen,
+        return Container(
+          decoration: BoxDecoration(
+            color: AppTheme.primaryGreen.withOpacity(0.15),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: IconButton(
+            onPressed: _resumeDownloadCurrent,
+            icon: const Icon(Icons.play_arrow_rounded),
+            color: AppTheme.primaryGreen,
+          ),
         );
       case DownloadStatus.completed:
-        return IconButton(
-          onPressed: _deleteDownloadCurrent,
-          icon: const Icon(Icons.delete_rounded),
-          color: Colors.red,
+        return Container(
+          decoration: BoxDecoration(
+            color: Colors.red.withOpacity(0.15),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: IconButton(
+            onPressed: _deleteDownloadCurrent,
+            icon: const Icon(Icons.delete_rounded),
+            color: Colors.red,
+          ),
         );
     }
   }

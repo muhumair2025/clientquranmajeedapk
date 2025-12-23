@@ -535,6 +535,13 @@ class _FullScreenAudioPlayerState extends State<FullScreenAudioPlayer>
   }
   
   void _onDownloadError(String error) {
+    // Don't show error if download was cancelled by user
+    if (error.toLowerCase().contains('cancelled') || 
+        error.toLowerCase().contains('canceled')) {
+      debugPrint('Download cancelled by user - not showing error');
+      return;
+    }
+    
     if (mounted) {
       _showUserFriendlyError(context.l.downloadError, error);
     }
@@ -554,23 +561,37 @@ class _FullScreenAudioPlayerState extends State<FullScreenAudioPlayer>
   }
 
   void _pauseDownload() {
-    switch (widget.sectionType) {
-      case 'lughat':
-        LughatService.pauseDownload(widget.surahIndex, widget.ayahIndex, LughatType.audio);
-        break;
-      case 'tafseer':
-        TafseerService.pauseDownload(widget.surahIndex, widget.ayahIndex, TafseerType.audio);
-        break;
-      case 'faidi':
-        FaidiService.pauseDownload(widget.surahIndex, widget.ayahIndex, FaidiType.audio);
-        break;
-      default:
-        LughatService.pauseDownload(widget.surahIndex, widget.ayahIndex, LughatType.audio);
-        break;
+    try {
+      switch (widget.sectionType) {
+        case 'lughat':
+          LughatService.pauseDownload(widget.surahIndex, widget.ayahIndex, LughatType.audio);
+          break;
+        case 'tafseer':
+          TafseerService.pauseDownload(widget.surahIndex, widget.ayahIndex, TafseerType.audio);
+          break;
+        case 'faidi':
+          FaidiService.pauseDownload(widget.surahIndex, widget.ayahIndex, FaidiType.audio);
+          break;
+        default:
+          LughatService.pauseDownload(widget.surahIndex, widget.ayahIndex, LughatType.audio);
+          break;
+      }
+      
+      if (mounted) {
+        setState(() {
+          _downloadStatus = DownloadStatus.paused;
+          _downloadProgress = 0.0; // Reset progress
+        });
+        _showSuccessSnackBar(context.l.downloadCancelledStatus);
+      }
+    } catch (e) {
+      debugPrint('Error stopping download: $e');
+      if (mounted) {
+        setState(() {
+          _downloadStatus = DownloadStatus.failed;
+        });
+      }
     }
-    setState(() {
-      _downloadStatus = DownloadStatus.paused;
-    });
   }
 
   Future<void> _resumeDownload() async {
@@ -747,52 +768,67 @@ class _FullScreenAudioPlayerState extends State<FullScreenAudioPlayer>
   }
 
   Widget _buildDownloadSection() {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      padding: const EdgeInsets.all(12),
+      margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: AppTheme.primaryGreen.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(8),
+        color: isDark 
+            ? AppTheme.primaryGreen.withOpacity(0.08)
+            : AppTheme.primaryGreen.withOpacity(0.05),
+        borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: AppTheme.primaryGreen.withValues(alpha: 0.3),
+          color: AppTheme.primaryGreen.withOpacity(0.2),
+          width: 1,
         ),
       ),
-      child: Column(
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                _getDownloadStatusText(),
-                style: TextStyle(
-                  fontFamily: 'Bahij Badr Light',
-                  fontSize: 14,
-                  color: AppTheme.primaryGreen,
-                  fontWeight: FontWeight.bold,
+          // Download button on the right
+          _buildDownloadButton(),
+          const SizedBox(width: 12),
+          // Status text on the left
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Text(
+                  _getDownloadStatusText(),
+                  style: context.textStyle(
+                    fontSize: 13,
+                    color: AppTheme.primaryGreen,
+                    fontWeight: FontWeight.w600,
+                  ),
+                  textAlign: TextAlign.right,
+                  textDirection: TextDirection.rtl,
                 ),
-                textDirection: TextDirection.rtl,
-              ),
-              _buildDownloadButton(),
-            ],
+                if (_downloadStatus == DownloadStatus.downloading || _downloadStatus == DownloadStatus.paused) ...[
+                  const SizedBox(height: 8),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(4),
+                    child: LinearProgressIndicator(
+                      value: _downloadProgress,
+                      backgroundColor: AppTheme.primaryGreen.withOpacity(0.2),
+                      valueColor: const AlwaysStoppedAnimation<Color>(AppTheme.primaryGreen),
+                      minHeight: 6,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    '${(_downloadProgress * 100).toInt()}%',
+                    style: context.textStyle(
+                      fontSize: 11,
+                      color: AppTheme.primaryGreen,
+                    ),
+                    textAlign: TextAlign.right,
+                  ),
+                ],
+              ],
+            ),
           ),
-          
-          if (_downloadStatus == DownloadStatus.downloading || _downloadStatus == DownloadStatus.paused) ...[
-            const SizedBox(height: 12),
-            LinearProgressIndicator(
-              value: _downloadProgress,
-              backgroundColor: Colors.grey.shade300,
-              valueColor: AlwaysStoppedAnimation<Color>(AppTheme.primaryGreen),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              '${(_downloadProgress * 100).toInt()}%',
-              style: TextStyle(
-                fontFamily: 'Bahij Badr Light',
-                fontSize: 12,
-                color: AppTheme.primaryGreen,
-              ),
-            ),
-          ],
         ],
       ),
     );
@@ -817,28 +853,52 @@ class _FullScreenAudioPlayerState extends State<FullScreenAudioPlayer>
     switch (_downloadStatus) {
       case DownloadStatus.notStarted:
       case DownloadStatus.failed:
-        return IconButton(
-          onPressed: _startDownload,
-          icon: const Icon(Icons.download_rounded),
-          color: AppTheme.primaryGreen,
+        return Container(
+          decoration: BoxDecoration(
+            color: AppTheme.primaryGreen.withOpacity(0.15),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: IconButton(
+            onPressed: _startDownload,
+            icon: const Icon(Icons.download_rounded),
+            color: AppTheme.primaryGreen,
+          ),
         );
       case DownloadStatus.downloading:
-        return IconButton(
-          onPressed: _pauseDownload,
-          icon: const Icon(Icons.pause_rounded),
-          color: AppTheme.primaryGreen,
+        return Container(
+          decoration: BoxDecoration(
+            color: Colors.orange.withOpacity(0.15),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: IconButton(
+            onPressed: _pauseDownload,
+            icon: const Icon(Icons.stop_rounded),
+            color: Colors.orange,
+          ),
         );
       case DownloadStatus.paused:
-        return IconButton(
-          onPressed: _resumeDownload,
-          icon: const Icon(Icons.play_arrow_rounded),
-          color: AppTheme.primaryGreen,
+        return Container(
+          decoration: BoxDecoration(
+            color: AppTheme.primaryGreen.withOpacity(0.15),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: IconButton(
+            onPressed: _resumeDownload,
+            icon: const Icon(Icons.play_arrow_rounded),
+            color: AppTheme.primaryGreen,
+          ),
         );
       case DownloadStatus.completed:
-        return IconButton(
-          onPressed: _deleteDownload,
-          icon: const Icon(Icons.delete_rounded),
-          color: Colors.red,
+        return Container(
+          decoration: BoxDecoration(
+            color: Colors.red.withOpacity(0.15),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: IconButton(
+            onPressed: _deleteDownload,
+            icon: const Icon(Icons.delete_rounded),
+            color: Colors.red,
+          ),
         );
     }
   }
@@ -879,13 +939,13 @@ class _FullScreenAudioPlayerState extends State<FullScreenAudioPlayer>
           children: [
             // Header
             Container(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               decoration: BoxDecoration(
                 color: AppTheme.primaryGreen,
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.1),
-                    blurRadius: 4,
+                    color: Colors.black.withValues(alpha: 0.08),
+                    blurRadius: 8,
                     offset: const Offset(0, 2),
                   ),
                 ],
@@ -896,14 +956,15 @@ class _FullScreenAudioPlayerState extends State<FullScreenAudioPlayer>
                   Expanded(
                     child: Text(
                       widget.title,
-                      style: const TextStyle(
+                      style: context.textStyle(
                         color: Colors.white,
-                        fontSize: 18,
+                        fontSize: 17,
                         fontWeight: FontWeight.bold,
-                        fontFamily: 'Bahij Badr Bold',
                       ),
                       textAlign: TextAlign.right,
                       textDirection: TextDirection.rtl,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
                   IconButton(
@@ -911,7 +972,10 @@ class _FullScreenAudioPlayerState extends State<FullScreenAudioPlayer>
                     icon: const Icon(
                       Icons.close_rounded,
                       color: Colors.white,
+                      size: 24,
                     ),
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
                   ),
                 ],
               ),
@@ -922,12 +986,12 @@ class _FullScreenAudioPlayerState extends State<FullScreenAudioPlayer>
               child: SingleChildScrollView(
                 child: Column(
                   children: [
-                    const SizedBox(height: 40),
+                    const SizedBox(height: 30),
                     
                     // Audio icon with rotation animation
                     Container(
-                      width: 200,
-                      height: 200,
+                      width: 160,
+                      height: 160,
                       decoration: BoxDecoration(
                         color: AppTheme.primaryGreen.withValues(alpha: 0.1),
                         shape: BoxShape.circle,
@@ -938,8 +1002,8 @@ class _FullScreenAudioPlayerState extends State<FullScreenAudioPlayer>
                           return Transform.rotate(
                             angle: _rotationController.value * 2 * 3.14159,
                             child: Icon(
-                              _localFilePath != null ? Icons.offline_bolt_rounded : Icons.audiotrack_rounded,
-                              size: 80,
+                              _localFilePath != null ? Icons.offline_bolt_rounded : Icons.headphones_rounded,
+                              size: 70,
                               color: AppTheme.primaryGreen,
                             ),
                           );
@@ -947,24 +1011,31 @@ class _FullScreenAudioPlayerState extends State<FullScreenAudioPlayer>
                       ),
                     ),
                     
-                    const SizedBox(height: 40),
+                    const SizedBox(height: 30),
                     
                     // Progress bar
                     Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 32),
+                      padding: const EdgeInsets.symmetric(horizontal: 24),
                       child: Column(
                         children: [
-                          Slider(
-                            value: _position.inSeconds.toDouble(),
-                            max: _duration.inSeconds.toDouble(),
-                            onChanged: _seek,
-                            activeColor: AppTheme.primaryGreen,
-                            inactiveColor: AppTheme.primaryGreen.withValues(alpha: 0.3),
+                          SliderTheme(
+                            data: SliderTheme.of(context).copyWith(
+                              trackHeight: 4,
+                              thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 6),
+                              overlayShape: const RoundSliderOverlayShape(overlayRadius: 14),
+                            ),
+                            child: Slider(
+                              value: _position.inSeconds.toDouble(),
+                              max: _duration.inSeconds.toDouble(),
+                              onChanged: _seek,
+                              activeColor: AppTheme.primaryGreen,
+                              inactiveColor: AppTheme.primaryGreen.withValues(alpha: 0.2),
+                            ),
                           ),
                           
                           // Time display
                           Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            padding: const EdgeInsets.symmetric(horizontal: 8),
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
@@ -972,14 +1043,16 @@ class _FullScreenAudioPlayerState extends State<FullScreenAudioPlayer>
                                   _formatDuration(_position),
                                   style: TextStyle(
                                     color: isDark ? Colors.white70 : Colors.black54,
-                                    fontSize: 14,
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w500,
                                   ),
                                 ),
                                 Text(
                                   _formatDuration(_duration),
                                   style: TextStyle(
                                     color: isDark ? Colors.white70 : Colors.black54,
-                                    fontSize: 14,
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w500,
                                   ),
                                 ),
                               ],
@@ -989,7 +1062,7 @@ class _FullScreenAudioPlayerState extends State<FullScreenAudioPlayer>
                       ),
                     ),
                     
-                    const SizedBox(height: 40),
+                    const SizedBox(height: 30),
                     
                     // Audio Controls
                     Row(
@@ -997,10 +1070,10 @@ class _FullScreenAudioPlayerState extends State<FullScreenAudioPlayer>
                       children: [
                         // Backward 10s button
                         Container(
-                          width: 60,
-                          height: 60,
+                          width: 56,
+                          height: 56,
                           decoration: BoxDecoration(
-                            color: AppTheme.primaryGreen.withValues(alpha: 0.2),
+                            color: AppTheme.primaryGreen.withValues(alpha: 0.15),
                             shape: BoxShape.circle,
                           ),
                           child: IconButton(
@@ -1008,25 +1081,25 @@ class _FullScreenAudioPlayerState extends State<FullScreenAudioPlayer>
                             icon: const Icon(
                               Icons.replay_10_rounded,
                               color: AppTheme.primaryGreen,
-                              size: 28,
+                              size: 26,
                             ),
                           ),
                         ),
                         
-                        const SizedBox(width: 20),
+                        const SizedBox(width: 24),
                         
                         // Play/Pause button
                         Container(
-                          width: 80,
-                          height: 80,
+                          width: 70,
+                          height: 70,
                           decoration: BoxDecoration(
                             color: AppTheme.primaryGreen,
                             shape: BoxShape.circle,
                             boxShadow: [
                               BoxShadow(
-                                color: AppTheme.primaryGreen.withValues(alpha: 0.3),
-                                blurRadius: 20,
-                                offset: const Offset(0, 10),
+                                color: AppTheme.primaryGreen.withValues(alpha: 0.4),
+                                blurRadius: 16,
+                                offset: const Offset(0, 6),
                               ),
                             ],
                           ),
@@ -1038,10 +1111,10 @@ class _FullScreenAudioPlayerState extends State<FullScreenAudioPlayer>
                                     builder: (context, child) {
                                       return Transform.rotate(
                                         angle: _rotationController.value * 2 * 3.14159,
-                                        child: Icon(
+                                        child: const Icon(
                                           Icons.sync_rounded,
                                           color: Colors.white,
-                                          size: 30,
+                                          size: 28,
                                         ),
                                       );
                                     },
@@ -1049,19 +1122,19 @@ class _FullScreenAudioPlayerState extends State<FullScreenAudioPlayer>
                                 : Icon(
                                     _isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
                                     color: Colors.white,
-                                    size: 40,
+                                    size: 36,
                                   ),
                           ),
                         ),
                         
-                        const SizedBox(width: 20),
+                        const SizedBox(width: 24),
                         
                         // Forward 10s button
                         Container(
-                          width: 60,
-                          height: 60,
+                          width: 56,
+                          height: 56,
                           decoration: BoxDecoration(
-                            color: AppTheme.primaryGreen.withValues(alpha: 0.2),
+                            color: AppTheme.primaryGreen.withValues(alpha: 0.15),
                             shape: BoxShape.circle,
                           ),
                           child: IconButton(
@@ -1069,17 +1142,19 @@ class _FullScreenAudioPlayerState extends State<FullScreenAudioPlayer>
                             icon: const Icon(
                               Icons.forward_10_rounded,
                               color: AppTheme.primaryGreen,
-                              size: 28,
+                              size: 26,
                             ),
                           ),
                         ),
                       ],
                     ),
                     
+                    const SizedBox(height: 24),
+                    
                     // Download section
                     _buildDownloadSection(),
                     
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 16),
                   ],
                 ),
               ),

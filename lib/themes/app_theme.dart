@@ -29,23 +29,25 @@ class AppTheme {
   // Method to get language-specific light theme
   static ThemeData getLightTheme(String languageCode) {
     String fontFamily = FontManager.getRegularFont(languageCode);
-    return _buildLightTheme(fontFamily);
+    double fontScale = FontManager.getFontSizeScale(languageCode);
+    return _buildLightTheme(fontFamily, languageCode, fontScale);
   }
 
   // Method to get language-specific dark theme
   static ThemeData getDarkTheme(String languageCode) {
     String fontFamily = FontManager.getRegularFont(languageCode);
-    return _buildDarkTheme(fontFamily);
+    double fontScale = FontManager.getFontSizeScale(languageCode);
+    return _buildDarkTheme(fontFamily, languageCode, fontScale);
   }
 
   // Light Theme (default - keeping for backward compatibility)
-  static ThemeData lightTheme = _buildLightTheme('Bahij Badr Light');
+  static ThemeData lightTheme = _buildLightTheme('Bahij Badr Light', 'ps', 1.15);
 
   // Dark Theme (default - keeping for backward compatibility)
-  static ThemeData darkTheme = _buildDarkTheme('Bahij Badr Light');
+  static ThemeData darkTheme = _buildDarkTheme('Bahij Badr Light', 'ps', 1.15);
 
   // Private method to build light theme with specific font
-  static ThemeData _buildLightTheme(String fontFamily) {
+  static ThemeData _buildLightTheme(String fontFamily, String languageCode, double fontScale) {
     return ThemeData(
     useMaterial3: true,
     brightness: Brightness.light,
@@ -68,7 +70,7 @@ class AppTheme {
       elevation: 0,
       centerTitle: true,
       titleTextStyle: TextStyle(
-        fontSize: 20,
+        fontSize: 20 * fontScale,
         fontWeight: FontWeight.bold,
         color: Colors.white,
         fontFamily: fontFamily,
@@ -97,31 +99,29 @@ class AppTheme {
     
     textTheme: TextTheme(
       headlineLarge: TextStyle(
-        fontSize: 24,
+        fontSize: 24 * fontScale,
         fontWeight: FontWeight.bold,
         color: lightTextPrimary,
-        fontFamily: FontManager.getBoldFont(fontFamily == 'Bahij Badr Light' ? 'ps' : 
-                    fontFamily == 'Poppins Regular' ? 'en' : 
-                    fontFamily == 'Noto Nastaliq Regular' ? 'ur' : 'ar'),
+        fontFamily: FontManager.getBoldFont(languageCode),
       ),
       headlineMedium: TextStyle(
-        fontSize: 20,
+        fontSize: 20 * fontScale,
         fontWeight: FontWeight.w600,
         color: lightTextPrimary,
         fontFamily: fontFamily,
       ),
       bodyLarge: TextStyle(
-        fontSize: 16,
+        fontSize: 16 * fontScale,
         color: lightTextPrimary,
         fontFamily: fontFamily,
       ),
       bodyMedium: TextStyle(
-        fontSize: 14,
+        fontSize: 14 * fontScale,
         color: lightTextSecondary,
         fontFamily: fontFamily,
       ),
       labelLarge: TextStyle(
-        fontSize: 14,
+        fontSize: 14 * fontScale,
         fontWeight: FontWeight.w600,
         color: lightTextPrimary,
         fontFamily: fontFamily,
@@ -135,7 +135,7 @@ class AppTheme {
   }
 
   // Private method to build dark theme with specific font
-  static ThemeData _buildDarkTheme(String fontFamily) {
+  static ThemeData _buildDarkTheme(String fontFamily, String languageCode, double fontScale) {
     return ThemeData(
       useMaterial3: true,
       brightness: Brightness.dark,
@@ -158,7 +158,7 @@ class AppTheme {
         elevation: 0,
         centerTitle: true,
         titleTextStyle: TextStyle(
-          fontSize: 20,
+          fontSize: 20 * fontScale,
           fontWeight: FontWeight.bold,
           color: Colors.white,
           fontFamily: fontFamily,
@@ -187,31 +187,29 @@ class AppTheme {
       
       textTheme: TextTheme(
         headlineLarge: TextStyle(
-          fontSize: 24,
+          fontSize: 24 * fontScale,
           fontWeight: FontWeight.bold,
           color: darkTextPrimary,
-          fontFamily: FontManager.getBoldFont(fontFamily == 'Bahij Badr Light' ? 'ps' : 
-                      fontFamily == 'Poppins Regular' ? 'en' : 
-                      fontFamily == 'Noto Nastaliq Regular' ? 'ur' : 'ar'),
+          fontFamily: FontManager.getBoldFont(languageCode),
         ),
         headlineMedium: TextStyle(
-          fontSize: 20,
+          fontSize: 20 * fontScale,
           fontWeight: FontWeight.w600,
           color: darkTextPrimary,
           fontFamily: fontFamily,
         ),
         bodyLarge: TextStyle(
-          fontSize: 16,
+          fontSize: 16 * fontScale,
           color: darkTextPrimary,
           fontFamily: fontFamily,
         ),
         bodyMedium: TextStyle(
-          fontSize: 14,
+          fontSize: 14 * fontScale,
           color: darkTextSecondary,
           fontFamily: fontFamily,
         ),
         labelLarge: TextStyle(
-          fontSize: 14,
+          fontSize: 14 * fontScale,
           fontWeight: FontWeight.w600,
           color: darkTextPrimary,
           fontFamily: fontFamily,

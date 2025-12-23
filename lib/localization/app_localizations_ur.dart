@@ -38,6 +38,9 @@ class AppLocalizationsUr extends AppLocalizations {
   String get more => 'مزید';
   @override
   String get latest => 'تازہ ترین';
+  
+  @override
+  String get live => 'براہ راست';
 
   // Home Page Cards (in Urdu)
   @override
@@ -45,7 +48,7 @@ class AppLocalizationsUr extends AppLocalizations {
   @override
   String get aqeedahSubtitle => 'اسلام کی بنیادیں';
   @override
-  String get tafseerTranslation => 'تفسیر اور ترجمہ';
+  String get tafseerTranslation => 'ترجمہ اور تفسیر';
   @override
   String get tafseerSubtitle => 'قرآن کی تشریح';
   @override
@@ -57,13 +60,35 @@ class AppLocalizationsUr extends AppLocalizations {
   @override
   String get hadithSubtitle => 'نبی کے اقوال';
   @override
-  String get questionAnswer => 'سوالات اور جوابات';
+  String get questionAnswer => 'سوال و جواب';
   @override
   String get questionAnswerSubtitle => 'آپ کے سوالات';
   @override
-  String get books => 'کتابیں';
+  String get books => 'کتب';
   @override
-  String get booksSubtitle => 'اسلامی کتابیں';
+  String get booksSubtitle => 'اسلامی کتب';
+  
+  // New Home Page Cards
+  @override
+  String get seerahHistory => 'سیرت اور تاریخ';
+  @override
+  String get seerahHistorySubtitle => 'نبی کی سوانح اور تاریخ';
+  @override
+  String get scientificCourses => 'علمی دروس';
+  @override
+  String get scientificCoursesSubtitle => 'علمی دروس';
+  @override
+  String get ethicsManners => 'اخلاق اور آداب';
+  @override
+  String get ethicsMannersSubtitle => 'اسلامی اخلاقیات';
+  @override
+  String get adhkarDuas => 'اذکار اور دعائیں';
+  @override
+  String get adhkarDuasSubtitle => 'روزمرہ کی دعائیں';
+  @override
+  String get variousStatements => 'مختلف بیانات';
+  @override
+  String get variousStatementsSubtitle => 'مختلف محاضرات';
 
   // Quran Navigation
   @override

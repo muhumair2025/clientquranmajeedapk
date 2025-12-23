@@ -39,6 +39,13 @@ class _VideoDownloadsScreenState extends State<VideoDownloadsScreen> {
         
         for (var file in files) {
           if (file is File && file.path.endsWith('.mp4')) {
+            // Check if file is properly downloaded (size > 0)
+            final fileStats = await file.stat();
+            if (fileStats.size == 0) {
+              debugPrint('Skipping incomplete video file: ${file.path}');
+              continue; // Skip empty/incomplete files
+            }
+            
             // Extract surah and ayah from filename (e.g., "1_1_video_abc12345.mp4")
             final filename = file.path.split('/').last;
             final parts = filename.split('_');

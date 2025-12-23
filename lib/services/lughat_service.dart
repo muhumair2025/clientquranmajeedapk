@@ -405,7 +405,7 @@ class LughatService {
     // Fallback to XML
     final key = '${surahIndex}_$ayahIndex';
     final hasData = _audioData.containsKey(key);
-    debugPrint('hasAudioData for $key: $hasData (from XML fallback)');
+    // debugPrint('hasAudioData for $key: $hasData (from XML fallback)');
     return hasData;
   }
 

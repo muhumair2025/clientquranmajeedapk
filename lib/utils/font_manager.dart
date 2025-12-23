@@ -1,6 +1,14 @@
 import 'package:flutter/material.dart';
 
 class FontManager {
+  // Font size scale factors for each language
+  static const Map<String, double> _fontSizeScales = {
+    'ps': 1.15, // Pashto font appears smaller, increase by 15%
+    'en': 1.0,  // English standard size
+    'ur': 1.0,  // Urdu standard size
+    'ar': 1.0,  // Arabic standard size
+  };
+
   // Font families for each language
   static const Map<String, FontConfig> _languageFonts = {
     'ps': FontConfig(
@@ -64,6 +72,16 @@ class FontManager {
     return _languageFonts[languageCode]?.light ?? _languageFonts['ps']!.light;
   }
 
+  // Get font size scale for language
+  static double getFontSizeScale(String languageCode) {
+    return _fontSizeScales[languageCode] ?? 1.0;
+  }
+
+  // Get scaled font size for language
+  static double getScaledFontSize(String languageCode, double baseFontSize) {
+    return baseFontSize * getFontSizeScale(languageCode);
+  }
+
   // Get text style for specific language
   static TextStyle getTextStyle(
     String languageCode, {
@@ -74,9 +92,10 @@ class FontManager {
     double? letterSpacing,
     double? wordSpacing,
   }) {
+    final scaledFontSize = getScaledFontSize(languageCode, fontSize);
     return TextStyle(
       fontFamily: getFontFamily(languageCode, weight: fontWeight),
-      fontSize: fontSize,
+      fontSize: scaledFontSize,
       fontWeight: fontWeight,
       color: color,
       height: height,
@@ -92,9 +111,10 @@ class FontManager {
     Color? color,
     double? height,
   }) {
+    final scaledFontSize = getScaledFontSize(languageCode, fontSize);
     return TextStyle(
       fontFamily: getBoldFont(languageCode),
-      fontSize: fontSize,
+      fontSize: scaledFontSize,
       fontWeight: FontWeight.bold,
       color: color,
       height: height,
@@ -108,9 +128,10 @@ class FontManager {
     Color? color,
     double? height,
   }) {
+    final scaledFontSize = getScaledFontSize(languageCode, fontSize);
     return TextStyle(
       fontFamily: getRegularFont(languageCode),
-      fontSize: fontSize,
+      fontSize: scaledFontSize,
       fontWeight: FontWeight.normal,
       color: color,
       height: height,
@@ -124,9 +145,10 @@ class FontManager {
     Color? color,
     double? height,
   }) {
+    final scaledFontSize = getScaledFontSize(languageCode, fontSize);
     return TextStyle(
       fontFamily: getLightFont(languageCode),
-      fontSize: fontSize,
+      fontSize: scaledFontSize,
       fontWeight: FontWeight.w300,
       color: color,
       height: height,

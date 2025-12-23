@@ -38,14 +38,17 @@ class AppLocalizationsEn extends AppLocalizations {
   String get more => 'More';
   @override
   String get latest => 'Latest';
+  
+  @override
+  String get live => 'Live';
 
   // Home Page Cards (translated to English)
   @override
-  String get aqeedah => 'Aqeedah';
+  String get aqeedah => 'Belief (Aqeedah)';
   @override
   String get aqeedahSubtitle => 'Foundations of Islam';
   @override
-  String get tafseerTranslation => 'Tafseer & Translation';
+  String get tafseerTranslation => 'Translation & Tafsir';
   @override
   String get tafseerSubtitle => 'Quran Commentary';
   @override
@@ -57,13 +60,35 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get hadithSubtitle => 'Prophetic Traditions';
   @override
-  String get questionAnswer => 'Q & A';
+  String get questionAnswer => 'Questions & Answers';
   @override
   String get questionAnswerSubtitle => 'Your Questions';
   @override
   String get books => 'Books';
   @override
   String get booksSubtitle => 'Islamic Books';
+  
+  // New Home Page Cards
+  @override
+  String get seerahHistory => 'Seerah & History';
+  @override
+  String get seerahHistorySubtitle => 'Prophetic Biography & History';
+  @override
+  String get scientificCourses => 'Scholarly Lectures';
+  @override
+  String get scientificCoursesSubtitle => 'Scholarly Lectures';
+  @override
+  String get ethicsManners => 'Ethics & Manners';
+  @override
+  String get ethicsMannersSubtitle => 'Islamic Ethics';
+  @override
+  String get adhkarDuas => 'Azkar & Duas';
+  @override
+  String get adhkarDuasSubtitle => 'Daily Supplications';
+  @override
+  String get variousStatements => 'Miscellaneous Lectures';
+  @override
+  String get variousStatementsSubtitle => 'Miscellaneous Lectures';
 
   // Quran Navigation
   @override

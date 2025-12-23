@@ -26,6 +26,7 @@ abstract class AppLocalizations {
   String get quranMajeed;
   String get more;
   String get latest;
+  String get live;
 
   // Home Page Cards (Core content - keep in Pashto)
   String get aqeedah;
@@ -40,6 +41,18 @@ abstract class AppLocalizations {
   String get questionAnswerSubtitle;
   String get books;
   String get booksSubtitle;
+  
+  // New Home Page Cards
+  String get seerahHistory;
+  String get seerahHistorySubtitle;
+  String get scientificCourses;
+  String get scientificCoursesSubtitle;
+  String get ethicsManners;
+  String get ethicsMannersSubtitle;
+  String get adhkarDuas;
+  String get adhkarDuasSubtitle;
+  String get variousStatements;
+  String get variousStatementsSubtitle;
 
   // Quran Navigation
   String get quranKareem;

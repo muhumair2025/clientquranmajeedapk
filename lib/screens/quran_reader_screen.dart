@@ -14,6 +14,7 @@ import '../providers/font_provider.dart';
 import '../localization/app_localizations_extension.dart';
 import 'bulk_audio_player_screen.dart';
 import 'dart:async';
+import 'package:share_plus/share_plus.dart';
 
 class QuranReaderScreen extends StatefulWidget {
   final int surahIndex;
@@ -1147,8 +1148,14 @@ class _QuranReaderScreenState extends State<QuranReaderScreen> {
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
       useSafeArea: true,
-      builder: (context) => Consumer<FontProvider>(
-        builder: (context, fontProvider, child) => _buildAsyncTranslationModal(surahIndex, ayahIndex, ayahText, translation, fontProvider),
+      isDismissible: true,
+      enableDrag: true,
+      barrierColor: Colors.black54,
+      builder: (context) => GestureDetector(
+        onTap: () {}, // Prevents tap from propagating to barrier
+        child: Consumer<FontProvider>(
+          builder: (context, fontProvider, child) => _buildAsyncTranslationModal(surahIndex, ayahIndex, ayahText, translation, fontProvider),
+        ),
       ),
     ).then((_) {
       // Remove highlight after 1 second when modal is closed
@@ -1198,28 +1205,39 @@ class _QuranReaderScreenState extends State<QuranReaderScreen> {
           availability = snapshot.data!;
         }
         
-        return Container(
-          margin: const EdgeInsets.all(16),
-          constraints: BoxConstraints(
-            maxHeight: screenHeight * 0.9,
-          ),
-          decoration: BoxDecoration(
-            color: isDark ? AppTheme.darkSurface : Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.1),
-                blurRadius: 10,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Header with navigation
+        return Align(
+          alignment: Alignment.bottomCenter,
+          child: Container(
+            margin: const EdgeInsets.only(left: 16, right: 16, bottom: 16, top: 60),
+            height: screenHeight * 0.75, // Fixed height at 75% of screen
+            width: double.infinity,
+            decoration: BoxDecoration(
+              color: isDark ? AppTheme.darkSurface : Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.1),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.max,
+              children: [
+              // Header with navigation - Fixed at top
               Container(
-                padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
+                decoration: BoxDecoration(
+                  color: isDark ? AppTheme.darkSurface : Colors.white,
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+                  border: Border(
+                    bottom: BorderSide(
+                      color: isDark ? Colors.white.withOpacity(0.1) : Colors.grey.shade200,
+                      width: 1,
+                    ),
+                  ),
+                ),
                 child: Row(
                   children: [
                     // Previous ayah button
@@ -1280,6 +1298,16 @@ class _QuranReaderScreenState extends State<QuranReaderScreen> {
                     
                     const SizedBox(width: 8),
                     
+                    // Share button
+                    _buildNavigationButton(
+                      icon: Icons.share_rounded,
+                      onPressed: () => _shareAyah(surahIndex, ayahIndex, ayahText, translation),
+                      isEnabled: true,
+                      isDark: isDark,
+                    ),
+                    
+                    const SizedBox(width: 8),
+                    
                     // Favorite button
                     _buildFavoriteButton(surahIndex, ayahIndex, isDark),
                     
@@ -1296,27 +1324,28 @@ class _QuranReaderScreenState extends State<QuranReaderScreen> {
                 ),
               ),
               
-              Flexible(
+              Expanded(
                 child: SingleChildScrollView(
+                  physics: const BouncingScrollPhysics(),
                   child: Column(
                     children: [
                       // Arabic text
                       Container(
                         width: double.infinity,
-                        padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+                        padding: const EdgeInsets.fromLTRB(12, 0, 12, 10),
                         child: Container(
-                          padding: const EdgeInsets.all(20),
+                          padding: const EdgeInsets.all(14),
                           decoration: BoxDecoration(
                             color: isDark 
                                 ? AppTheme.primaryGreen.withValues(alpha: 0.08)
                                 : AppTheme.primaryGreen.withValues(alpha: 0.05),
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(10),
                           ),
                           child: Text(
                             ayahText,
                             style: TextStyle(
                               fontFamily: fontProvider.selectedArabicFont,
-                              fontSize: 16,
+                              fontSize: 17,
                               color: isDark ? Colors.white : Colors.black87,
                               height: 1.8,
                             ),
@@ -1330,18 +1359,17 @@ class _QuranReaderScreenState extends State<QuranReaderScreen> {
                       if (translation != null)
                         Container(
                           width: double.infinity,
-                          padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+                          padding: const EdgeInsets.fromLTRB(12, 0, 12, 10),
                           child: Container(
-                            padding: const EdgeInsets.all(16),
+                            padding: const EdgeInsets.all(12),
                             decoration: BoxDecoration(
                               color: AppTheme.primaryGreen.withValues(alpha: 0.05),
-                              borderRadius: BorderRadius.circular(12),
+                              borderRadius: BorderRadius.circular(10),
                             ),
                             child: Text(
                               translation,
-                              style: TextStyle(
-                                fontFamily: 'Bahij Badr Light',
-                                fontSize: 15,
+                              style: context.textStyle(
+                                fontSize: 14,
                                 color: isDark ? Colors.white70 : Colors.black87,
                                 height: 1.5,
                               ),
@@ -1353,7 +1381,7 @@ class _QuranReaderScreenState extends State<QuranReaderScreen> {
                       
                       // Options sections
                       Container(
-                        padding: const EdgeInsets.all(16),
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                         child: Column(
                           children: [
                             // Lughat section
@@ -1367,7 +1395,7 @@ class _QuranReaderScreenState extends State<QuranReaderScreen> {
                                   isAvailable: availability['lughat_text'] ?? false,
                                 ),
                                 OptionData(
-                                  icon: Icons.play_circle_rounded, 
+                                  icon: Icons.volume_up_rounded, 
                                   label: context.l.audio, 
                                   type: 'lughat_audio',
                                   isAvailable: availability['lughat_audio'] ?? false,
@@ -1384,7 +1412,7 @@ class _QuranReaderScreenState extends State<QuranReaderScreen> {
                               isDark: isDark,
                             ),
                             
-                            const SizedBox(height: 12),
+                            const SizedBox(height: 8),
                             
                             // Tafseer section
                             _buildOptionSection(
@@ -1397,7 +1425,7 @@ class _QuranReaderScreenState extends State<QuranReaderScreen> {
                                   isAvailable: availability['tafseer_text'] ?? false,
                                 ),
                                 OptionData(
-                                  icon: Icons.play_circle_rounded, 
+                                  icon: Icons.volume_up_rounded, 
                                   label: context.l.audio, 
                                   type: 'tafseer_audio',
                                   isAvailable: availability['tafseer_audio'] ?? false,
@@ -1414,7 +1442,7 @@ class _QuranReaderScreenState extends State<QuranReaderScreen> {
                               isDark: isDark,
                             ),
                             
-                            const SizedBox(height: 12),
+                            const SizedBox(height: 8),
                             
                             // Faidi section
                             _buildOptionSection(
@@ -1427,7 +1455,7 @@ class _QuranReaderScreenState extends State<QuranReaderScreen> {
                                   isAvailable: availability['faidi_text'] ?? false,
                                 ),
                                 OptionData(
-                                  icon: Icons.play_circle_rounded, 
+                                  icon: Icons.volume_up_rounded, 
                                   label: context.l.audio, 
                                   type: 'faidi_audio',
                                   isAvailable: availability['faidi_audio'] ?? false,
@@ -1453,6 +1481,7 @@ class _QuranReaderScreenState extends State<QuranReaderScreen> {
                 ),
               ),
             ],
+            ),
           ),
         );
           },
@@ -1468,32 +1497,29 @@ class _QuranReaderScreenState extends State<QuranReaderScreen> {
         QuranApiService.clearCacheForAyah(surahIndex, ayahIndex);
       }
       
-      // Load availability data for all sections
-      final results = await Future.wait([
-        // Lughat
-        Future.value(LughatService.hasTextData(surahIndex, ayahIndex)),
-        LughatService.hasAudioData(surahIndex, ayahIndex),
-        LughatService.hasVideoData(surahIndex, ayahIndex),
-        // Tafseer
-        Future.value(TafseerService.hasTextData(surahIndex, ayahIndex)),
-        TafseerService.hasAudioData(surahIndex, ayahIndex),
-        TafseerService.hasVideoData(surahIndex, ayahIndex),
-        // Faidi
-        Future.value(FaidiService.hasTextData(surahIndex, ayahIndex)),
-        FaidiService.hasAudioData(surahIndex, ayahIndex),
-        FaidiService.hasVideoData(surahIndex, ayahIndex),
-      ]);
+      // Optimized: Batch load all section data at once
+      final allSections = await QuranApiService.getAllSectionsData(surahIndex, ayahIndex);
+      
+      // Check text data availability (synchronous, from XML)
+      final lughatTextAvailable = LughatService.hasTextData(surahIndex, ayahIndex);
+      final tafseerTextAvailable = TafseerService.hasTextData(surahIndex, ayahIndex);
+      final faidiTextAvailable = FaidiService.hasTextData(surahIndex, ayahIndex);
+      
+      // Check API data availability (from batched result)
+      final lughatData = allSections['lughat'];
+      final tafseerData = allSections['tafseer'];
+      final faidiData = allSections['faidi'];
 
       return {
-        'lughat_text': results[0],
-        'lughat_audio': results[1],
-        'lughat_video': results[2],
-        'tafseer_text': results[3],
-        'tafseer_audio': results[4],
-        'tafseer_video': results[5],
-        'faidi_text': results[6],
-        'faidi_audio': results[7],
-        'faidi_video': results[8],
+        'lughat_text': lughatTextAvailable,
+        'lughat_audio': lughatData?.audioUrl != null,
+        'lughat_video': lughatData?.videoUrl != null,
+        'tafseer_text': tafseerTextAvailable,
+        'tafseer_audio': tafseerData?.audioUrl != null,
+        'tafseer_video': tafseerData?.videoUrl != null,
+        'faidi_text': faidiTextAvailable,
+        'faidi_audio': faidiData?.audioUrl != null,
+        'faidi_video': faidiData?.videoUrl != null,
       };
     } catch (e) {
       debugPrint('Error loading availability data: $e');
@@ -1547,59 +1573,87 @@ class _QuranReaderScreenState extends State<QuranReaderScreen> {
     required int ayahIndex,
     required bool isDark,
   }) {
+    // Use theme green color for all sections
+    final sectionColor = AppTheme.primaryGreen;
+    final bgColor = isDark 
+        ? AppTheme.primaryGreen.withOpacity(0.08)
+        : AppTheme.primaryGreen.withOpacity(0.05);
+
     return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: isDark ? AppTheme.darkSurface.withValues(alpha: 0.5) : Colors.grey.shade50,
-        borderRadius: BorderRadius.circular(12),
+        color: bgColor,
+        borderRadius: BorderRadius.circular(10),
         border: Border.all(
-          color: isDark ? Colors.white.withValues(alpha: 0.1) : Colors.grey.shade200,
+          color: sectionColor.withOpacity(0.2),
+          width: 1,
         ),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
         children: [
-          // Section title
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
-            decoration: BoxDecoration(
-              color: AppTheme.primaryGreen.withValues(alpha: 0.1),
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
-            ),
+          // Title on the right
+          Expanded(
+            flex: 2,
             child: Text(
               title,
-              style: TextStyle(
-                fontSize: 13,
+              style: context.textStyle(
+                fontSize: 15,
                 fontWeight: FontWeight.bold,
-                color: AppTheme.primaryGreen,
-                fontFamily: 'Bahij Badr Bold',
+                color: sectionColor,
               ),
               textAlign: TextAlign.right,
               textDirection: TextDirection.rtl,
             ),
           ),
-          
-          // Options row
-          Padding(
-            padding: const EdgeInsets.all(8),
-            child: Row(
-              children: options.map((option) => Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 3),
-                  child: _buildOptionButton(
-                    icon: option.icon,
-                    label: option.label,
-                    onTap: option.isAvailable 
-                        ? () => _handleOptionTap(option.type, surahIndex, ayahIndex)
-                        : null,
-                    isDark: isDark,
-                    isAvailable: option.isAvailable,
-                  ),
-                ),
-              )).toList(),
+          const SizedBox(width: 8),
+          // Icons on the left - no labels
+          ...options.map((option) => Padding(
+            padding: const EdgeInsets.only(left: 4),
+            child: _buildCompactIconButton(
+              icon: option.icon,
+              color: sectionColor,
+              onTap: option.isAvailable 
+                  ? () => _handleOptionTap(option.type, surahIndex, ayahIndex)
+                  : null,
+              isDark: isDark,
+              isAvailable: option.isAvailable,
             ),
-          ),
+          )).toList(),
         ],
+      ),
+    );
+  }
+
+  Widget _buildCompactIconButton({
+    required IconData icon,
+    required Color color,
+    required VoidCallback? onTap,
+    required bool isDark,
+    required bool isAvailable,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(8),
+      child: Container(
+        width: 40,
+        height: 40,
+        decoration: BoxDecoration(
+          color: isAvailable 
+              ? (isDark ? color.withOpacity(0.2) : color.withOpacity(0.12))
+              : (isDark ? Colors.grey.shade800 : Colors.grey.shade200),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(
+            color: isAvailable 
+                ? color.withOpacity(0.4)
+                : Colors.grey.shade400,
+            width: 1.5,
+          ),
+        ),
+        child: Icon(
+          icon,
+          color: isAvailable ? color : Colors.grey,
+          size: 22,
+        ),
       ),
     );
   }
@@ -1831,6 +1885,20 @@ class _QuranReaderScreenState extends State<QuranReaderScreen> {
     } catch (e) {
       _showError('Error loading faidi video: $e');
     }
+  }
+
+  void _shareAyah(int surahIndex, int ayahIndex, String ayahText, String? translation) {
+    final surahName = surahsData[surahIndex]?.name ?? 'Surah $surahIndex';
+    final ayahNumber = ayahIndex + 1;
+    
+    String shareText = '$surahName - ${context.l.ayah} $ayahNumber\n\n';
+    shareText += '$ayahText\n\n';
+    if (translation != null && translation.isNotEmpty) {
+      shareText += '$translation\n\n';
+    }
+    shareText += '📖 ${context.l.appTitle}';
+    
+    Share.share(shareText);
   }
 
   void _showError(String message) {
