@@ -588,4 +588,27 @@ class AppLocalizationsPs extends AppLocalizations {
   @override
   String get noteRemoved => 'یادښت لیرې شو';
 
+  // Latest Content Screen
+  @override
+  String get filter => 'فلټر';
+  @override
+  String get clearFilter => 'پاک کړئ';
+  @override
+  String get loadingLatestContent => 'وروستي مواد لوډیږي...';
+  @override
+  String get failedToLoadLatest => 'وروستي مواد لوډ کول ناکام شول';
+  @override
+  String get noNewContent => 'تر اوسه نوي مواد نشته';
+  @override
+  String get checkBackLater => 'وروسته بیا وګورئ';
+  @override
+  String get newBadge => 'نوی';
+  @override
+  String get category => 'کټګوري';
+  @override
+  String get subcategory => 'فرعي کټګوري';
+  @override
+  String get ayahAudio => 'آیت آډیو';
+  @override
+  String get ayahVideo => 'آیت ویډیو';
 } 

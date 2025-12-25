@@ -628,4 +628,28 @@ class AppLocalizationsAr extends AppLocalizations {
   String get noteSaved => 'تم حفظ الملاحظة';
   @override
   String get noteRemoved => 'تم حذف الملاحظة';
+
+  // Latest Content Screen
+  @override
+  String get filter => 'تصفية';
+  @override
+  String get clearFilter => 'مسح';
+  @override
+  String get loadingLatestContent => 'جاري تحميل المحتوى الجديد...';
+  @override
+  String get failedToLoadLatest => 'فشل في تحميل المحتوى الجديد';
+  @override
+  String get noNewContent => 'لا يوجد محتوى جديد بعد';
+  @override
+  String get checkBackLater => 'تحقق لاحقاً للحصول على تحديثات';
+  @override
+  String get newBadge => 'جديد';
+  @override
+  String get category => 'فئة';
+  @override
+  String get subcategory => 'فئة فرعية';
+  @override
+  String get ayahAudio => 'صوت الآية';
+  @override
+  String get ayahVideo => 'فيديو الآية';
 } 

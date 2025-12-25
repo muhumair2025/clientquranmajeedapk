@@ -628,4 +628,28 @@ class AppLocalizationsUr extends AppLocalizations {
   String get commentaryDescription => 'آیات کی تفصیلی تفسیر';
   @override
   String get benefitsDescription => 'روحانی فوائد اور سبق';
+
+  // Latest Content Screen
+  @override
+  String get filter => 'فلٹر';
+  @override
+  String get clearFilter => 'صاف کریں';
+  @override
+  String get loadingLatestContent => 'تازہ ترین مواد لوڈ ہو رہا ہے...';
+  @override
+  String get failedToLoadLatest => 'تازہ ترین مواد لوڈ کرنے میں ناکام';
+  @override
+  String get noNewContent => 'ابھی تک کوئی نیا مواد نہیں';
+  @override
+  String get checkBackLater => 'بعد میں دوبارہ چیک کریں';
+  @override
+  String get newBadge => 'نیا';
+  @override
+  String get category => 'زمرہ';
+  @override
+  String get subcategory => 'ذیلی زمرہ';
+  @override
+  String get ayahAudio => 'آیت آڈیو';
+  @override
+  String get ayahVideo => 'آیت ویڈیو';
 } 

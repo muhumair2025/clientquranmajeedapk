@@ -80,8 +80,8 @@ class CurvedBottomNav extends StatelessWidget {
               painter: _CurvedNavBarPainter(
                 notchCenterX: notchCenterX,
                 notchRadius: 32,
-                backgroundColor: Colors.white,
-                shadowColor: Colors.black.withValues(alpha: 0.08),
+                backgroundColor: AppTheme.primaryGreen,
+                shadowColor: Colors.black.withValues(alpha: 0.15),
               ),
             ),
           ),
@@ -166,7 +166,7 @@ class CurvedBottomNav extends StatelessWidget {
 
   Widget _buildNavItem(BuildContext context, BottomNavItem item, bool isSelected, double itemWidth) {
     final Color activeColor = AppTheme.primaryGreen;
-    final Color inactiveColor = Colors.grey.shade400;
+    final Color inactiveColor = Colors.white.withValues(alpha: 0.85);
     
     // Responsive font size
     final screenWidth = MediaQuery.of(context).size.width;
@@ -219,7 +219,7 @@ class CurvedBottomNav extends StatelessWidget {
                           style: context.textStyle(
                             fontSize: baseFontSize,
                             fontWeight: FontWeight.w600,
-                            color: activeColor,
+                            color: Colors.white,
                           ),
                         ),
                       )

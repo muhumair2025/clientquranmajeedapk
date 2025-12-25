@@ -665,26 +665,30 @@ class _BulkAudioPlayerScreenState extends State<BulkAudioPlayerScreen>
       context: context,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
-      builder: (context) => Container(
-        margin: const EdgeInsets.all(16),
-        height: MediaQuery.of(context).size.height * 0.5,
-        decoration: BoxDecoration(
-          color: isDark ? AppTheme.darkSurface : Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.1),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
+      builder: (context) => StatefulBuilder(
+        builder: (BuildContext context, StateSetter setModalState) {
+          return Container(
+            margin: const EdgeInsets.all(16),
+            height: MediaQuery.of(context).size.height * 0.5,
+            decoration: BoxDecoration(
+              color: isDark ? AppTheme.darkSurface : Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.1),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
             ),
-          ],
-        ),
-        child: _buildSettingsContent(isDark, fontProvider),
+            child: _buildSettingsContent(isDark, fontProvider, setModalState),
+          );
+        },
       ),
     );
   }
 
-  Widget _buildSettingsContent(bool isDark, FontProvider fontProvider) {
+  Widget _buildSettingsContent(bool isDark, FontProvider fontProvider, StateSetter setModalState) {
     return Container(
       padding: const EdgeInsets.all(16),
       child: SingleChildScrollView(
@@ -704,7 +708,7 @@ class _BulkAudioPlayerScreenState extends State<BulkAudioPlayerScreen>
             ),
             const SizedBox(height: 12),
             
-            // From/To Selection - More compact
+            // From/To Selection - More compact with instant update
             Row(
               textDirection: TextDirection.rtl,
               children: [
@@ -712,7 +716,7 @@ class _BulkAudioPlayerScreenState extends State<BulkAudioPlayerScreen>
                   child: _buildAyahSelector(
                     label: context.l.fromAyah,
                     value: _fromAyahIndex,
-                    onTap: () => _showAyahSelector(true),
+                    onTap: () => _showAyahSelector(true, setModalState),
                     isDark: isDark,
                     fontProvider: fontProvider,
                   ),
@@ -722,7 +726,7 @@ class _BulkAudioPlayerScreenState extends State<BulkAudioPlayerScreen>
                   child: _buildAyahSelector(
                     label: context.l.toAyah,
                     value: _toAyahIndex,
-                    onTap: () => _showAyahSelector(false),
+                    onTap: () => _showAyahSelector(false, setModalState),
                     isDark: isDark,
                     fontProvider: fontProvider,
                   ),
@@ -732,7 +736,7 @@ class _BulkAudioPlayerScreenState extends State<BulkAudioPlayerScreen>
             
             const SizedBox(height: 12),
             
-            // Playback Mode - Compact chips
+            // Playback Mode - Compact chips with instant update
             Row(
               textDirection: TextDirection.rtl,
               children: PlaybackMode.values.map((mode) {
@@ -745,30 +749,52 @@ class _BulkAudioPlayerScreenState extends State<BulkAudioPlayerScreen>
                         setState(() {
                           _playbackMode = mode;
                         });
+                        setModalState(() {
+                          _playbackMode = mode;
+                        });
                         _saveSettings();
                       },
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(vertical: 8),
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 200),
+                        padding: const EdgeInsets.symmetric(vertical: 10),
                         decoration: BoxDecoration(
                           color: isSelected 
                               ? AppTheme.primaryGreen 
                               : (isDark ? AppTheme.darkBackground : AppTheme.lightGray),
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: BorderRadius.circular(10),
                           border: Border.all(
                             color: isSelected 
                                 ? AppTheme.primaryGreen 
                                 : AppTheme.primaryGreen.withValues(alpha: 0.2),
-                            width: 1.5,
+                            width: isSelected ? 2 : 1.5,
                           ),
+                          boxShadow: isSelected ? [
+                            BoxShadow(
+                              color: AppTheme.primaryGreen.withValues(alpha: 0.3),
+                              blurRadius: 8,
+                              offset: const Offset(0, 2),
+                            ),
+                          ] : null,
                         ),
-                        child: Text(
-                          _getPlaybackModeText(mode),
-                          textAlign: TextAlign.center,
-                          style: context.textStyle(
-                            fontSize: 12,
-                            color: isSelected ? Colors.white : (isDark ? Colors.white70 : Colors.black87),
-                            fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-                          ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              _getPlaybackModeIcon(mode),
+                              size: 16,
+                              color: isSelected ? Colors.white : (isDark ? Colors.white70 : Colors.black54),
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              _getPlaybackModeText(mode),
+                              textAlign: TextAlign.center,
+                              style: context.textStyle(
+                                fontSize: 12,
+                                color: isSelected ? Colors.white : (isDark ? Colors.white70 : Colors.black87),
+                                fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ),
@@ -779,17 +805,18 @@ class _BulkAudioPlayerScreenState extends State<BulkAudioPlayerScreen>
             
             const SizedBox(height: 12),
             
-            // Auto play next toggle - Compact
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            // Auto play next toggle - Compact with instant update
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
               decoration: BoxDecoration(
                 color: isDark 
-                    ? AppTheme.primaryGreen.withOpacity(0.08)
-                    : AppTheme.primaryGreen.withOpacity(0.05),
-                borderRadius: BorderRadius.circular(8),
+                    ? AppTheme.primaryGreen.withOpacity(_autoPlayNext ? 0.15 : 0.08)
+                    : AppTheme.primaryGreen.withOpacity(_autoPlayNext ? 0.1 : 0.05),
+                borderRadius: BorderRadius.circular(10),
                 border: Border.all(
-                  color: AppTheme.primaryGreen.withOpacity(0.2),
-                  width: 1,
+                  color: AppTheme.primaryGreen.withOpacity(_autoPlayNext ? 0.4 : 0.2),
+                  width: _autoPlayNext ? 2 : 1,
                 ),
               ),
               child: Row(
@@ -802,21 +829,36 @@ class _BulkAudioPlayerScreenState extends State<BulkAudioPlayerScreen>
                       setState(() {
                         _autoPlayNext = value;
                       });
+                      setModalState(() {
+                        _autoPlayNext = value;
+                      });
                       _saveSettings();
                     },
                     activeColor: AppTheme.primaryGreen,
                   ),
                   const SizedBox(width: 12),
                   Expanded(
-                    child: Text(
-                      context.l.autoPlayNext,
-                      style: context.textStyle(
-                        fontSize: 13,
-                        color: AppTheme.primaryGreen,
-                        fontWeight: FontWeight.w600,
-                      ),
-                      textAlign: TextAlign.right,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
                       textDirection: TextDirection.rtl,
+                      children: [
+                        Icon(
+                          _autoPlayNext ? Icons.playlist_play_rounded : Icons.block_rounded,
+                          size: 18,
+                          color: AppTheme.primaryGreen,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          context.l.autoPlayNext,
+                          style: context.textStyle(
+                            fontSize: 13,
+                            color: AppTheme.primaryGreen,
+                            fontWeight: FontWeight.w600,
+                          ),
+                          textAlign: TextAlign.right,
+                          textDirection: TextDirection.rtl,
+                        ),
+                      ],
                     ),
                   ),
                 ],
@@ -1246,7 +1288,7 @@ class _BulkAudioPlayerScreenState extends State<BulkAudioPlayerScreen>
     return '$minutes:$seconds';
   }
 
-  void _showAyahSelector(bool isFrom) {
+  void _showAyahSelector(bool isFrom, StateSetter? parentModalState) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     
@@ -1319,6 +1361,10 @@ class _BulkAudioPlayerScreenState extends State<BulkAudioPlayerScreen>
                                 _toAyahIndex = 1;
                               }
                             });
+                            // Update parent modal instantly
+                            if (parentModalState != null) {
+                              parentModalState(() {});
+                            }
                             _saveSettings(); // Save settings
                             Navigator.pop(context);
                           },
@@ -1340,6 +1386,10 @@ class _BulkAudioPlayerScreenState extends State<BulkAudioPlayerScreen>
                               setState(() {
                                 _toAyahIndex = _getMaxAyahForCurrentSurah();
                               });
+                              // Update parent modal instantly
+                              if (parentModalState != null) {
+                                parentModalState(() {});
+                              }
                               _saveSettings(); // Save settings
                               Navigator.pop(context);
                             },
@@ -1389,6 +1439,10 @@ class _BulkAudioPlayerScreenState extends State<BulkAudioPlayerScreen>
                               // Update current ayah to start from new "from" ayah
                               _currentAyahIndex = _fromAyahIndex;
                             });
+                            // Update parent modal instantly
+                            if (parentModalState != null) {
+                              parentModalState(() {});
+                            }
                             _saveSettings(); // Save settings
                             Navigator.pop(context);
                           } else {
@@ -1399,6 +1453,10 @@ class _BulkAudioPlayerScreenState extends State<BulkAudioPlayerScreen>
                             setState(() {
                               _toAyahIndex = number;
                             });
+                            // Update parent modal instantly
+                            if (parentModalState != null) {
+                              parentModalState(() {});
+                            }
                             _saveSettings(); // Save settings
                             Navigator.pop(context);
                           } else {
@@ -1444,6 +1502,10 @@ class _BulkAudioPlayerScreenState extends State<BulkAudioPlayerScreen>
                                 _toAyahIndex = ayahNumber;
                               }
                             });
+                            // Update parent modal instantly
+                            if (parentModalState != null) {
+                              parentModalState(() {});
+                            }
                             _saveSettings(); // Save settings
                             Navigator.pop(context);
                           } : null,

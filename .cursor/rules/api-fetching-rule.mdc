@@ -1,0 +1,143 @@
+---
+alwaysApply: true
+---
+API Fetching – General Best Practices
+
+Always show a loading state while fetching data
+
+Handle success, error, and empty states separately
+
+Use try/catch or error boundaries to prevent app crashes
+
+Set proper timeouts for API requests
+
+
+
+---
+
+Network Handling
+
+Detect online / offline status
+
+Avoid API calls when network is unavailable
+
+Auto-refetch data when connection is restored
+
+Gracefully handle slow internet (don’t block UI)
+
+
+
+---
+
+Caching Strategy
+
+Cache API responses locally
+
+Use cached data first, then update from network
+
+Set cache expiration or versioning
+
+Clear or refresh cache when needed
+
+
+
+---
+
+Offline Experience
+
+Show last available data when offline
+
+Display a clear offline message
+
+Prevent actions that require internet
+
+Queue user actions to sync later
+
+
+
+---
+
+Background Updates
+
+Fetch new data in background
+
+Update UI only when fresh data is available
+
+Avoid interrupting user during updates
+
+Sync data silently when app is idle
+
+
+
+---
+
+Performance Optimization
+
+Minimize number of API calls
+
+Debounce repeated requests
+
+Avoid refetching same data multiple times
+
+Use pagination or chunked loading
+
+
+
+---
+
+Data Consistency
+
+Validate API response format
+
+Handle partial or corrupted data
+
+Keep UI stable during data refresh
+
+Prevent race conditions in multiple API calls
+
+
+
+---
+
+User Experience
+
+Never show blank screens
+
+Provide meaningful error messages
+
+Keep interactions responsive
+
+Maintain state during refresh
+
+
+
+---
+
+Security (Generic)
+
+Use HTTPS only
+
+Sanitize API responses
+
+Protect sensitive headers or tokens
+
+Handle unauthorized responses properly
+
+
+
+---
+
+Monitoring & Debugging
+
+Log API failures
+
+Track slow responses
+
+Capture unexpected errors
+
+Add fallback behavior
+
+Short Conclusion
+
+> API fetching is not just about getting data.
+It includes network awareness, caching, offline handling, performance, error management, and smooth user experience.

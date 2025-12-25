@@ -332,4 +332,17 @@ abstract class AppLocalizations {
   String get autoPlayNext;
   String get playingRange;
   String get number;
+  
+  // Latest Content Screen
+  String get filter;
+  String get clearFilter;
+  String get loadingLatestContent;
+  String get failedToLoadLatest;
+  String get noNewContent;
+  String get checkBackLater;
+  String get newBadge;
+  String get category;
+  String get subcategory;
+  String get ayahAudio;
+  String get ayahVideo;
 } 

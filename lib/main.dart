@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'themes/app_theme.dart';
 import 'providers/theme_provider.dart';
 import 'providers/font_provider.dart';
@@ -10,11 +11,15 @@ import 'screens/major_downloads_screen.dart';
 import 'screens/placeholder_screen.dart';
 import 'screens/live_dars_screen.dart';
 import 'screens/home_screen.dart';
+import 'screens/latest_content_screen.dart';
+import 'screens/splash_screen.dart';
 import 'services/lughat_service.dart';
 import 'services/tafseer_service.dart';
 import 'services/faidi_service.dart';
 import 'services/favorites_service.dart';
 import 'services/notes_service.dart';
+import 'services/app_content_service.dart';
+import 'services/live_video_service.dart';
 import 'localization/app_localizations_delegate.dart';
 import 'localization/app_localizations_extension.dart';
 import 'widgets/first_launch_language_modal.dart';
@@ -24,6 +29,15 @@ import 'widgets/app_drawer.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
+  // Load environment variables from .env.local
+  try {
+    await dotenv.load(fileName: '.env.local');
+    debugPrint('✅ Loaded .env.local configuration');
+  } catch (e) {
+    debugPrint('⚠️ Warning: Could not load .env.local file: $e');
+    debugPrint('⚠️ API features may not work properly');
+  }
+  
   // Initialize all services data
   await Future.wait([
     LughatService.loadLughatData(),
@@ -31,6 +45,8 @@ void main() async {
     FaidiService.loadFaidiData(),
     FavoritesService.initialize(),
     NotesService.initialize(),
+    AppContentService.initialize(), // Hero slides & splash screen
+    LiveVideoService.initialize(), // Live videos
   ]);
   
   // Setup system UI
@@ -88,10 +104,41 @@ class QuranMajeedApp extends StatelessWidget {
           theme: AppTheme.getLightTheme(languageProvider.currentLanguage),
           darkTheme: AppTheme.getDarkTheme(languageProvider.currentLanguage),
           themeMode: themeProvider.themeMode,
-          home: const MainScreen(),
+          home: const SplashWrapper(),
         );
       },
     );
+  }
+}
+
+/// Wrapper that shows splash screen first, then main screen
+class SplashWrapper extends StatefulWidget {
+  const SplashWrapper({super.key});
+
+  @override
+  State<SplashWrapper> createState() => _SplashWrapperState();
+}
+
+class _SplashWrapperState extends State<SplashWrapper> {
+  bool _showSplash = true;
+
+  void _onSplashComplete() {
+    if (mounted) {
+      setState(() {
+        _showSplash = false;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_showSplash) {
+      return SplashScreen(
+        onInitializationComplete: _onSplashComplete,
+        minimumDisplayDuration: const Duration(seconds: 2),
+      );
+    }
+    return const MainScreen();
   }
 }
 
@@ -127,7 +174,7 @@ class _MainScreenState extends State<MainScreen> {
       case 0:
         return const PlaceholderPage(); // Other tools (More)
       case 1:
-        return const PlaceholderPage(); // Latest content
+        return LatestContentScreen(key: ValueKey('latest_$languageCode')); // Latest content
       case 2:
         return const LiveDarsScreen(); // Live Dars
       case 3:

@@ -1,0 +1,68 @@
+========================================
+   .env.local FILE SETUP GUIDE
+========================================
+
+IMPORTANT: You must create a .env.local file in the project root!
+
+LOCATION:
+---------
+Create the file here: C:\Projects\quran_majeed\.env.local
+(Same folder as pubspec.yaml)
+
+FILE CONTENTS:
+--------------
+Copy and paste these two lines into .env.local:
+
+BaseUrl=http://localhost:8000/api
+HeaderApiKey=de9cc0578682fe54e2b7fc4702947a5080b57ce69bb002f45f18f688d283e4a4
+
+FOR PRODUCTION:
+---------------
+Replace the BaseUrl with your production URL:
+
+BaseUrl=https://yourdomain.com/api
+HeaderApiKey=de9cc0578682fe54e2b7fc4702947a5080b57ce69bb002f45f18f688d283e4a4
+
+AFTER CREATING THE FILE:
+------------------------
+1. Save the .env.local file
+2. Run: flutter pub get
+3. Run: flutter run
+
+VERIFICATION:
+-------------
+When the app starts, check the console/logs for:
+✅ "Loaded .env.local configuration"
+
+If you see:
+⚠️ "Warning: Could not load .env.local file"
+Then the file is missing or in the wrong location.
+
+========================================
+
+QUICK COMMANDS:
+---------------
+
+Windows (PowerShell):
+  cd C:\Projects\quran_majeed
+  echo "BaseUrl=http://localhost:8000/api" > .env.local
+  echo "HeaderApiKey=de9cc0578682fe54e2b7fc4702947a5080b57ce69bb002f45f18f688d283e4a4" >> .env.local
+
+Mac/Linux:
+  cd /path/to/quran_majeed
+  cat > .env.local << EOF
+BaseUrl=http://localhost:8000/api
+HeaderApiKey=de9cc0578682fe54e2b7fc4702947a5080b57ce69bb002f45f18f688d283e4a4
+EOF
+
+========================================
+
+TROUBLESHOOTING:
+----------------
+- File must be named exactly: .env.local (with the dot!)
+- File must be in the project root (where pubspec.yaml is)
+- No extra spaces or quotes needed
+- Make sure to run 'flutter pub get' after creating the file
+
+========================================
+

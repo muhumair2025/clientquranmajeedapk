@@ -588,4 +588,27 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get benefitsDescription => 'Spiritual benefits and lessons';
 
+  // Latest Content Screen
+  @override
+  String get filter => 'Filter';
+  @override
+  String get clearFilter => 'Clear';
+  @override
+  String get loadingLatestContent => 'Loading latest content...';
+  @override
+  String get failedToLoadLatest => 'Failed to load latest content';
+  @override
+  String get noNewContent => 'No new content yet';
+  @override
+  String get checkBackLater => 'Check back later for updates';
+  @override
+  String get newBadge => 'NEW';
+  @override
+  String get category => 'Category';
+  @override
+  String get subcategory => 'Subcategory';
+  @override
+  String get ayahAudio => 'Ayah Audio';
+  @override
+  String get ayahVideo => 'Ayah Video';
 } 

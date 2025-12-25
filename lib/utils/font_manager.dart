@@ -9,27 +9,38 @@ class FontManager {
     'ar': 1.0,  // Arabic standard size
   };
 
+  // English fonts (used as fallback for numbers and English text)
+  static const String _englishRegular = 'Poppins Regular';
+  static const String _englishBold = 'Poppins Bold';
+
   // Font families for each language
   static const Map<String, FontConfig> _languageFonts = {
     'ps': FontConfig(
       regular: 'Bahij Badr Light',
       bold: 'Bahij Badr Bold',
       light: 'Bahij Badr Light',
+      // Fallback to English font for numbers and English text
+      fallbacks: ['Poppins Regular', 'Poppins Bold', 'sans-serif'],
     ),
     'en': FontConfig(
       regular: 'Poppins Regular',
       bold: 'Poppins Bold',
       light: 'Poppins Regular',
+      fallbacks: ['sans-serif'],
     ),
     'ur': FontConfig(
       regular: 'Noto Nastaliq Regular',
       bold: 'Noto Nastaliq Bold',
       light: 'Noto Nastaliq Regular',
+      // Fallback to English font for numbers and English text
+      fallbacks: ['Poppins Regular', 'Poppins Bold', 'serif'],
     ),
     'ar': FontConfig(
       regular: 'Tajawal Regular',
       bold: 'Tajawal Bold',
       light: 'Tajawal Regular',
+      // Fallback to English font for numbers and English text
+      fallbacks: ['Poppins Regular', 'Poppins Bold', 'sans-serif'],
     ),
   };
 
@@ -82,7 +93,13 @@ class FontManager {
     return baseFontSize * getFontSizeScale(languageCode);
   }
 
+  // Get font fallbacks for a language (English font for numbers/English text)
+  static List<String> getFontFallbacksForLanguage(String languageCode) {
+    return _languageFonts[languageCode]?.fallbacks ?? ['Poppins Regular', 'sans-serif'];
+  }
+
   // Get text style for specific language
+  // Uses language font for native script, falls back to English for numbers/English
   static TextStyle getTextStyle(
     String languageCode, {
     double fontSize = 14,
@@ -95,6 +112,7 @@ class FontManager {
     final scaledFontSize = getScaledFontSize(languageCode, fontSize);
     return TextStyle(
       fontFamily: getFontFamily(languageCode, weight: fontWeight),
+      fontFamilyFallback: getFontFallbacksForLanguage(languageCode),
       fontSize: scaledFontSize,
       fontWeight: fontWeight,
       color: color,
@@ -105,6 +123,7 @@ class FontManager {
   }
 
   // Get heading text style for specific language
+  // Uses language font for native script, falls back to English for numbers/English
   static TextStyle getHeadingStyle(
     String languageCode, {
     double fontSize = 20,
@@ -114,6 +133,7 @@ class FontManager {
     final scaledFontSize = getScaledFontSize(languageCode, fontSize);
     return TextStyle(
       fontFamily: getBoldFont(languageCode),
+      fontFamilyFallback: getFontFallbacksForLanguage(languageCode),
       fontSize: scaledFontSize,
       fontWeight: FontWeight.bold,
       color: color,
@@ -122,6 +142,7 @@ class FontManager {
   }
 
   // Get body text style for specific language
+  // Uses language font for native script, falls back to English for numbers/English
   static TextStyle getBodyStyle(
     String languageCode, {
     double fontSize = 14,
@@ -131,6 +152,7 @@ class FontManager {
     final scaledFontSize = getScaledFontSize(languageCode, fontSize);
     return TextStyle(
       fontFamily: getRegularFont(languageCode),
+      fontFamilyFallback: getFontFallbacksForLanguage(languageCode),
       fontSize: scaledFontSize,
       fontWeight: FontWeight.normal,
       color: color,
@@ -139,6 +161,7 @@ class FontManager {
   }
 
   // Get caption text style for specific language
+  // Uses language font for native script, falls back to English for numbers/English
   static TextStyle getCaptionStyle(
     String languageCode, {
     double fontSize = 12,
@@ -148,6 +171,7 @@ class FontManager {
     final scaledFontSize = getScaledFontSize(languageCode, fontSize);
     return TextStyle(
       fontFamily: getLightFont(languageCode),
+      fontFamilyFallback: getFontFallbacksForLanguage(languageCode),
       fontSize: scaledFontSize,
       fontWeight: FontWeight.w300,
       color: color,
@@ -194,20 +218,190 @@ class FontManager {
     return isRTL(languageCode) ? TextAlign.right : TextAlign.left;
   }
 
-  // Get default font fallbacks for each language
+  // Get default font fallbacks for each language (deprecated - use getFontFallbacksForLanguage)
   static List<String> getFontFallbacks(String languageCode) {
-    switch (languageCode) {
-      case 'ps':
-        return ['Bahij Badr Light', 'Bahij Badr', 'sans-serif'];
-      case 'en':
-        return ['Poppins Regular', 'Poppins', 'sans-serif'];
-      case 'ur':
-        return ['Noto Nastaliq Regular', 'Noto Nastaliq', 'serif'];
-      case 'ar':
-        return ['Tajawal Regular', 'Tajawal', 'sans-serif'];
-      default:
-        return ['Bahij Badr Light', 'sans-serif'];
+    return getFontFallbacksForLanguage(languageCode);
+  }
+
+  // Get a pure English text style (for content that should always be in English font)
+  // Use this for labels, numbers, time stamps, etc. that should not use RTL fonts
+  static TextStyle getEnglishTextStyle({
+    double fontSize = 14,
+    FontWeight fontWeight = FontWeight.normal,
+    Color? color,
+    double? height,
+    double? letterSpacing,
+  }) {
+    final fontFamily = fontWeight.index >= FontWeight.w600.index 
+        ? _englishBold 
+        : _englishRegular;
+    return TextStyle(
+      fontFamily: fontFamily,
+      fontSize: fontSize,
+      fontWeight: fontWeight,
+      color: color,
+      height: height,
+      letterSpacing: letterSpacing,
+    );
+  }
+
+  // Check if a character is English letter or number
+  static bool isEnglishOrNumber(String char) {
+    if (char.isEmpty) return false;
+    final code = char.codeUnitAt(0);
+    // A-Z: 65-90, a-z: 97-122, 0-9: 48-57
+    // Also include common punctuation and symbols
+    return (code >= 48 && code <= 57) ||   // 0-9
+           (code >= 65 && code <= 90) ||   // A-Z
+           (code >= 97 && code <= 122) ||  // a-z
+           (code == 32) ||                  // space
+           (code >= 33 && code <= 47) ||   // ! " # $ % & ' ( ) * + , - . /
+           (code >= 58 && code <= 64) ||   // : ; < = > ? @
+           (code >= 91 && code <= 96) ||   // [ \ ] ^ _ `
+           (code >= 123 && code <= 126);   // { | } ~
+  }
+
+  // Check if entire string is English/numbers only
+  static bool isAllEnglishOrNumbers(String text) {
+    for (int i = 0; i < text.length; i++) {
+      if (!isEnglishOrNumber(text[i])) {
+        return false;
+      }
     }
+    return true;
+  }
+
+  // Build mixed font text spans for a string
+  // Applies language font to native script, English font to English/numbers
+  static List<TextSpan> buildMixedFontSpans(
+    String text,
+    String languageCode, {
+    double fontSize = 14,
+    FontWeight fontWeight = FontWeight.normal,
+    Color? color,
+    double? height,
+  }) {
+    if (text.isEmpty) return [];
+
+    final spans = <TextSpan>[];
+    final scaledFontSize = getScaledFontSize(languageCode, fontSize);
+    
+    // Language-specific style
+    final languageStyle = TextStyle(
+      fontFamily: getFontFamily(languageCode, weight: fontWeight),
+      fontSize: scaledFontSize,
+      fontWeight: fontWeight,
+      color: color,
+      height: height,
+    );
+    
+    // English/number style
+    final englishStyle = TextStyle(
+      fontFamily: fontWeight.index >= FontWeight.w600.index ? _englishBold : _englishRegular,
+      fontSize: fontSize, // No scaling for English
+      fontWeight: fontWeight,
+      color: color,
+      height: height,
+    );
+
+    StringBuffer currentSegment = StringBuffer();
+    bool currentIsEnglish = isEnglishOrNumber(text[0]);
+
+    for (int i = 0; i < text.length; i++) {
+      final char = text[i];
+      final charIsEnglish = isEnglishOrNumber(char);
+
+      if (charIsEnglish == currentIsEnglish) {
+        currentSegment.write(char);
+      } else {
+        // Style changed - add current segment
+        if (currentSegment.isNotEmpty) {
+          spans.add(TextSpan(
+            text: currentSegment.toString(),
+            style: currentIsEnglish ? englishStyle : languageStyle,
+          ));
+        }
+        currentSegment = StringBuffer(char);
+        currentIsEnglish = charIsEnglish;
+      }
+    }
+
+    // Add final segment
+    if (currentSegment.isNotEmpty) {
+      spans.add(TextSpan(
+        text: currentSegment.toString(),
+        style: currentIsEnglish ? englishStyle : languageStyle,
+      ));
+    }
+
+    return spans;
+  }
+}
+
+/// Widget that automatically applies correct font based on character type
+/// Uses language font for native script, English font for English/numbers
+class MixedFontText extends StatelessWidget {
+  final String text;
+  final String languageCode;
+  final double fontSize;
+  final FontWeight fontWeight;
+  final Color? color;
+  final double? height;
+  final TextAlign? textAlign;
+  final TextDirection? textDirection;
+  final int? maxLines;
+  final TextOverflow? overflow;
+
+  const MixedFontText(
+    this.text, {
+    super.key,
+    required this.languageCode,
+    this.fontSize = 14,
+    this.fontWeight = FontWeight.normal,
+    this.color,
+    this.height,
+    this.textAlign,
+    this.textDirection,
+    this.maxLines,
+    this.overflow,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    // If text is all English/numbers, just use simple Text with English font
+    if (FontManager.isAllEnglishOrNumbers(text)) {
+      return Text(
+        text,
+        style: FontManager.getEnglishTextStyle(
+          fontSize: fontSize,
+          fontWeight: fontWeight,
+          color: color,
+          height: height,
+        ),
+        textAlign: textAlign,
+        textDirection: textDirection,
+        maxLines: maxLines,
+        overflow: overflow,
+      );
+    }
+
+    // Mixed text - use RichText with different fonts
+    final spans = FontManager.buildMixedFontSpans(
+      text,
+      languageCode,
+      fontSize: fontSize,
+      fontWeight: fontWeight,
+      color: color,
+      height: height,
+    );
+
+    return RichText(
+      text: TextSpan(children: spans),
+      textAlign: textAlign ?? TextAlign.start,
+      textDirection: textDirection,
+      maxLines: maxLines,
+      overflow: overflow ?? TextOverflow.clip,
+    );
   }
 }
 
@@ -215,11 +409,13 @@ class FontConfig {
   final String regular;
   final String bold;
   final String light;
+  final List<String> fallbacks;
 
   const FontConfig({
     required this.regular,
     required this.bold,
     required this.light,
+    this.fallbacks = const ['sans-serif'],
   });
 }
 

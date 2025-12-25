@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class QuranApiService {
   static final Dio _dio = Dio(
@@ -9,6 +10,15 @@ class QuranApiService {
     ),
   );
   static const String baseUrl = 'https://quranxmlmaker.ssatechs.com/api';
+  
+  // Get API key from environment
+  static String get _apiKey => dotenv.env['HeaderApiKey'] ?? '';
+  
+  // HTTP headers with authentication
+  static Map<String, String> get _headers => {
+    'X-API-Key': _apiKey,
+    'Content-Type': 'application/json',
+  };
   
   // Cache for API responses to avoid repeated calls (nullable for 404s)
   static final Map<String, Map<String, dynamic>?> _cache = {};
@@ -28,6 +38,7 @@ class QuranApiService {
       final response = await _dio.get(
         '$baseUrl/ayah/$surah/$ayah/$section',
         options: Options(
+          headers: _headers,
           validateStatus: (status) => status != null && status < 500,
         ),
       );
@@ -45,12 +56,16 @@ class QuranApiService {
           _cache[cacheKey] = null;
           debugPrint('API returned success=false for $surah:$ayah:$section');
         }
+      } else if (response.statusCode == 401) {
+        // Unauthorized - API key issue
+        _cache[cacheKey] = null;
+        debugPrint('❌ Unauthorized: Invalid API key for $surah:$ayah:$section');
       } else if (response.statusCode == 404) {
         // Cache 404 as null to prevent repeated failed requests
         _cache[cacheKey] = null;
         // debugPrint('No data found for $surah:$ayah:$section (404) - cached');
       } else {
-        debugPrint('API returned status ${response.statusCode} for $surah:$ayah:$section');
+        debugPrint('⚠️ API returned status ${response.statusCode} for $surah:$ayah:$section');
       }
     } catch (e) {
       // Cache failures to prevent repeated attempts for the same ayah
@@ -82,7 +97,13 @@ class QuranApiService {
     final cacheKey = '${surah}_${ayah}_all';
     
     try {
-      final response = await _dio.get('$baseUrl/ayah/$surah/$ayah');
+      final response = await _dio.get(
+        '$baseUrl/ayah/$surah/$ayah',
+        options: Options(
+          headers: _headers,
+          validateStatus: (status) => status != null && status < 500,
+        ),
+      );
       
       if (response.statusCode == 200 && response.data != null) {
         final data = response.data as Map<String, dynamic>;
@@ -103,9 +124,17 @@ class QuranApiService {
         }
         
         return result;
+      } else if (response.statusCode == 401) {
+        debugPrint('❌ Unauthorized: Invalid API key for $surah:$ayah');
+      } else {
+        debugPrint('⚠️ API returned status ${response.statusCode} for $surah:$ayah');
       }
     } catch (e) {
-      debugPrint('Error fetching all sections data for $surah:$ayah - $e');
+      if (e is DioException && e.response?.statusCode == 401) {
+        debugPrint('❌ Unauthorized: Check API key in .env.local');
+      } else {
+        debugPrint('⚠️ Error fetching all sections data for $surah:$ayah - $e');
+      }
     }
     
     return {
