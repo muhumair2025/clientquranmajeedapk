@@ -427,4 +427,11 @@ abstract class AppLocalizations {
   String get mushafScript;
   String get uthmaniScript;
   String get pages;
+  
+  // Content Screen
+  String get contentNotAvailable;
+  String get openPdf;
+  String get pdfDownloaded;
+  String get downloadPdf;
+  String get items;
 } 

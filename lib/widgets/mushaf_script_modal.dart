@@ -3,6 +3,7 @@ import '../services/mushaf_download_service.dart';
 import '../themes/app_theme.dart';
 import '../localization/app_localizations_extension.dart';
 import 'app_text.dart';
+import '../utils/theme_extensions.dart';
 
 /// Compact modal for selecting and downloading Mushaf scripts
 class MushafScriptModal extends StatefulWidget {
@@ -71,7 +72,7 @@ class _MushafScriptModalState extends State<MushafScriptModal> {
     return Container(
       constraints: BoxConstraints(maxHeight: screenHeight * 0.65),
       decoration: BoxDecoration(
-        color: isDark ? AppTheme.darkBackground : Colors.white,
+        color: isDark ? context.backgroundColor : Colors.white,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
       ),
       child: Column(
@@ -95,7 +96,7 @@ class _MushafScriptModalState extends State<MushafScriptModal> {
               children: [
                 Icon(
                   Icons.auto_stories_rounded,
-                  color: AppTheme.primaryGreen,
+                  color: context.primaryColor,
                   size: 24,
                 ),
                 const SizedBox(width: 10),
@@ -159,11 +160,11 @@ class _MushafScriptModalState extends State<MushafScriptModal> {
   Widget _buildScriptCard(bool isDark) {
     return Container(
       decoration: BoxDecoration(
-        color: isDark ? AppTheme.darkSurface : Colors.grey[50],
+        color: isDark ? context.surfaceColor : Colors.grey[50],
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: _isDownloaded 
-              ? AppTheme.primaryGreen.withOpacity(0.3)
+              ? context.primaryColor.withOpacity(0.3)
               : (isDark ? Colors.white10 : Colors.grey[200]!),
           width: 1.5,
         ),
@@ -215,7 +216,7 @@ class _MushafScriptModalState extends State<MushafScriptModal> {
                             _selectedScript.nameArabic,
                             style: TextStyle(
                               fontSize: 12,
-                              color: AppTheme.primaryGold,
+                              color: context.accentColor,
                             ),
                             textDirection: TextDirection.rtl,
                           ),
@@ -244,7 +245,7 @@ class _MushafScriptModalState extends State<MushafScriptModal> {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
-                      color: AppTheme.primaryGreen.withOpacity(0.1),
+                      color: context.primaryColor.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: Row(
@@ -253,7 +254,7 @@ class _MushafScriptModalState extends State<MushafScriptModal> {
                         Icon(
                           Icons.check_circle,
                           size: 14,
-                          color: AppTheme.primaryGreen,
+                          color: context.primaryColor,
                         ),
                         const SizedBox(width: 4),
                         AppText(
@@ -261,7 +262,7 @@ class _MushafScriptModalState extends State<MushafScriptModal> {
                           style: TextStyle(
                             fontSize: 11,
                             fontWeight: FontWeight.w600,
-                            color: AppTheme.primaryGreen,
+                            color: context.primaryColor,
                           ),
                         ),
                       ],
@@ -320,7 +321,7 @@ class _MushafScriptModalState extends State<MushafScriptModal> {
         child: ElevatedButton.icon(
           onPressed: _handleContinue,
           style: ElevatedButton.styleFrom(
-            backgroundColor: AppTheme.primaryGreen,
+            backgroundColor: context.primaryColor,
             foregroundColor: Colors.white,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(10),
@@ -362,7 +363,7 @@ class _MushafScriptModalState extends State<MushafScriptModal> {
           child: ElevatedButton.icon(
             onPressed: _startDownload,
             style: ElevatedButton.styleFrom(
-              backgroundColor: AppTheme.primaryGold,
+              backgroundColor: context.accentColor,
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(10),
@@ -400,7 +401,7 @@ class _MushafScriptModalState extends State<MushafScriptModal> {
                 height: 18,
                 child: CircularProgressIndicator(
                   strokeWidth: 2,
-                  color: AppTheme.primaryGreen,
+                  color: context.primaryColor,
                 ),
               ),
               const SizedBox(width: 10),
@@ -446,7 +447,7 @@ class _MushafScriptModalState extends State<MushafScriptModal> {
                       value: status == DownloadStatus.extracting ? null : progress,
                       minHeight: 6,
                       backgroundColor: isDark ? Colors.white10 : Colors.grey[200],
-                      valueColor: AlwaysStoppedAnimation(AppTheme.primaryGreen),
+                      valueColor: AlwaysStoppedAnimation(context.primaryColor),
                     ),
                   ),
                   if (status == DownloadStatus.downloading && progress > 0) ...[
@@ -514,7 +515,7 @@ class _MushafScriptModalState extends State<MushafScriptModal> {
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
-                color: AppTheme.primaryGreen,
+                color: context.primaryColor,
               ),
             ),
           ),

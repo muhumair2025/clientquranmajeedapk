@@ -9,6 +9,7 @@ import '../themes/app_theme.dart';
 import '../localization/app_localizations_extension.dart';
 import '../services/qibla_service.dart';
 import 'package:geolocator/geolocator.dart';
+import '../utils/theme_extensions.dart';
 
 class QiblaFinderScreen extends StatefulWidget {
   const QiblaFinderScreen({super.key});
@@ -201,7 +202,7 @@ class _QiblaFinderScreenState extends State<QiblaFinderScreen>
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          CircularProgressIndicator(color: AppTheme.primaryGreen),
+          CircularProgressIndicator(color: context.primaryColor),
           const SizedBox(height: 16),
           AppText(context.l.loading, style: context.textStyle(fontSize: 16, color: Colors.white)),
         ],
@@ -233,7 +234,7 @@ class _QiblaFinderScreenState extends State<QiblaFinderScreen>
             ElevatedButton(
               onPressed: () => openAppSettings(),
               style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.primaryGreen,
+                backgroundColor: context.primaryColor,
                 padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
               ),
               child: const Text('Open Settings'),
@@ -295,6 +296,7 @@ class _QiblaFinderScreenState extends State<QiblaFinderScreen>
                       painter: _Figure8Painter(
                         progress: _figure8Controller.value * 2 * math.pi,
                         progressFill: _calibrationProgress,
+                        color: context.primaryColor,
                       ),
                     );
                   },
@@ -312,7 +314,7 @@ class _QiblaFinderScreenState extends State<QiblaFinderScreen>
                       child: LinearProgressIndicator(
                         value: _calibrationProgress,
                         backgroundColor: Colors.white12,
-                        valueColor: AlwaysStoppedAnimation(AppTheme.primaryGreen),
+                        valueColor: AlwaysStoppedAnimation(context.primaryColor),
                         minHeight: 10,
                       ),
                     ),
@@ -371,7 +373,7 @@ class _QiblaFinderScreenState extends State<QiblaFinderScreen>
                   decoration: BoxDecoration(
                     color: Colors.black.withOpacity(0.6),
                     borderRadius: BorderRadius.circular(30),
-                    border: Border.all(color: AppTheme.primaryGreen.withOpacity(0.3)),
+                    border: Border.all(color: context.primaryColor.withOpacity(0.3)),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
@@ -416,10 +418,10 @@ class _QiblaFinderScreenState extends State<QiblaFinderScreen>
                             decoration: BoxDecoration(
                               color: Colors.black.withOpacity(0.7),
                               shape: BoxShape.circle,
-                              border: Border.all(color: AppTheme.primaryGreen, width: 2),
+                              border: Border.all(color: context.primaryColor, width: 2),
                               boxShadow: [
                                 BoxShadow(
-                                  color: AppTheme.primaryGreen.withOpacity(0.4),
+                                  color: context.primaryColor.withOpacity(0.4),
                                   blurRadius: 12,
                                   spreadRadius: 2,
                                 ),
@@ -436,7 +438,7 @@ class _QiblaFinderScreenState extends State<QiblaFinderScreen>
                       angle: needleAngle,
                       child: CustomPaint(
                         size: const Size(300, 300),
-                        painter: _NeedlePainter(),
+                        painter: _NeedlePainter(context.primaryColor),
                       ),
                     ),
                     
@@ -445,11 +447,11 @@ class _QiblaFinderScreenState extends State<QiblaFinderScreen>
                       width: 16,
                       height: 16,
                       decoration: BoxDecoration(
-                        color: AppTheme.primaryGreen,
+                        color: context.primaryColor,
                         shape: BoxShape.circle,
                         boxShadow: [
                           BoxShadow(
-                            color: AppTheme.primaryGreen.withOpacity(0.5),
+                            color: context.primaryColor.withOpacity(0.5),
                             blurRadius: 8,
                             spreadRadius: 2,
                           ),
@@ -487,12 +489,12 @@ class _QiblaFinderScreenState extends State<QiblaFinderScreen>
                           style: context.textStyle(
                             fontSize: 36,
                             fontWeight: FontWeight.bold,
-                            color: AppTheme.primaryGreen,
+                            color: context.primaryColor,
                           ),
                         ),
                         AppText(
                           '°',
-                          style: context.textStyle(fontSize: 24, color: AppTheme.primaryGreen),
+                          style: context.textStyle(fontSize: 24, color: context.primaryColor),
                         ),
                         const SizedBox(width: 12),
                         AppText(
@@ -515,10 +517,10 @@ class _QiblaFinderScreenState extends State<QiblaFinderScreen>
                     width: 8,
                     height: 8,
                     decoration: BoxDecoration(
-                      color: AppTheme.primaryGreen,
+                      color: context.primaryColor,
                       shape: BoxShape.circle,
                       boxShadow: [
-                        BoxShadow(color: AppTheme.primaryGreen.withOpacity(0.5), blurRadius: 6),
+                        BoxShadow(color: context.primaryColor.withOpacity(0.5), blurRadius: 6),
                       ],
                     ),
                   ),
@@ -542,8 +544,13 @@ class _QiblaFinderScreenState extends State<QiblaFinderScreen>
 class _Figure8Painter extends CustomPainter {
   final double progress;
   final double progressFill;
+  final Color color;
 
-  _Figure8Painter({required this.progress, required this.progressFill});
+  _Figure8Painter({
+    required this.progress,
+    required this.progressFill,
+    required this.color,
+  });
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -571,7 +578,7 @@ class _Figure8Painter extends CustomPainter {
 
     // Progress fill
     final fillPaint = Paint()
-      ..color = AppTheme.primaryGreen
+      ..color = color
       ..style = PaintingStyle.stroke
       ..strokeWidth = 4
       ..strokeCap = StrokeCap.round;
@@ -594,13 +601,13 @@ class _Figure8Painter extends CustomPainter {
     canvas.drawCircle(
       Offset(dotX, dotY),
       16,
-      Paint()..color = AppTheme.primaryGreen.withOpacity(0.3),
+      Paint()..color = color.withOpacity(0.3),
     );
     // Dot
     canvas.drawCircle(
       Offset(dotX, dotY),
       8,
-      Paint()..color = AppTheme.primaryGreen,
+      Paint()..color = color,
     );
   }
 
@@ -693,6 +700,9 @@ class _ModernCompassPainter extends CustomPainter {
 
 // Needle painter
 class _NeedlePainter extends CustomPainter {
+  final Color color;
+  
+  _NeedlePainter(this.color);
   @override
   void paint(Canvas canvas, Size size) {
     final center = Offset(size.width / 2, size.height / 2);
@@ -715,9 +725,7 @@ class _NeedlePainter extends CustomPainter {
       ..shader = LinearGradient(
         begin: Alignment.topCenter,
         end: Alignment.bottomCenter,
-        colors: [
-          AppTheme.primaryGreen,
-          AppTheme.primaryGreen.withOpacity(0.7),
+        colors: [color, color.withOpacity(0.7),
         ],
       ).createShader(Rect.fromCenter(center: center, width: 20, height: 100));
     

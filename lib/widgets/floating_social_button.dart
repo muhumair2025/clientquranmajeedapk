@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
 import '../themes/app_theme.dart';
+import '../utils/theme_extensions.dart';
 
 /// Floating action button with expandable social media icons
-/// Expands upward showing Facebook, YouTube, TikTok, Instagram
+/// Expands upward showing Facebook, YouTube, TikTok, Instagram, WhatsApp
 class FloatingSocialButton extends StatefulWidget {
   final String? facebookUrl;
   final String? youtubeUrl;
   final String? tiktokUrl;
   final String? instagramUrl;
+  final String? whatsappUrl;
   final Function(String url)? onSocialPressed;
 
   const FloatingSocialButton({
@@ -16,6 +18,7 @@ class FloatingSocialButton extends StatefulWidget {
     this.youtubeUrl,
     this.tiktokUrl,
     this.instagramUrl,
+    this.whatsappUrl,
     this.onSocialPressed,
   });
 
@@ -72,14 +75,25 @@ class _FloatingSocialButtonState extends State<FloatingSocialButton>
 
   @override
   Widget build(BuildContext context) {
+    // Fixed height to accommodate 5 social buttons + main button
+    // Main button: 48px + spacing: 12px + (5 buttons × 44px) + (4 spacings × 10px) = 300px
+    const double totalHeight = 350.0;
+    
     return SizedBox(
       width: 50,
-      height: 285,
+      height: totalHeight,
       child: Stack(
         alignment: Alignment.bottomCenter,
         clipBehavior: Clip.none,
         children: [
-          // Social buttons (expanded upward)
+          // Social buttons (expanded upward) - WhatsApp added as index 4
+          if (_isExpanded || _animationController.isAnimating)
+            _buildSocialButton(
+              index: 4,
+              imagePath: 'assets/socials/whatsapp.png',
+              label: 'WhatsApp',
+              url: widget.whatsappUrl ?? 'https://wa.me',
+            ),
           if (_isExpanded || _animationController.isAnimating)
             _buildSocialButton(
               index: 3,
@@ -127,8 +141,8 @@ class _FloatingSocialButtonState extends State<FloatingSocialButton>
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                           colors: [
-                            AppTheme.primaryGreen,
-                            AppTheme.darkGreen,
+                            context.primaryColor,
+                            context.primaryColor.darker(0.2),
                           ],
                         ),
                         shape: BoxShape.circle,
@@ -159,8 +173,9 @@ class _FloatingSocialButtonState extends State<FloatingSocialButton>
     required String label,
     required String url,
   }) {
-    // Calculate position from bottom - reduced spacing (55px instead of 62px)
-    final double bottomOffset = 60.0 + (index * 55.0);
+    // Calculate position from bottom with consistent spacing
+    // Button spacing: 12px from main button + (index × 54px spacing between buttons)
+    final double bottomOffset = 60.0 + (index * 54.0);
 
     return AnimatedBuilder(
       animation: _expandAnimation,
@@ -198,4 +213,3 @@ class _FloatingSocialButtonState extends State<FloatingSocialButton>
     );
   }
 }
-

@@ -5,6 +5,7 @@ import 'package:file_picker/file_picker.dart';
 import '../themes/app_theme.dart';
 import '../widgets/app_text.dart';
 import '../localization/app_localizations_extension.dart';
+import '../utils/theme_extensions.dart';
 
 class AdhanSoundSelectionScreen extends StatefulWidget {
   final String? currentSoundPath;
@@ -115,7 +116,7 @@ class _AdhanSoundSelectionScreenState extends State<AdhanSoundSelectionScreen> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text('Custom sound selected: ${result.files.single.name}'),
-              backgroundColor: AppTheme.primaryGreen,
+              backgroundColor: context.primaryColor,
             ),
           );
         }
@@ -198,7 +199,7 @@ class _AdhanSoundSelectionScreenState extends State<AdhanSoundSelectionScreen> {
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
-                      color: AppTheme.primaryGreen,
+                      color: context.primaryColor,
                     ),
                   ),
                 ),
@@ -232,7 +233,7 @@ class _AdhanSoundSelectionScreenState extends State<AdhanSoundSelectionScreen> {
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
-                      color: AppTheme.primaryGreen,
+                      color: context.primaryColor,
                     ),
                   ),
                 ),
@@ -256,7 +257,7 @@ class _AdhanSoundSelectionScreenState extends State<AdhanSoundSelectionScreen> {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: isDark ? AppTheme.darkSurface : Colors.white,
+              color: isDark ? context.surfaceColor : Colors.white,
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withOpacity(0.1),
@@ -273,7 +274,7 @@ class _AdhanSoundSelectionScreenState extends State<AdhanSoundSelectionScreen> {
                       Navigator.pop(context, _selectedSound);
                     },
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: AppTheme.primaryGreen,
+                      backgroundColor: context.primaryColor,
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
@@ -312,11 +313,11 @@ class _AdhanSoundSelectionScreenState extends State<AdhanSoundSelectionScreen> {
         margin: const EdgeInsets.only(bottom: 12),
         decoration: BoxDecoration(
           color: isSelected
-              ? AppTheme.primaryGreen.withOpacity(0.1)
+              ? context.primaryColor.withOpacity(0.1)
               : (isDark ? Colors.white10 : Colors.grey.shade100),
           borderRadius: BorderRadius.circular(12),
           border: isSelected
-              ? Border.all(color: AppTheme.primaryGreen, width: 2)
+              ? Border.all(color: context.primaryColor, width: 2)
               : null,
         ),
         child: Row(
@@ -327,7 +328,7 @@ class _AdhanSoundSelectionScreenState extends State<AdhanSoundSelectionScreen> {
               height: 48,
               decoration: BoxDecoration(
                 color: isSelected
-                    ? AppTheme.primaryGreen
+                    ? context.primaryColor
                     : (isDark ? Colors.white12 : Colors.grey.shade200),
                 shape: BoxShape.circle,
               ),
@@ -350,7 +351,7 @@ class _AdhanSoundSelectionScreenState extends State<AdhanSoundSelectionScreen> {
                     style: TextStyle(
                       fontSize: 15,
                       fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                      color: isSelected ? AppTheme.primaryGreen : null,
+                      color: isSelected ? context.primaryColor : null,
                     ),
                   ),
                   const SizedBox(height: 2),
@@ -367,7 +368,7 @@ class _AdhanSoundSelectionScreenState extends State<AdhanSoundSelectionScreen> {
               onPressed: onPlay,
               icon: Icon(
                 isPlaying ? Icons.stop_circle : Icons.play_circle_filled,
-                color: isSelected ? AppTheme.primaryGreen : Colors.grey,
+                color: isSelected ? context.primaryColor : Colors.grey,
                 size: 32,
               ),
             ),
@@ -376,7 +377,7 @@ class _AdhanSoundSelectionScreenState extends State<AdhanSoundSelectionScreen> {
             if (isSelected)
               Icon(
                 Icons.check_circle,
-                color: AppTheme.primaryGreen,
+                color: context.primaryColor,
                 size: 24,
               ),
           ],
@@ -397,11 +398,11 @@ class _AdhanSoundSelectionScreenState extends State<AdhanSoundSelectionScreen> {
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: isCustomSelected
-              ? AppTheme.primaryGreen.withOpacity(0.1)
+              ? context.primaryColor.withOpacity(0.1)
               : (isDark ? Colors.white10 : Colors.grey.shade100),
           borderRadius: BorderRadius.circular(12),
           border: isCustomSelected
-              ? Border.all(color: AppTheme.primaryGreen, width: 2)
+              ? Border.all(color: context.primaryColor, width: 2)
               : null,
         ),
         child: Column(
@@ -414,7 +415,7 @@ class _AdhanSoundSelectionScreenState extends State<AdhanSoundSelectionScreen> {
                   height: 48,
                   decoration: BoxDecoration(
                     color: hasCustomSound && isCustomSelected
-                        ? AppTheme.primaryGreen
+                        ? context.primaryColor
                         : (isDark ? Colors.white12 : Colors.grey.shade200),
                     shape: BoxShape.circle,
                   ),
@@ -437,7 +438,7 @@ class _AdhanSoundSelectionScreenState extends State<AdhanSoundSelectionScreen> {
                         style: TextStyle(
                           fontSize: 15,
                           fontWeight: isCustomSelected ? FontWeight.w600 : FontWeight.w500,
-                          color: isCustomSelected ? AppTheme.primaryGreen : null,
+                          color: isCustomSelected ? context.primaryColor : null,
                         ),
                       ),
                       if (hasCustomSound) ...[
@@ -461,7 +462,7 @@ class _AdhanSoundSelectionScreenState extends State<AdhanSoundSelectionScreen> {
                       _isPlaying && _currentlyPlayingSound == _customSoundPath
                           ? Icons.stop_circle
                           : Icons.play_circle_filled,
-                      color: isCustomSelected ? AppTheme.primaryGreen : Colors.grey,
+                      color: isCustomSelected ? context.primaryColor : Colors.grey,
                       size: 32,
                     ),
                   ),
@@ -470,7 +471,7 @@ class _AdhanSoundSelectionScreenState extends State<AdhanSoundSelectionScreen> {
                 if (isCustomSelected)
                   Icon(
                     Icons.check_circle,
-                    color: AppTheme.primaryGreen,
+                    color: context.primaryColor,
                     size: 24,
                   ),
               ],
@@ -489,8 +490,8 @@ class _AdhanSoundSelectionScreenState extends State<AdhanSoundSelectionScreen> {
                   style: const TextStyle(fontFamily: 'Poppins Regular'),
                 ),
                 style: OutlinedButton.styleFrom(
-                  foregroundColor: AppTheme.primaryGreen,
-                  side: BorderSide(color: AppTheme.primaryGreen),
+                  foregroundColor: context.primaryColor,
+                  side: BorderSide(color: context.primaryColor),
                   padding: const EdgeInsets.symmetric(vertical: 12),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),

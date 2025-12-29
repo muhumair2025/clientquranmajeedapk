@@ -84,21 +84,30 @@ class _QuranMajeedDrawerState extends State<QuranMajeedDrawer> {
             child: SafeArea(
               child: Column(
                 children: [
-                  // Compact header
+                  // Compact header with app icon
                   Padding(
                     padding: const EdgeInsets.fromLTRB(16, 20, 16, 16),
                     child: Row(
                       children: [
                         Container(
-                          padding: const EdgeInsets.all(10),
+                          width: 52,
+                          height: 52,
                           decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.2),
                             borderRadius: BorderRadius.circular(12),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.2),
+                                blurRadius: 8,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
                           ),
-                          child: const Icon(
-                            Icons.menu_book_rounded,
-                            size: 32,
-                            color: Colors.white,
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(12),
+                            child: Image.asset(
+                              'assets/appicon/abu hassan.png',
+                              fit: BoxFit.cover,
+                            ),
                           ),
                         ),
                         const SizedBox(width: 12),
@@ -107,7 +116,7 @@ class _QuranMajeedDrawerState extends State<QuranMajeedDrawer> {
                             context.l.appTitle,
                             style: const TextStyle(
                               color: Colors.white,
-                              fontSize: 20,
+                              fontSize: 18,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
@@ -199,6 +208,7 @@ class _QuranMajeedDrawerState extends State<QuranMajeedDrawer> {
                         // Settings menu
                         _buildCompactDrawerItem(
                           context,
+                          icon: Icons.settings_rounded,
                           title: context.l.settings,
                           onTap: () {
                             Navigator.of(context).pop();
@@ -223,6 +233,7 @@ class _QuranMajeedDrawerState extends State<QuranMajeedDrawer> {
 
   Widget _buildCompactDrawerItem(
     BuildContext context, {
+    IconData? icon,
     required String title,
     required VoidCallback onTap,
   }) {
@@ -239,6 +250,14 @@ class _QuranMajeedDrawerState extends State<QuranMajeedDrawer> {
         ),
         child: Row(
           children: [
+            if (icon != null) ...[
+              Icon(
+                icon,
+                color: Colors.white,
+                size: 18,
+              ),
+              const SizedBox(width: 12),
+            ],
             Expanded(
               child: AppText(
                 title,

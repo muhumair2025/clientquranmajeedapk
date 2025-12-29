@@ -66,6 +66,7 @@ dependencies:
   timezone: ^0.9.4
   file_picker: ^8.1.6
   archive: ^3.6.1
+  pdfx: ^2.6.0
 
 dev_dependencies:
   flutter_test:
@@ -77,6 +78,17 @@ dev_dependencies:
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
   flutter_lints: ^5.0.0
+  flutter_launcher_icons: ^0.14.3
+
+# App Launcher Icon Configuration
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/appicon/abu hassan.png"
+  adaptive_icon_background: "#1B5E20"
+  adaptive_icon_foreground: "assets/appicon/abu hassan.png"
+  min_sdk_android: 21
+  remove_alpha_ios: true
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -95,11 +107,13 @@ flutter:
     - assets/drawable/
     - assets/images/
     - assets/socials/
+    - assets/more/
     - assets/quran_data/
     - assets/data/
     - assets/adhan/
     - assets/Mushaf/1441/databases/
     - assets/mushafscript.png
+    - assets/appicon/
     - .env.local
 
   # An image asset can refer to one or more resolution-specific "variants", see

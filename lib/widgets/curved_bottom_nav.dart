@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../themes/app_theme.dart';
 import '../localization/app_localizations_extension.dart';
+import '../utils/theme_extensions.dart';
 
 class CurvedBottomNav extends StatelessWidget {
   final int selectedIndex;
@@ -60,8 +61,8 @@ class CurvedBottomNav extends StatelessWidget {
                 decoration: BoxDecoration(
                   gradient: RadialGradient(
                     colors: [
-                      AppTheme.primaryGreen.withValues(alpha: 0.08),
-                      AppTheme.primaryGreen.withValues(alpha: 0.02),
+                      context.primaryColor.withValues(alpha: 0.08),
+                      context.primaryColor.withValues(alpha: 0.02),
                       Colors.transparent,
                     ],
                     stops: const [0.0, 0.6, 1.0],
@@ -80,7 +81,7 @@ class CurvedBottomNav extends StatelessWidget {
               painter: _CurvedNavBarPainter(
                 notchCenterX: notchCenterX,
                 notchRadius: 32,
-                backgroundColor: AppTheme.primaryGreen,
+                backgroundColor: context.primaryColor,
                 shadowColor: Colors.black.withValues(alpha: 0.15),
               ),
             ),
@@ -122,7 +123,7 @@ class CurvedBottomNav extends StatelessWidget {
                   boxShadow: [
                     // Outer soft shadow for depth
                     BoxShadow(
-                      color: AppTheme.primaryGreen.withValues(alpha: 0.15),
+                      color: context.primaryColor.withValues(alpha: 0.15),
                       blurRadius: 20,
                       offset: const Offset(0, 4),
                       spreadRadius: 0,
@@ -145,7 +146,7 @@ class CurvedBottomNav extends StatelessWidget {
                 ),
                 child: Icon(
                   _getActiveIcon(),
-                  color: AppTheme.primaryGreen,
+                  color: context.primaryColor,
                   size: 24,
                 ),
               ),
@@ -165,7 +166,7 @@ class CurvedBottomNav extends StatelessWidget {
   }
 
   Widget _buildNavItem(BuildContext context, BottomNavItem item, bool isSelected, double itemWidth) {
-    final Color activeColor = AppTheme.primaryGreen;
+    final Color activeColor = context.primaryColor;
     final Color inactiveColor = Colors.white.withValues(alpha: 0.85);
     
     // Responsive font size

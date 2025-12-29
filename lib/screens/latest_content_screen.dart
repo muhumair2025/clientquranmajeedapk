@@ -8,6 +8,7 @@ import '../models/latest_content_models.dart';
 import '../themes/app_theme.dart';
 import '../utils/font_manager.dart';
 import 'subcategories_screen.dart';
+import '../utils/theme_extensions.dart';
 
 /// Latest Content Screen - Minimal, clean, modern design
 /// Shows newest content from categories, subcategories, and materials
@@ -95,7 +96,7 @@ class _LatestContentScreenState extends State<LatestContentScreen> {
     final isDark = theme.brightness == Brightness.dark;
 
     return Container(
-      color: isDark ? AppTheme.darkBackground : AppTheme.lightBackground,
+      color: isDark ? context.backgroundColor : context.backgroundColor,
       child: Column(
         children: [
           // Minimal filter bar
@@ -191,12 +192,12 @@ class _LatestContentScreenState extends State<LatestContentScreen> {
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         decoration: BoxDecoration(
           color: isSelected 
-              ? AppTheme.primaryGreen 
-              : (isDark ? AppTheme.darkCardBackground : AppTheme.lightCardBackground),
+              ? context.primaryColor 
+              : (isDark ? context.cardColor : context.cardColor),
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
             color: isSelected 
-                ? AppTheme.primaryGreen 
+                ? context.primaryColor 
                 : (isDark ? Colors.white10 : Colors.black.withOpacity(0.08)),
             width: 1,
           ),
@@ -209,7 +210,7 @@ class _LatestContentScreenState extends State<LatestContentScreen> {
               size: 16,
               color: isSelected 
                   ? Colors.white 
-                  : (isDark ? AppTheme.darkTextSecondary : AppTheme.lightTextSecondary),
+                  : (isDark ? context.secondaryTextColor : context.secondaryTextColor),
             ),
             const SizedBox(width: 6),
             AppText(
@@ -219,7 +220,7 @@ class _LatestContentScreenState extends State<LatestContentScreen> {
                 fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
                 color: isSelected 
                     ? Colors.white 
-                    : (isDark ? AppTheme.darkTextPrimary : AppTheme.lightTextPrimary),
+                    : (isDark ? context.textColor : context.textColor),
               ),
             ),
           ],
@@ -240,7 +241,7 @@ class _LatestContentScreenState extends State<LatestContentScreen> {
               height: 32,
               child: CircularProgressIndicator(
                 strokeWidth: 2.5,
-                color: AppTheme.primaryGreen,
+                color: context.primaryColor,
               ),
             ),
             const SizedBox(height: 16),
@@ -248,7 +249,7 @@ class _LatestContentScreenState extends State<LatestContentScreen> {
               context.l.loadingLatestContent,
               style: TextStyle(
                 fontSize: 13,
-                color: isDark ? AppTheme.darkTextSecondary : AppTheme.lightTextSecondary,
+                color: isDark ? context.secondaryTextColor : context.secondaryTextColor,
               ),
             ),
           ],
@@ -267,14 +268,14 @@ class _LatestContentScreenState extends State<LatestContentScreen> {
               Icon(
                 Icons.wifi_off_rounded,
                 size: 48,
-                color: isDark ? AppTheme.darkTextSecondary : AppTheme.lightTextSecondary,
+                color: isDark ? context.secondaryTextColor : context.secondaryTextColor,
               ),
               const SizedBox(height: 16),
               AppText(
                 context.l.failedToLoadLatest,
                 style: TextStyle(
                   fontSize: 15,
-                  color: isDark ? AppTheme.darkTextPrimary : AppTheme.lightTextPrimary,
+                  color: isDark ? context.textColor : context.textColor,
                 ),
                 textAlign: TextAlign.center,
               ),
@@ -284,7 +285,7 @@ class _LatestContentScreenState extends State<LatestContentScreen> {
                 icon: const Icon(Icons.refresh_rounded, size: 18),
                 label: AppText(context.l.retry),
                 style: TextButton.styleFrom(
-                  foregroundColor: AppTheme.primaryGreen,
+                  foregroundColor: context.primaryColor,
                 ),
               ),
             ],
@@ -305,8 +306,8 @@ class _LatestContentScreenState extends State<LatestContentScreen> {
                 Icons.inbox_rounded,
                 size: 48,
                 color: isDark 
-                    ? AppTheme.darkTextSecondary.withOpacity(0.5) 
-                    : AppTheme.lightTextSecondary.withOpacity(0.5),
+                    ? context.secondaryTextColor.withOpacity(0.5) 
+                    : context.secondaryTextColor.withOpacity(0.5),
               ),
               const SizedBox(height: 16),
               AppText(
@@ -314,7 +315,7 @@ class _LatestContentScreenState extends State<LatestContentScreen> {
                 style: TextStyle(
                   fontSize: 15,
                   fontWeight: FontWeight.w500,
-                  color: isDark ? AppTheme.darkTextPrimary : AppTheme.lightTextPrimary,
+                  color: isDark ? context.textColor : context.textColor,
                 ),
               ),
               const SizedBox(height: 6),
@@ -322,7 +323,7 @@ class _LatestContentScreenState extends State<LatestContentScreen> {
                 context.l.checkBackLater,
                 style: TextStyle(
                   fontSize: 13,
-                  color: isDark ? AppTheme.darkTextSecondary : AppTheme.lightTextSecondary,
+                  color: isDark ? context.secondaryTextColor : context.secondaryTextColor,
                 ),
               ),
             ],
@@ -334,7 +335,7 @@ class _LatestContentScreenState extends State<LatestContentScreen> {
     // Content list
     return RefreshIndicator(
       onRefresh: _refreshLatestContent,
-      color: AppTheme.primaryGreen,
+      color: context.primaryColor,
       child: ListView.separated(
         key: ValueKey(languageProvider.currentLanguage),
         padding: const EdgeInsets.fromLTRB(12, 4, 12, 100),
@@ -359,7 +360,7 @@ class _LatestContentScreenState extends State<LatestContentScreen> {
     return Container(
       margin: const EdgeInsets.only(bottom: 6),
       decoration: BoxDecoration(
-        color: isDark ? AppTheme.darkCardBackground : AppTheme.lightCardBackground,
+        color: isDark ? context.cardColor : context.cardColor,
         borderRadius: BorderRadius.circular(10),
         border: Border.all(
           color: isDark ? Colors.white.withOpacity(0.04) : Colors.black.withOpacity(0.04),
@@ -398,8 +399,8 @@ class _LatestContentScreenState extends State<LatestContentScreen> {
                                 fontSize: 13.5,
                                 fontWeight: FontWeight.w600,
                                 color: isDark 
-                                    ? AppTheme.darkTextPrimary 
-                                    : AppTheme.lightTextPrimary,
+                                    ? context.textColor 
+                                    : context.textColor,
                                 height: 1.3,
                               ),
                               textAlign: isRTL ? TextAlign.right : TextAlign.left,
@@ -419,7 +420,7 @@ class _LatestContentScreenState extends State<LatestContentScreen> {
                                 vertical: 2,
                               ),
                               decoration: BoxDecoration(
-                                color: AppTheme.primaryGreen,
+                                color: context.primaryColor,
                                 borderRadius: BorderRadius.circular(3),
                               ),
                               child: AppText(
@@ -446,7 +447,7 @@ class _LatestContentScreenState extends State<LatestContentScreen> {
                             _getTypeLabel(context, item.type),
                             style: TextStyle(
                               fontSize: 11,
-                              color: AppTheme.primaryGreen.withOpacity(0.8),
+                              color: context.primaryColor.withOpacity(0.8),
                               fontWeight: FontWeight.w500,
                             ),
                           ),
@@ -459,8 +460,8 @@ class _LatestContentScreenState extends State<LatestContentScreen> {
                               style: TextStyle(
                                 fontSize: 10,
                                 color: isDark 
-                                    ? AppTheme.darkTextSecondary.withOpacity(0.4)
-                                    : AppTheme.lightTextSecondary.withOpacity(0.4),
+                                    ? context.secondaryTextColor.withOpacity(0.4)
+                                    : context.secondaryTextColor.withOpacity(0.4),
                               ),
                             ),
                           ),
@@ -471,8 +472,8 @@ class _LatestContentScreenState extends State<LatestContentScreen> {
                             style: TextStyle(
                               fontSize: 11,
                               color: isDark 
-                                  ? AppTheme.darkTextSecondary 
-                                  : AppTheme.lightTextSecondary,
+                                  ? context.secondaryTextColor 
+                                  : context.secondaryTextColor,
                             ),
                           ),
                           
@@ -485,8 +486,8 @@ class _LatestContentScreenState extends State<LatestContentScreen> {
                                 style: TextStyle(
                                   fontSize: 10,
                                   color: isDark 
-                                      ? AppTheme.darkTextSecondary.withOpacity(0.4)
-                                      : AppTheme.lightTextSecondary.withOpacity(0.4),
+                                      ? context.secondaryTextColor.withOpacity(0.4)
+                                      : context.secondaryTextColor.withOpacity(0.4),
                                 ),
                               ),
                             ),
@@ -496,8 +497,8 @@ class _LatestContentScreenState extends State<LatestContentScreen> {
                                 style: TextStyle(
                                   fontSize: 11,
                                   color: isDark 
-                                      ? AppTheme.darkTextSecondary 
-                                      : AppTheme.lightTextSecondary,
+                                      ? context.secondaryTextColor 
+                                      : context.secondaryTextColor,
                                 ),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
@@ -517,8 +518,8 @@ class _LatestContentScreenState extends State<LatestContentScreen> {
                   isRTL ? Icons.chevron_left_rounded : Icons.chevron_right_rounded,
                   size: 18,
                   color: isDark 
-                      ? AppTheme.darkTextSecondary.withOpacity(0.3) 
-                      : AppTheme.lightTextSecondary.withOpacity(0.3),
+                      ? context.secondaryTextColor.withOpacity(0.3) 
+                      : context.secondaryTextColor.withOpacity(0.3),
                 ),
               ],
             ),
@@ -533,14 +534,14 @@ class _LatestContentScreenState extends State<LatestContentScreen> {
       width: 36,
       height: 36,
       decoration: BoxDecoration(
-        color: AppTheme.primaryGreen.withOpacity(isDark ? 0.15 : 0.08),
+        color: context.primaryColor.withOpacity(isDark ? 0.15 : 0.08),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Center(
         child: Icon(
           _getTypeIcon(item.type),
           size: 18,
-          color: AppTheme.primaryGreen,
+          color: context.primaryColor,
         ),
       ),
     );
@@ -666,7 +667,7 @@ class _LatestContentScreenState extends State<LatestContentScreen> {
           overflow: TextOverflow.ellipsis,
           style: const TextStyle(fontSize: 13),
         ),
-        backgroundColor: AppTheme.primaryGreen,
+        backgroundColor: context.primaryColor,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(8),

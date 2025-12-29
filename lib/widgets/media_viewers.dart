@@ -10,6 +10,7 @@ import '../services/common_models.dart';
 import '../localization/app_localizations_extension.dart';
 import 'app_text.dart';
 import 'dart:io';
+import '../utils/theme_extensions.dart';
 
 class FullScreenTextViewer extends StatelessWidget {
   final String content;
@@ -41,8 +42,7 @@ class FullScreenTextViewer extends StatelessWidget {
         wordCards.add(
           Container(
             padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: AppTheme.primaryGreen.withValues(alpha: 0.05),
+            decoration: BoxDecoration(color: AppTheme.primaryGreen.withValues(alpha: 0.05),
               borderRadius: BorderRadius.circular(10),
               border: Border.all(
                 color: AppTheme.primaryGreen.withValues(alpha: 0.2),
@@ -164,15 +164,14 @@ class FullScreenTextViewer extends StatelessWidget {
     final isDark = theme.brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: isDark ? AppTheme.darkBackground : AppTheme.lightBackground,
+      backgroundColor: isDark ? context.backgroundColor : context.backgroundColor,
       body: SafeArea(
         child: Column(
           children: [
             // Header
             Container(
               padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: AppTheme.primaryGreen,
+              decoration: BoxDecoration(color: Theme.of(context).colorScheme.primary,
                 boxShadow: [
                   BoxShadow(
                     color: Colors.black.withValues(alpha: 0.1),
@@ -198,7 +197,7 @@ class FullScreenTextViewer extends StatelessWidget {
                   ),
                   IconButton(
                     onPressed: () => Navigator.pop(context),
-                    icon: const Icon(
+                    icon: Icon(
                       Icons.close_rounded,
                       color: Colors.white,
                     ),
@@ -681,7 +680,7 @@ class _FullScreenAudioPlayerState extends State<FullScreenAudioPlayer>
         final isDark = theme.brightness == Brightness.dark;
         
         return AlertDialog(
-          backgroundColor: isDark ? AppTheme.darkSurface : Colors.white,
+          backgroundColor: isDark ? context.surfaceColor : Colors.white,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
           ),
@@ -720,7 +719,7 @@ class _FullScreenAudioPlayerState extends State<FullScreenAudioPlayer>
               child: Text(
                 context.l.ok,
                 style: TextStyle(
-                  color: AppTheme.primaryGreen,
+                  color: context.primaryColor,
                 ),
               ),
             ),
@@ -775,7 +774,7 @@ class _FullScreenAudioPlayerState extends State<FullScreenAudioPlayer>
           style: const TextStyle(),
           textDirection: TextDirection.rtl,
         ),
-        backgroundColor: AppTheme.primaryGreen,
+        backgroundColor: context.primaryColor,
       ),
     );
   }
@@ -789,11 +788,11 @@ class _FullScreenAudioPlayerState extends State<FullScreenAudioPlayer>
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
         color: isDark 
-            ? AppTheme.primaryGreen.withOpacity(0.08)
-            : AppTheme.primaryGreen.withOpacity(0.05),
+            ? context.primaryColor.withOpacity(0.08)
+            : context.primaryColor.withOpacity(0.05),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: AppTheme.primaryGreen.withOpacity(0.2),
+          color: context.primaryColor.withOpacity(0.2),
           width: 1,
         ),
       ),
@@ -812,7 +811,7 @@ class _FullScreenAudioPlayerState extends State<FullScreenAudioPlayer>
                   _getDownloadStatusText(),
                   style: context.textStyle(
                     fontSize: 13,
-                    color: AppTheme.primaryGreen,
+                    color: context.primaryColor,
                     fontWeight: FontWeight.w600,
                   ),
                   textAlign: TextAlign.right,
@@ -824,8 +823,8 @@ class _FullScreenAudioPlayerState extends State<FullScreenAudioPlayer>
                     borderRadius: BorderRadius.circular(4),
                     child: LinearProgressIndicator(
                       value: _downloadProgress,
-                      backgroundColor: AppTheme.primaryGreen.withOpacity(0.2),
-                      valueColor: const AlwaysStoppedAnimation<Color>(AppTheme.primaryGreen),
+                      backgroundColor: context.primaryColor.withOpacity(0.2),
+                      valueColor: AlwaysStoppedAnimation<Color>(context.primaryColor),
                       minHeight: 6,
                     ),
                   ),
@@ -834,7 +833,7 @@ class _FullScreenAudioPlayerState extends State<FullScreenAudioPlayer>
                     '${(_downloadProgress * 100).toInt()}%',
                     style: context.textStyle(
                       fontSize: 11,
-                      color: AppTheme.primaryGreen,
+                      color: context.primaryColor,
                     ),
                     textAlign: TextAlign.right,
                   ),
@@ -867,14 +866,13 @@ class _FullScreenAudioPlayerState extends State<FullScreenAudioPlayer>
       case DownloadStatus.notStarted:
       case DownloadStatus.failed:
         return Container(
-          decoration: BoxDecoration(
-            color: AppTheme.primaryGreen.withOpacity(0.15),
+          decoration: BoxDecoration(color: Theme.of(context).colorScheme.primary.withOpacity(0.15),
             borderRadius: BorderRadius.circular(8),
           ),
           child: IconButton(
             onPressed: _startDownload,
-            icon: const Icon(Icons.download_rounded),
-            color: AppTheme.primaryGreen,
+            icon: Icon(Icons.download_rounded),
+            color: context.primaryColor,
           ),
         );
       case DownloadStatus.downloading:
@@ -885,20 +883,19 @@ class _FullScreenAudioPlayerState extends State<FullScreenAudioPlayer>
           ),
           child: IconButton(
             onPressed: _pauseDownload,
-            icon: const Icon(Icons.stop_rounded),
+            icon: Icon(Icons.stop_rounded),
             color: Colors.orange,
           ),
         );
       case DownloadStatus.paused:
         return Container(
-          decoration: BoxDecoration(
-            color: AppTheme.primaryGreen.withOpacity(0.15),
+          decoration: BoxDecoration(color: Theme.of(context).colorScheme.primary.withOpacity(0.15),
             borderRadius: BorderRadius.circular(8),
           ),
           child: IconButton(
             onPressed: _resumeDownload,
-            icon: const Icon(Icons.play_arrow_rounded),
-            color: AppTheme.primaryGreen,
+            icon: Icon(Icons.play_arrow_rounded),
+            color: context.primaryColor,
           ),
         );
       case DownloadStatus.completed:
@@ -909,7 +906,7 @@ class _FullScreenAudioPlayerState extends State<FullScreenAudioPlayer>
           ),
           child: IconButton(
             onPressed: _deleteDownload,
-            icon: const Icon(Icons.delete_rounded),
+            icon: Icon(Icons.delete_rounded),
             color: Colors.red,
           ),
         );
@@ -946,15 +943,14 @@ class _FullScreenAudioPlayerState extends State<FullScreenAudioPlayer>
     final isDark = theme.brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: isDark ? AppTheme.darkBackground : AppTheme.lightBackground,
+      backgroundColor: isDark ? context.backgroundColor : context.backgroundColor,
       body: SafeArea(
         child: Column(
           children: [
             // Header
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              decoration: BoxDecoration(
-                color: AppTheme.primaryGreen,
+              decoration: BoxDecoration(color: Theme.of(context).colorScheme.primary,
                 boxShadow: [
                   BoxShadow(
                     color: Colors.black.withValues(alpha: 0.08),
@@ -982,7 +978,7 @@ class _FullScreenAudioPlayerState extends State<FullScreenAudioPlayer>
                   ),
                   IconButton(
                     onPressed: () => Navigator.pop(context),
-                    icon: const Icon(
+                    icon: Icon(
                       Icons.close_rounded,
                       color: Colors.white,
                       size: 24,
@@ -1005,8 +1001,7 @@ class _FullScreenAudioPlayerState extends State<FullScreenAudioPlayer>
                     Container(
                       width: 160,
                       height: 160,
-                      decoration: BoxDecoration(
-                        color: AppTheme.primaryGreen.withValues(alpha: 0.1),
+                      decoration: BoxDecoration(color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
                         shape: BoxShape.circle,
                       ),
                       child: AnimatedBuilder(
@@ -1017,7 +1012,7 @@ class _FullScreenAudioPlayerState extends State<FullScreenAudioPlayer>
                             child: Icon(
                               _localFilePath != null ? Icons.offline_bolt_rounded : Icons.headphones_rounded,
                               size: 70,
-                              color: AppTheme.primaryGreen,
+                              color: context.primaryColor,
                             ),
                           );
                         },
@@ -1041,8 +1036,8 @@ class _FullScreenAudioPlayerState extends State<FullScreenAudioPlayer>
                               value: _position.inSeconds.toDouble(),
                               max: _duration.inSeconds.toDouble(),
                               onChanged: _seek,
-                              activeColor: AppTheme.primaryGreen,
-                              inactiveColor: AppTheme.primaryGreen.withValues(alpha: 0.2),
+                              activeColor: context.primaryColor,
+                              inactiveColor: context.primaryColor.withValues(alpha: 0.2),
                             ),
                           ),
                           
@@ -1085,15 +1080,14 @@ class _FullScreenAudioPlayerState extends State<FullScreenAudioPlayer>
                         Container(
                           width: 56,
                           height: 56,
-                          decoration: BoxDecoration(
-                            color: AppTheme.primaryGreen.withValues(alpha: 0.15),
+                          decoration: BoxDecoration(color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.15),
                             shape: BoxShape.circle,
                           ),
                           child: IconButton(
                             onPressed: _seekBackward,
-                            icon: const Icon(
+                            icon: Icon(
                               Icons.replay_10_rounded,
-                              color: AppTheme.primaryGreen,
+                              color: context.primaryColor,
                               size: 26,
                             ),
                           ),
@@ -1105,12 +1099,11 @@ class _FullScreenAudioPlayerState extends State<FullScreenAudioPlayer>
                         Container(
                           width: 70,
                           height: 70,
-                          decoration: BoxDecoration(
-                            color: AppTheme.primaryGreen,
+                          decoration: BoxDecoration(color: Theme.of(context).colorScheme.primary,
                             shape: BoxShape.circle,
                             boxShadow: [
                               BoxShadow(
-                                color: AppTheme.primaryGreen.withValues(alpha: 0.4),
+                                color: context.primaryColor.withValues(alpha: 0.4),
                                 blurRadius: 16,
                                 offset: const Offset(0, 6),
                               ),
@@ -1124,7 +1117,7 @@ class _FullScreenAudioPlayerState extends State<FullScreenAudioPlayer>
                                     builder: (context, child) {
                                       return Transform.rotate(
                                         angle: _rotationController.value * 2 * 3.14159,
-                                        child: const Icon(
+                                        child: Icon(
                                           Icons.sync_rounded,
                                           color: Colors.white,
                                           size: 28,
@@ -1146,15 +1139,14 @@ class _FullScreenAudioPlayerState extends State<FullScreenAudioPlayer>
                         Container(
                           width: 56,
                           height: 56,
-                          decoration: BoxDecoration(
-                            color: AppTheme.primaryGreen.withValues(alpha: 0.15),
+                          decoration: BoxDecoration(color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.15),
                             shape: BoxShape.circle,
                           ),
                           child: IconButton(
                             onPressed: _seekForward,
-                            icon: const Icon(
+                            icon: Icon(
                               Icons.forward_10_rounded,
-                              color: AppTheme.primaryGreen,
+                              color: context.primaryColor,
                               size: 26,
                             ),
                           ),
@@ -1332,10 +1324,10 @@ class _FullScreenVideoPlayerState extends State<FullScreenVideoPlayer>
         allowMuting: true,
         showControls: true,
         materialProgressColors: ChewieProgressColors(
-          playedColor: AppTheme.primaryGreen,
-          handleColor: AppTheme.primaryGreen,
-          backgroundColor: AppTheme.primaryGreen.withValues(alpha: 0.3),
-          bufferedColor: AppTheme.primaryGreen.withValues(alpha: 0.5),
+          playedColor: context.primaryColor,
+          handleColor: context.primaryColor,
+          backgroundColor: context.primaryColor.withValues(alpha: 0.3),
+          bufferedColor: context.primaryColor.withValues(alpha: 0.5),
         ),
         placeholder: Container(
           color: Colors.black,
@@ -1348,7 +1340,7 @@ class _FullScreenVideoPlayerState extends State<FullScreenVideoPlayer>
                   child: Icon(
                     Icons.videocam_outlined,
                     size: 80,
-                    color: AppTheme.primaryGreen,
+                    color: context.primaryColor,
                   ),
                 );
               },
@@ -1362,7 +1354,7 @@ class _FullScreenVideoPlayerState extends State<FullScreenVideoPlayer>
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(
+                  Icon(
                     Icons.error_outline_rounded,
                     color: Colors.red,
                     size: 48,
@@ -1634,7 +1626,7 @@ class _FullScreenVideoPlayerState extends State<FullScreenVideoPlayer>
         final isDark = theme.brightness == Brightness.dark;
         
         return AlertDialog(
-          backgroundColor: isDark ? AppTheme.darkSurface : Colors.white,
+          backgroundColor: isDark ? context.surfaceColor : Colors.white,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
           ),
@@ -1673,7 +1665,7 @@ class _FullScreenVideoPlayerState extends State<FullScreenVideoPlayer>
               child: Text(
                 context.l.ok,
                 style: TextStyle(
-                  color: AppTheme.primaryGreen,
+                  color: context.primaryColor,
                 ),
               ),
             ),
@@ -1728,7 +1720,7 @@ class _FullScreenVideoPlayerState extends State<FullScreenVideoPlayer>
           style: const TextStyle(),
           textDirection: TextDirection.rtl,
         ),
-        backgroundColor: AppTheme.primaryGreen,
+        backgroundColor: context.primaryColor,
       ),
     );
   }
@@ -1767,7 +1759,7 @@ class _FullScreenVideoPlayerState extends State<FullScreenVideoPlayer>
             LinearProgressIndicator(
               value: _downloadProgress,
               backgroundColor: Colors.grey.shade300,
-              valueColor: AlwaysStoppedAnimation<Color>(AppTheme.primaryGreen),
+              valueColor: AlwaysStoppedAnimation<Color>(context.primaryColor),
             ),
             const SizedBox(height: 8),
             Text(
@@ -1804,25 +1796,25 @@ class _FullScreenVideoPlayerState extends State<FullScreenVideoPlayer>
       case DownloadStatus.failed:
         return IconButton(
           onPressed: _startDownload,
-          icon: const Icon(Icons.download_rounded),
+          icon: Icon(Icons.download_rounded),
           color: Colors.white,
         );
       case DownloadStatus.downloading:
         return IconButton(
           onPressed: _pauseDownload,
-          icon: const Icon(Icons.pause_rounded),
+          icon: Icon(Icons.pause_rounded),
           color: Colors.white,
         );
       case DownloadStatus.paused:
         return IconButton(
           onPressed: _resumeDownload,
-          icon: const Icon(Icons.play_arrow_rounded),
+          icon: Icon(Icons.play_arrow_rounded),
           color: Colors.white,
         );
       case DownloadStatus.completed:
         return IconButton(
           onPressed: _deleteDownload,
-          icon: const Icon(Icons.delete_rounded),
+          icon: Icon(Icons.delete_rounded),
           color: Colors.red,
         );
     }
@@ -1838,8 +1830,8 @@ class _FullScreenVideoPlayerState extends State<FullScreenVideoPlayer>
             // Header
             Container(
               padding: const EdgeInsets.all(16),
-              decoration: const BoxDecoration(
-                color: AppTheme.primaryGreen,
+              decoration: BoxDecoration(
+                color: context.primaryColor,
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -1858,7 +1850,7 @@ class _FullScreenVideoPlayerState extends State<FullScreenVideoPlayer>
                   ),
                   IconButton(
                     onPressed: () => Navigator.pop(context),
-                    icon: const Icon(
+                    icon: Icon(
                       Icons.close_rounded,
                       color: Colors.white,
                     ),
@@ -1870,9 +1862,9 @@ class _FullScreenVideoPlayerState extends State<FullScreenVideoPlayer>
             // Video Player
             Expanded(
               child: _isLoading
-                  ? const Center(
+                  ? Center(
                       child: CircularProgressIndicator(
-                        color: AppTheme.primaryGreen,
+                        color: context.primaryColor,
                       ),
                     )
                   : _error != null
@@ -1880,7 +1872,7 @@ class _FullScreenVideoPlayerState extends State<FullScreenVideoPlayer>
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              const Icon(
+                              Icon(
                                 Icons.error_outline_rounded,
                                 color: Colors.red,
                                 size: 48,
@@ -1912,9 +1904,9 @@ class _FullScreenVideoPlayerState extends State<FullScreenVideoPlayer>
                             Expanded(
                               child: _chewieController != null
                                   ? Chewie(controller: _chewieController!)
-                                  : const Center(
+                                  : Center(
                                       child: CircularProgressIndicator(
-                                        color: AppTheme.primaryGreen,
+                                        color: context.primaryColor,
                                       ),
                                     ),
                             ),

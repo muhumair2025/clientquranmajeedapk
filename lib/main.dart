@@ -22,6 +22,7 @@ import 'services/notes_service.dart';
 import 'services/app_content_service.dart';
 import 'services/live_video_service.dart';
 import 'services/mushaf_database_service.dart';
+import 'services/background_refresh_service.dart';
 import 'localization/app_localizations_delegate.dart';
 import 'localization/app_localizations_extension.dart';
 import 'widgets/first_launch_language_modal.dart';
@@ -52,6 +53,9 @@ void main() async {
     PrayerAlarmService.initialize(), // Prayer alarms
     MushafDatabaseService.initialize(), // Mushaf image-based Quran
   ]);
+  
+  // Initialize background refresh service for smart data sync
+  BackgroundRefreshService().initialize();
   
   // Setup system UI - Full screen immersive mode (hides navigation bar)
   SystemChrome.setEnabledSystemUIMode(
@@ -95,7 +99,7 @@ class QuranMajeedApp extends StatelessWidget {
     return Consumer2<ThemeProvider, LanguageProvider>(
       builder: (context, themeProvider, languageProvider, child) {
         return MaterialApp(
-          title: 'Quran Majeed',
+          title: 'Abu Hassaan Ishaq Swati',
           debugShowCheckedModeBanner: false,
           // Localization setup
           locale: languageProvider.currentLocale,

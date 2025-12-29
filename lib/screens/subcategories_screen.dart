@@ -1,4 +1,5 @@
 import '../widgets/app_text.dart';
+import 'content_list_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:provider/provider.dart';
@@ -10,6 +11,7 @@ import '../services/content_api_service.dart';
 import '../models/category_models.dart';
 import '../themes/app_theme.dart';
 import '../utils/font_manager.dart';
+import '../utils/theme_extensions.dart';
 
 class SubcategoriesScreen extends StatefulWidget {
   final int categoryId;
@@ -168,10 +170,10 @@ class _SubcategoriesScreenState extends State<SubcategoriesScreen> {
     final languageProvider = context.watch<LanguageProvider>();
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    final primaryColor = _categoryColor ?? AppTheme.primaryGreen;
+    final primaryColor = _categoryColor ?? context.primaryColor;
 
     return Scaffold(
-      backgroundColor: isDark ? AppTheme.darkBackground : AppTheme.lightBackground,
+      backgroundColor: isDark ? context.backgroundColor : context.backgroundColor,
       appBar: AppBar(
         title: AppText(
           widget.categoryName,
@@ -179,7 +181,7 @@ class _SubcategoriesScreenState extends State<SubcategoriesScreen> {
             fontWeight: FontWeight.w600,
           ),
         ),
-        backgroundColor: AppTheme.primaryGreen, // Use theme color
+        backgroundColor: context.primaryColor, // Use theme color
         foregroundColor: Colors.white,
         elevation: 0,
       ),
@@ -300,10 +302,10 @@ class _SubcategoriesScreenState extends State<SubcategoriesScreen> {
     return Container(
       margin: const EdgeInsets.only(bottom: 8), // More compact spacing
       decoration: BoxDecoration(
-        color: isDark ? AppTheme.darkCardBackground : AppTheme.lightCardBackground,
+        color: isDark ? context.cardColor : context.cardColor,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: AppTheme.primaryGreen.withOpacity(0.1),
+          color: context.primaryColor.withOpacity(0.1),
           width: 1,
         ),
         boxShadow: [
@@ -319,14 +321,14 @@ class _SubcategoriesScreenState extends State<SubcategoriesScreen> {
         child: InkWell(
           borderRadius: BorderRadius.circular(12),
           onTap: () {
-            // TODO: Navigate to materials/content screen
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: AppText('${subcategory.name} - Coming Soon'),
-                backgroundColor: AppTheme.primaryGreen,
-                behavior: SnackBarBehavior.floating,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
+            // Navigate to content list screen
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => ContentListScreen(
+                  subcategoryId: subcategory.id,
+                  subcategoryName: subcategory.name,
+                  categoryColor: widget.categoryColor,
                 ),
               ),
             );
@@ -342,12 +344,12 @@ class _SubcategoriesScreenState extends State<SubcategoriesScreen> {
                   'assets/images/islamic-pattern.png',
                   width: 20,
                   height: 20,
-                  color: AppTheme.primaryGreen,
+                  color: context.primaryColor,
                   errorBuilder: (context, error, stackTrace) {
                     return Icon(
                       Icons.circle,
                       size: 8,
-                      color: AppTheme.primaryGreen,
+                      color: context.primaryColor,
                     );
                   },
                 ),
@@ -367,7 +369,7 @@ class _SubcategoriesScreenState extends State<SubcategoriesScreen> {
                             languageCode,
                             fontSize: 15,
                             fontWeight: FontWeight.w600,
-                            color: isDark ? AppTheme.darkTextPrimary : AppTheme.lightTextPrimary,
+                            color: isDark ? context.textColor : context.textColor,
                             height: 1.4,
                           ),
                           textAlign: isRTL ? TextAlign.right : TextAlign.left,
@@ -383,7 +385,7 @@ class _SubcategoriesScreenState extends State<SubcategoriesScreen> {
                             style: FontManager.getTextStyle(
                               languageCode,
                               fontSize: 12.5,
-                              color: isDark ? AppTheme.darkTextSecondary : AppTheme.lightTextSecondary,
+                              color: isDark ? context.secondaryTextColor : context.secondaryTextColor,
                               height: 1.3,
                             ),
                             textAlign: isRTL ? TextAlign.right : TextAlign.left,
@@ -404,7 +406,7 @@ class _SubcategoriesScreenState extends State<SubcategoriesScreen> {
                               Icon(
                                 Icons.article_outlined,
                                 size: 13,
-                                color: AppTheme.primaryGreen.withOpacity(0.8),
+                                color: context.primaryColor.withOpacity(0.8),
                               ),
                               const SizedBox(width: 4),
                               AppText(
@@ -412,7 +414,7 @@ class _SubcategoriesScreenState extends State<SubcategoriesScreen> {
                                 style: FontManager.getTextStyle(
                                   languageCode,
                                   fontSize: 11.5,
-                                  color: AppTheme.primaryGreen.withOpacity(0.8),
+                                  color: context.primaryColor.withOpacity(0.8),
                                   fontWeight: FontWeight.w500,
                                 ),
                               ),

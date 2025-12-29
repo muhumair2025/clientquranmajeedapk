@@ -21,6 +21,7 @@ import '../localization/app_localizations_extension.dart';
 import 'bulk_audio_player_screen.dart';
 import 'dart:async';
 import 'package:share_plus/share_plus.dart';
+import '../utils/theme_extensions.dart';
 
 class QuranReaderScreen extends StatefulWidget {
   final int surahIndex;
@@ -80,7 +81,7 @@ class _QuranReaderScreenState extends State<QuranReaderScreen> {
 
   Future<void> _initializeQuranReader() async {
     try {
-      // Load initial page based on surah or para
+      // Load initial page based on surah, para, or specific ayah
       int initialPage = 1;
       
       if (widget.paraIndex != null) {
@@ -89,8 +90,24 @@ class _QuranReaderScreenState extends State<QuranReaderScreen> {
         if (page != null) {
           initialPage = page;
         }
+      } else if (widget.initialAyahIndex != null && widget.surahIndex > 0) {
+        // Load page for specific ayah (from search results)
+        final page = await MushafDatabaseService.getPageForAyah(
+          widget.surahIndex,
+          widget.initialAyahIndex!,
+        );
+        if (page != null) {
+          initialPage = page;
+          debugPrint('✅ Navigating to page $initialPage for ${widget.surahIndex}:${widget.initialAyahIndex}');
+        } else {
+          // Fallback to first page of surah if ayah page not found
+          final surahPage = await MushafDatabaseService.getPageForSurah(widget.surahIndex);
+          if (surahPage != null) {
+            initialPage = surahPage;
+          }
+        }
       } else if (widget.surahIndex > 0) {
-        // Load page for surah
+        // Load page for surah (first ayah)
         final page = await MushafDatabaseService.getPageForSurah(widget.surahIndex);
         if (page != null) {
           initialPage = page;
@@ -377,7 +394,7 @@ class _QuranReaderScreenState extends State<QuranReaderScreen> {
           builder: (context, scrollController) {
             return Container(
               decoration: BoxDecoration(
-                color: isDark ? AppTheme.darkCardBackground : Colors.white,
+                color: isDark ? context.cardColor : Colors.white,
                 borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
               ),
               child: Directionality(
@@ -400,7 +417,7 @@ class _QuranReaderScreenState extends State<QuranReaderScreen> {
                             color: isDark ? const Color(0xFF2A2A2A) : const Color(0xFFF5F0E6),
                             borderRadius: BorderRadius.circular(10),
                             border: Border.all(
-                              color: isDark ? Colors.grey[700]! : AppTheme.primaryGold.withOpacity(0.3),
+                              color: isDark ? Colors.grey[700]! : context.accentColor.withOpacity(0.3),
                             ),
                           ),
                           child: Text(
@@ -504,7 +521,7 @@ class _QuranReaderScreenState extends State<QuranReaderScreen> {
     return Container(
       padding: const EdgeInsets.fromLTRB(4, 8, 4, 8),
       decoration: BoxDecoration(
-        color: isDark ? AppTheme.darkCardBackground : Colors.white,
+        color: isDark ? context.cardColor : Colors.white,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
         boxShadow: [
           BoxShadow(
@@ -621,7 +638,7 @@ class _QuranReaderScreenState extends State<QuranReaderScreen> {
           child: Icon(
             icon,
             color: isEnabled 
-              ? (isDark ? Colors.white70 : AppTheme.primaryGreen)
+              ? (isDark ? Colors.white70 : context.primaryColor)
               : Colors.grey[400],
             size: 22,
           ),
@@ -685,7 +702,7 @@ class _QuranReaderScreenState extends State<QuranReaderScreen> {
     required String languageCode,
   }) {
     final bgColor = isDark ? const Color(0xFFF5F0E6).withOpacity(0.08) : const Color(0xFFF5F0E6);
-    final borderColor = isDark ? Colors.grey[700]! : AppTheme.primaryGold.withOpacity(0.4);
+    final borderColor = isDark ? Colors.grey[700]! : context.accentColor.withOpacity(0.4);
     final isRTL = FontManager.isRTL(languageCode);
     final uiFont = FontManager.getRegularFont(languageCode);
     
@@ -751,7 +768,7 @@ class _QuranReaderScreenState extends State<QuranReaderScreen> {
     required VoidCallback onTap,
     required bool isDark,
   }) {
-    final activeColor = isDark ? AppTheme.primaryGold : AppTheme.primaryGreen;
+    final activeColor = isDark ? context.accentColor : context.primaryColor;
     final inactiveColor = isDark ? Colors.grey[600]! : Colors.grey[400]!;
     
     return Material(
@@ -1044,7 +1061,7 @@ class _QuranReaderScreenState extends State<QuranReaderScreen> {
           builder: (context, scrollController) {
             return Container(
               decoration: BoxDecoration(
-                color: isDark ? AppTheme.darkCardBackground : Colors.white,
+                color: isDark ? context.cardColor : Colors.white,
                 borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
               ),
               child: Column(
@@ -1144,14 +1161,14 @@ Shared from Quran Majeed App
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
-        backgroundColor: isDark ? AppTheme.darkBackground : AppTheme.lightBackground,
+        backgroundColor: isDark ? context.backgroundColor : context.backgroundColor,
         body: isLoading
             ? Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     CircularProgressIndicator(
-                      valueColor: AlwaysStoppedAnimation<Color>(AppTheme.primaryGreen),
+                      valueColor: AlwaysStoppedAnimation<Color>(context.primaryColor),
                     ),
                     const SizedBox(height: 16),
                     AppText(
@@ -1350,6 +1367,7 @@ Shared from Quran Majeed App
                     painter: AyahHighlightPainter(
                       glyphs: highlightedGlyphs.where((g) => g.pageNumber == pageNumber).toList(),
                       scale: scale,
+                      highlightColor: context.primaryColor,
                     ),
                   ),
                 ),
@@ -1381,7 +1399,7 @@ Shared from Quran Majeed App
         errorBuilder: (context, error, stackTrace) {
           debugPrint('Error loading image: $imagePath - $error');
           return Container(
-            color: isDark ? AppTheme.darkBackground : Colors.white,
+            color: isDark ? context.backgroundColor : Colors.white,
             child: Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -1480,10 +1498,12 @@ Shared from Quran Majeed App
 class AyahHighlightPainter extends CustomPainter {
   final List<GlyphInfo> glyphs;
   final double scale;
+  final Color highlightColor;
   
   AyahHighlightPainter({
     required this.glyphs,
     required this.scale,
+    required this.highlightColor,
   });
   
   @override
@@ -1491,8 +1511,7 @@ class AyahHighlightPainter extends CustomPainter {
     if (glyphs.isEmpty) return;
     
     // Transparent green fill only (no border as per user request)
-    final paint = Paint()
-      ..color = AppTheme.primaryGreen.withValues(alpha: 0.3)
+    final paint = Paint()..color = highlightColor.withValues(alpha: 0.3)
       ..style = PaintingStyle.fill;
     
     // Draw highlight for each glyph segment

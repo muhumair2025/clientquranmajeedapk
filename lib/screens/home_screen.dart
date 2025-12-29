@@ -100,12 +100,13 @@ class _QuranMajeedHomePageState extends State<QuranMajeedHomePage> {
           // Floating social button
           Positioned(
             right: 16,
-            bottom: 100, // Above bottom nav bar
+            bottom: 100, // Above bottom nav bar - fixed position
             child: FloatingSocialButton(
               facebookUrl: 'https://facebook.com/quranmajeed',
               youtubeUrl: 'https://youtube.com/@quranmajeed',
               tiktokUrl: 'https://tiktok.com/@quranmajeed',
               instagramUrl: 'https://instagram.com/quranmajeed',
+              whatsappUrl: 'https://wa.me/1234567890', // Add your WhatsApp number here
               onSocialPressed: (url) => _launchUrl(url),
             ),
           ),

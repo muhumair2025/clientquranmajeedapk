@@ -4,7 +4,7 @@ import '../themes/app_theme.dart';
 import '../localization/app_localizations_extension.dart';
 import 'names_of_allah_screen.dart';
 import 'qibla_finder_screen.dart';
-import 'prayer_times_screen.dart';
+import '../utils/theme_extensions.dart';
 
 class MoreToolsScreen extends StatelessWidget {
   const MoreToolsScreen({super.key});
@@ -85,10 +85,10 @@ class MoreToolsScreen extends StatelessWidget {
   List<ToolItem> _getTools(BuildContext context) {
     return [
       ToolItem(
-        icon: Icons.explore_rounded,
+        imagePath: 'assets/more/qibla.png',
         title: context.l.qiblaFinder,
         description: context.l.qiblaFinderDesc,
-        color: const Color(0xFF2196F3),
+        color: context.primaryColor,
         onTap: () {
           Navigator.of(context).push(
             MaterialPageRoute(
@@ -98,88 +98,15 @@ class MoreToolsScreen extends StatelessWidget {
         },
       ),
       ToolItem(
-        icon: Icons.access_time_rounded,
-        title: context.l.prayerTimes,
-        description: context.l.prayerTimesDesc,
-        color: const Color(0xFF4CAF50),
-        onTap: () {
-          Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (context) => const PrayerTimesScreen(),
-            ),
-          );
-        },
-      ),
-      ToolItem(
-        icon: Icons.circle_outlined,
-        title: context.l.tasbeehCounter,
-        description: context.l.tasbeehCounterDesc,
-        color: const Color(0xFF9C27B0),
-        onTap: () {
-          // TODO: Navigate to Tasbeeh Counter
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: AppText(context.l.comingSoon)),
-          );
-        },
-      ),
-      ToolItem(
-        icon: Icons.calendar_today_rounded,
-        title: context.l.hijriCalendar,
-        description: context.l.hijriCalendarDesc,
-        color: const Color(0xFFFF9800),
-        onTap: () {
-          // TODO: Navigate to Hijri Calendar
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: AppText(context.l.comingSoon)),
-          );
-        },
-      ),
-      ToolItem(
-        icon: Icons.mosque_rounded,
+        imagePath: 'assets/more/Allahname.png',
         title: context.l.namesOfAllah,
         description: context.l.namesOfAllahDesc,
-        color: const Color(0xFF006653),
+        color: context.primaryColor,
         onTap: () {
           Navigator.of(context).push(
             MaterialPageRoute(
               builder: (context) => const NamesOfAllahScreen(),
             ),
-          );
-        },
-      ),
-      ToolItem(
-        icon: Icons.format_quote_rounded,
-        title: context.l.islamicQuotes,
-        description: context.l.islamicQuotesDesc,
-        color: const Color(0xFFE91E63),
-        onTap: () {
-          // TODO: Navigate to Islamic Quotes
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: AppText(context.l.comingSoon)),
-          );
-        },
-      ),
-      ToolItem(
-        icon: Icons.auto_awesome_rounded,
-        title: context.l.duaCollection,
-        description: context.l.duaCollectionDesc,
-        color: const Color(0xFF00BCD4),
-        onTap: () {
-          // TODO: Navigate to Dua Collection
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: AppText(context.l.comingSoon)),
-          );
-        },
-      ),
-      ToolItem(
-        icon: Icons.account_balance_wallet_rounded,
-        title: context.l.zakat,
-        description: context.l.zakatDesc,
-        color: const Color(0xFFFF5722),
-        onTap: () {
-          // TODO: Navigate to Zakat Calculator
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: AppText(context.l.comingSoon)),
           );
         },
       ),
@@ -239,7 +166,7 @@ class _ToolCard extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.start,
               crossAxisAlignment: isRTL ? CrossAxisAlignment.end : CrossAxisAlignment.start,
               children: [
-                // Icon with background
+                // Image with background
                 Container(
                   width: 56,
                   height: 56,
@@ -258,10 +185,25 @@ class _ToolCard extends StatelessWidget {
                       width: 1,
                     ),
                   ),
-                  child: Icon(
-                    tool.icon,
-                    color: tool.color,
-                    size: 28,
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(14),
+                    child: Padding(
+                      padding: const EdgeInsets.all(8),
+                      child: Image.asset(
+                        tool.imagePath,
+                        width: 40,
+                        height: 40,
+                        fit: BoxFit.contain,
+                        errorBuilder: (context, error, stackTrace) {
+                          // Fallback to icon if image fails to load
+                          return Icon(
+                            Icons.apps_rounded,
+                            color: tool.color,
+                            size: 28,
+                          );
+                        },
+                      ),
+                    ),
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -325,18 +267,17 @@ class _ToolCard extends StatelessWidget {
 }
 
 class ToolItem {
-  final IconData icon;
+  final String imagePath;
   final String title;
   final String description;
   final Color color;
   final VoidCallback onTap;
 
   const ToolItem({
-    required this.icon,
+    required this.imagePath,
     required this.title,
     required this.description,
     required this.color,
     required this.onTap,
   });
 }
-

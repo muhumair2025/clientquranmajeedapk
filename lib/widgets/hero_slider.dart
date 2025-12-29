@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../services/app_content_service.dart';
 import '../models/app_content_models.dart';
 import '../themes/app_theme.dart';
+import '../utils/theme_extensions.dart';
 
 /// Beautiful hero slider widget with cached images
 /// Displays at the top of home page with auto-scroll
@@ -203,7 +204,7 @@ class _HeroSliderState extends State<HeroSlider> {
                       vertical: 8,
                     ),
                     decoration: BoxDecoration(
-                      color: AppTheme.primaryGreen,
+                      color: context.primaryColor,
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Text(
@@ -255,7 +256,7 @@ class _HeroSliderState extends State<HeroSlider> {
                     loadingProgress.expectedTotalBytes!
                 : null,
             strokeWidth: 2,
-            color: AppTheme.primaryGreen,
+            color: context.primaryColor,
           ),
         );
       },
@@ -267,12 +268,12 @@ class _HeroSliderState extends State<HeroSlider> {
 
   Widget _buildPlaceholder() {
     return Container(
-      color: AppTheme.primaryGreen.withValues(alpha: 0.1),
+      color: context.primaryColor.withValues(alpha: 0.1),
       child: Center(
         child: Icon(
           Icons.image_outlined,
           size: 48,
-          color: AppTheme.primaryGreen.withValues(alpha: 0.5),
+          color: context.primaryColor.withValues(alpha: 0.5),
         ),
       ),
     );
@@ -288,7 +289,7 @@ class _HeroSliderState extends State<HeroSlider> {
       height: 8,
       decoration: BoxDecoration(
         color: isActive
-            ? AppTheme.primaryGreen
+            ? context.primaryColor
             : (isDark ? Colors.white38 : Colors.grey.shade400),
         borderRadius: BorderRadius.circular(4),
       ),

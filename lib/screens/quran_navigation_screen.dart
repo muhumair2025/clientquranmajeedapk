@@ -12,6 +12,7 @@ import '../services/reading_progress_service.dart';
 import 'quran_reader_screen.dart';
 import 'quran_search_screen.dart';
 import 'favorites_screen.dart';
+import '../utils/theme_extensions.dart';
 
 class QuranNavigationScreen extends StatefulWidget {
   const QuranNavigationScreen({super.key});
@@ -188,10 +189,10 @@ class _QuranNavigationScreenState extends State<QuranNavigationScreen>
     return Stack(
       children: [
         Scaffold(
-      backgroundColor: isDark ? AppTheme.darkBackground : AppTheme.lightBackground,
+      backgroundColor: isDark ? context.backgroundColor : context.backgroundColor,
       appBar: AppBar(
         title: AppText(context.l.quranKareem),
-        backgroundColor: AppTheme.primaryGreen,
+        backgroundColor: context.primaryColor,
         foregroundColor: Colors.white,
         elevation: 0,
         actions: [
@@ -212,14 +213,14 @@ class _QuranNavigationScreenState extends State<QuranNavigationScreen>
         children: [
           // Custom Tab Bar with search
           Container(
-            color: isDark ? AppTheme.darkSurface : Colors.white,
+            color: isDark ? context.surfaceColor : Colors.white,
             child: Column(
               children: [
                 // Tab selector
                 Container(
                   margin: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: isDark ? AppTheme.darkBackground : AppTheme.lightGray,
+                    color: isDark ? context.backgroundColor : AppTheme.lightGray,
                     borderRadius: BorderRadius.circular(25),
                   ),
                   child: Row(
@@ -250,7 +251,7 @@ class _QuranNavigationScreenState extends State<QuranNavigationScreen>
                                   style: TextStyle(
                                     fontSize: 16,
                                     fontWeight: FontWeight.w600,
-                                    color: isSelected ? AppTheme.primaryGreen : Colors.grey[600],
+                                    color: isSelected ? context.primaryColor : Colors.grey[600],
                                   ),
                                 ),
                               );
@@ -268,7 +269,7 @@ class _QuranNavigationScreenState extends State<QuranNavigationScreen>
                               return Container(
                                 padding: const EdgeInsets.symmetric(vertical: 12),
                                 decoration: BoxDecoration(
-                                  color: isSelected ? AppTheme.primaryGold : Colors.transparent,
+                                  color: isSelected ? context.primaryColor : Colors.transparent,
                                   borderRadius: BorderRadius.circular(25),
                                   boxShadow: isSelected ? [
                                     BoxShadow(
@@ -300,7 +301,7 @@ class _QuranNavigationScreenState extends State<QuranNavigationScreen>
                   padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
                   child: Container(
                     decoration: BoxDecoration(
-                      color: isDark ? AppTheme.darkBackground : AppTheme.lightGray,
+                      color: isDark ? context.backgroundColor : AppTheme.lightGray,
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: TextField(
@@ -330,7 +331,7 @@ class _QuranNavigationScreenState extends State<QuranNavigationScreen>
                         ),
                         prefixIcon: Icon(
                           Icons.search_rounded,
-                          color: AppTheme.primaryGreen,
+                          color: context.primaryColor,
                           size: 24,
                         ),
                         border: InputBorder.none,
@@ -396,7 +397,7 @@ class _QuranNavigationScreenState extends State<QuranNavigationScreen>
         return Container(
           margin: const EdgeInsets.only(bottom: 12),
           decoration: BoxDecoration(
-            color: isDark ? AppTheme.darkSurface : Colors.white,
+            color: isDark ? context.surfaceColor : Colors.white,
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
@@ -448,7 +449,7 @@ class _QuranNavigationScreenState extends State<QuranNavigationScreen>
                                   width: 35,
                                   height: 35,
                                   decoration: BoxDecoration(
-                                    color: AppTheme.primaryGreen.withValues(alpha: 0.1),
+                                    color: context.primaryColor.withValues(alpha: 0.1),
                                     borderRadius: BorderRadius.circular(12),
                                   ),
                                 );
@@ -526,7 +527,7 @@ class _QuranNavigationScreenState extends State<QuranNavigationScreen>
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
-                        color: AppTheme.primaryGold.withValues(alpha: 0.1),
+                        color: context.primaryColor.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: AppText(
@@ -576,7 +577,7 @@ class _QuranNavigationScreenState extends State<QuranNavigationScreen>
         return Container(
           margin: const EdgeInsets.only(bottom: 12),
           decoration: BoxDecoration(
-            color: isDark ? AppTheme.darkSurface : Colors.white,
+            color: isDark ? context.surfaceColor : Colors.white,
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
@@ -626,7 +627,7 @@ class _QuranNavigationScreenState extends State<QuranNavigationScreen>
                                   width: 35,
                                   height: 35,
                                   decoration: BoxDecoration(
-                                    color: AppTheme.primaryGreen.withValues(alpha: 0.1),
+                                    color: context.primaryColor.withValues(alpha: 0.1),
                                     borderRadius: BorderRadius.circular(12),
                                   ),
                                 );
@@ -705,7 +706,7 @@ class _QuranNavigationScreenState extends State<QuranNavigationScreen>
                       width: 44,
                       height: 44,
                       decoration: BoxDecoration(
-                        color: AppTheme.primaryGreen.withValues(alpha: 0.1),
+                        color: context.primaryColor.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: Material(
@@ -723,7 +724,7 @@ class _QuranNavigationScreenState extends State<QuranNavigationScreen>
                                 // Fallback to original icon if image fails to load
                                 return Icon(
                                   Icons.send_rounded,
-                                  color: AppTheme.primaryGreen,
+                                  color: context.primaryColor,
                                   size: 24,
                                 );
                               },
@@ -1014,7 +1015,7 @@ class _QuranNavigationScreenState extends State<QuranNavigationScreen>
               ),
             );
           },
-          backgroundColor: AppTheme.primaryGold,
+          backgroundColor: context.primaryColor,
           child: const Icon(
             Icons.favorite,
             color: Colors.white,
@@ -1072,7 +1073,7 @@ class _QuranNavigationScreenState extends State<QuranNavigationScreen>
                               ),
                             );
                           },
-                          backgroundColor: AppTheme.primaryGreen,
+                          backgroundColor: context.primaryColor,
                           foregroundColor: Colors.white,
                           elevation: 6,
                           heroTag: "continueReading", // Unique hero tag to avoid conflicts
@@ -1154,7 +1155,7 @@ class _QuranNavigationScreenState extends State<QuranNavigationScreen>
                   ),
                 );
               },
-              backgroundColor: AppTheme.primaryGold,
+              backgroundColor: context.primaryColor,
               child: const Icon(
                 Icons.favorite,
                 color: Colors.white,
@@ -1168,7 +1169,7 @@ class _QuranNavigationScreenState extends State<QuranNavigationScreen>
                   child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                     decoration: BoxDecoration(
-                      color: AppTheme.primaryGreen,
+                      color: context.primaryColor,
                       borderRadius: BorderRadius.circular(10),
                     border: Border.all(color: Colors.white, width: 2),
                     boxShadow: [
@@ -1565,8 +1566,8 @@ class _SurahAyahModalState extends State<SurahAyahModal> {
       spans.add(TextSpan(
         text: displayText.substring(safeStart, safeEnd),
         style: arabicStyle.copyWith(
-          backgroundColor: AppTheme.primaryGold.withValues(alpha: 0.3),
-          color: AppTheme.primaryGreen,
+          backgroundColor: context.primaryColor.withValues(alpha: 0.3),
+          color: Colors.white,
           fontWeight: FontWeight.bold,
         ),
       ));
@@ -1663,8 +1664,8 @@ class _SurahAyahModalState extends State<SurahAyahModal> {
       spans.add(TextSpan(
         text: text.substring(match.start, match.end),
         style: baseStyle.copyWith(
-          backgroundColor: AppTheme.primaryGold.withValues(alpha: 0.3),
-          color: AppTheme.primaryGreen,
+          backgroundColor: context.primaryColor.withValues(alpha: 0.3),
+          color: Colors.white,
           fontWeight: FontWeight.bold,
         ),
       ));
@@ -1802,7 +1803,7 @@ class _SurahAyahModalState extends State<SurahAyahModal> {
     return Container(
       height: MediaQuery.of(context).size.height * 0.85,
       decoration: BoxDecoration(
-        color: isDark ? AppTheme.darkBackground : Colors.white,
+        color: isDark ? context.backgroundColor : Colors.white,
         borderRadius: const BorderRadius.only(
           topLeft: Radius.circular(20),
           topRight: Radius.circular(20),
@@ -1867,7 +1868,7 @@ class _SurahAyahModalState extends State<SurahAyahModal> {
                 // Search box
                 Container(
                   decoration: BoxDecoration(
-                    color: isDark ? AppTheme.darkSurface : AppTheme.lightGray,
+                    color: isDark ? context.surfaceColor : AppTheme.lightGray,
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: TextField(
@@ -1895,7 +1896,7 @@ class _SurahAyahModalState extends State<SurahAyahModal> {
                       ),
                       prefixIcon: Icon(
                         Icons.search_rounded,
-                        color: AppTheme.primaryGreen,
+                        color: context.primaryColor,
                         size: 24,
                       ),
                       border: InputBorder.none,
@@ -1935,7 +1936,7 @@ class _SurahAyahModalState extends State<SurahAyahModal> {
                           return Container(
                             margin: const EdgeInsets.only(bottom: 12),
                             decoration: BoxDecoration(
-                              color: isDark ? AppTheme.darkSurface : Colors.white,
+                              color: isDark ? context.surfaceColor : Colors.white,
                               borderRadius: BorderRadius.circular(12),
                               border: Border.all(
                                 color: isDark ? Colors.white10 : Colors.grey[200]!,
@@ -1970,7 +1971,7 @@ class _SurahAyahModalState extends State<SurahAyahModal> {
                                                     width: 28,
                                                     height: 28,
                                                     decoration: BoxDecoration(
-                                                      color: AppTheme.primaryGreen.withValues(alpha: 0.1),
+                                                      color: context.primaryColor.withValues(alpha: 0.1),
                                                       borderRadius: BorderRadius.circular(14),
                                                     ),
                                                   );

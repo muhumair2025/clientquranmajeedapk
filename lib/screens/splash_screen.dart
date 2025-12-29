@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../services/app_content_service.dart';
 import '../models/app_content_models.dart';
 import '../themes/app_theme.dart';
+import '../utils/theme_extensions.dart';
 
 /// Splash screen that displays cached image from API (full screen)
 /// Only shows API image, no default mockup
@@ -87,14 +88,14 @@ class _SplashScreenState extends State<SplashScreen>
         _splashData!.hasSplashScreen &&
         _splashData!.imageDownloadUrl != null) {
       return Scaffold(
-        backgroundColor: AppTheme.primaryGreen,
+        backgroundColor: context.primaryColor,
         body: _buildSplashImage(),
       );
     }
 
     // No splash image - just show simple loading with green background
     return Scaffold(
-      backgroundColor: AppTheme.primaryGreen,
+      backgroundColor: context.primaryColor,
       body: Center(
         child: CircularProgressIndicator(
           strokeWidth: 3,

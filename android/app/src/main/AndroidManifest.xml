@@ -32,7 +32,7 @@
     <uses-feature android:name="android.hardware.sensor.compass" android:required="false" />
     
     <application
-        android:label="quran_majeed"
+        android:label="Abu Hassaan Ishaq Swati"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher"
         android:usesCleartextTraffic="true"

@@ -5,6 +5,7 @@ import '../widgets/app_text.dart';
 import '../themes/app_theme.dart';
 import '../localization/app_localizations_extension.dart';
 import '../models/asma_ul_husna_model.dart';
+import '../utils/theme_extensions.dart';
 
 class NamesOfAllahScreen extends StatefulWidget {
   const NamesOfAllahScreen({super.key});
@@ -149,7 +150,7 @@ class _NameCard extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 10,
                   fontWeight: FontWeight.w500,
-                  color: AppTheme.primaryGreen.withOpacity(0.7),
+                  color: context.primaryColor.withOpacity(0.7),
                   letterSpacing: 0.5,
                 ),
               ),
@@ -161,11 +162,11 @@ class _NameCard extends StatelessWidget {
                   child: Text(
                     name.arabic,
                     textAlign: TextAlign.center,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontFamily: 'Al Qalam Quran Majeed',
                       fontSize: 22,
                       fontWeight: FontWeight.w500,
-                      color: AppTheme.primaryGreen,
+                      color: context.primaryColor,
                       height: 1.3,
                     ),
                     maxLines: 2,
@@ -231,16 +232,16 @@ class _NameCard extends StatelessWidget {
               width: 48,
               height: 48,
               decoration: BoxDecoration(
-                color: AppTheme.primaryGreen.withOpacity(0.1),
+                color: context.primaryColor.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Center(
                 child: Text(
                   '${name.id}',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w700,
-                    color: AppTheme.primaryGreen,
+                    color: context.primaryColor,
                   ),
                 ),
               ),
@@ -251,11 +252,11 @@ class _NameCard extends StatelessWidget {
             Text(
               name.arabic,
               textAlign: TextAlign.center,
-              style: const TextStyle(
+              style: TextStyle(
                 fontFamily: 'Al Qalam Quran Majeed',
                 fontSize: 36,
                 fontWeight: FontWeight.w600,
-                color: AppTheme.primaryGreen,
+                color: context.primaryColor,
                 height: 1.5,
               ),
             ),
@@ -277,7 +278,7 @@ class _NameCard extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: AppTheme.primaryGreen.withOpacity(0.05),
+                color: context.primaryColor.withOpacity(0.05),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: AppText(

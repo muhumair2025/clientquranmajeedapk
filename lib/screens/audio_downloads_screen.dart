@@ -5,6 +5,7 @@ import '../themes/app_theme.dart';
 import '../widgets/media_viewers.dart';
 import '../localization/app_localizations_extension.dart';
 import 'dart:io';
+import '../utils/theme_extensions.dart';
 
 class AudioDownloadsScreen extends StatefulWidget {
   final String sectionType;
@@ -173,10 +174,10 @@ class _AudioDownloadsScreenState extends State<AudioDownloadsScreen> {
     final isDark = theme.brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: isDark ? AppTheme.darkBackground : AppTheme.lightBackground,
+      backgroundColor: isDark ? context.backgroundColor : context.backgroundColor,
       appBar: AppBar(
         title: AppText(context.l.audioDownloads),
-        backgroundColor: AppTheme.primaryGreen,
+        backgroundColor: context.primaryColor,
         foregroundColor: Colors.white,
       ),
       body: _buildBody(context, isDark),
@@ -190,7 +191,7 @@ class _AudioDownloadsScreenState extends State<AudioDownloadsScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             CircularProgressIndicator(
-              valueColor: AlwaysStoppedAnimation<Color>(AppTheme.primaryGreen),
+              valueColor: AlwaysStoppedAnimation<Color>(context.primaryColor),
             ),
             const SizedBox(height: 16),
             AppText(
@@ -252,8 +253,8 @@ class _AudioDownloadsScreenState extends State<AudioDownloadsScreen> {
 
         return GestureDetector(
           onTap: hasAudios
-              ? () {
-                  Navigator.push(
+              ? () async {
+                  final result = await Navigator.push(
                     context,
                     MaterialPageRoute(
                       builder: (context) => ParaAudioDetailScreen(
@@ -264,12 +265,16 @@ class _AudioDownloadsScreenState extends State<AudioDownloadsScreen> {
                       ),
                     ),
                   );
+                  // Refresh if files were deleted
+                  if (result == true) {
+                    _loadDownloadedAudios();
+                  }
                 }
               : null,
           child: Container(
             decoration: BoxDecoration(
               color: isDark
-                  ? (hasAudios ? AppTheme.darkSurface : AppTheme.darkSurface.withValues(alpha: 0.5))
+                  ? (hasAudios ? context.surfaceColor : context.surfaceColor.withValues(alpha: 0.5))
                   : (hasAudios ? Colors.white : Colors.grey[100]),
               borderRadius: BorderRadius.circular(16),
               boxShadow: hasAudios
@@ -283,7 +288,7 @@ class _AudioDownloadsScreenState extends State<AudioDownloadsScreen> {
                   : null,
               border: Border.all(
                 color: hasAudios
-                    ? AppTheme.primaryGreen.withValues(alpha: 0.3)
+                    ? context.primaryColor.withValues(alpha: 0.3)
                     : Colors.grey.withValues(alpha: 0.2),
                 width: 1,
               ),
@@ -293,28 +298,32 @@ class _AudioDownloadsScreenState extends State<AudioDownloadsScreen> {
               children: [
                 Icon(
                   Icons.folder_rounded,
-                  size: 40,
-                  color: hasAudios ? AppTheme.primaryGreen : Colors.grey[400],
+                  size: 36,
+                  color: hasAudios ? context.primaryColor : Colors.grey[400],
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 6),
                 AppText(
                   context.l.paraNumber.replaceAll('{number}', paraNumber.toString()),
                   style: TextStyle(
-                    fontSize: 14,
+                    fontSize: 13,
                     fontWeight: FontWeight.bold,
                     color: hasAudios
                         ? (isDark ? Colors.white : Colors.black87)
                         : Colors.grey[500],
                   ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
                 if (hasAudios) ...[
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 2),
                   AppText(
                     context.l.audiosCount.replaceAll('{count}', audioCount.toString()),
                     style: TextStyle(
-                      fontSize: 12,
-                      color: AppTheme.primaryGreen,
+                      fontSize: 11,
+                      color: context.primaryColor,
                     ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ],
               ],
@@ -360,13 +369,45 @@ class ParaAudioDetailScreen extends StatelessWidget {
     final audiosBySurah = _groupAudiosBySurah();
 
     return Scaffold(
-      backgroundColor: isDark ? AppTheme.darkBackground : AppTheme.lightBackground,
+      backgroundColor: isDark ? context.backgroundColor : context.backgroundColor,
       appBar: AppBar(
-                        title: AppText('$paraName - ${context.l.para} $paraNumber'),
-        backgroundColor: AppTheme.primaryGreen,
+        title: AppText('$paraName - ${context.l.para} $paraNumber'),
+        backgroundColor: context.primaryColor,
         foregroundColor: Colors.white,
       ),
-      body: ListView.builder(
+      body: audios.isEmpty
+          ? Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.folder_off_rounded,
+                    size: 80,
+                    color: Colors.grey[400],
+                  ),
+                  const SizedBox(height: 20),
+                  AppText(
+                    context.l.noAudioDownloads,
+                    style: TextStyle(
+                      fontSize: 18,
+                      color: Colors.grey[600],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: () => Navigator.pop(context, true),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: context.primaryColor,
+                    ),
+                    child: AppText(
+                      'Go Back',
+                      style: const TextStyle(color: Colors.white),
+                    ),
+                  ),
+                ],
+              ),
+            )
+          : ListView.builder(
         padding: const EdgeInsets.all(16),
         itemCount: audiosBySurah.length,
         itemBuilder: (context, index) {
@@ -376,7 +417,7 @@ class ParaAudioDetailScreen extends StatelessWidget {
           return Container(
             margin: const EdgeInsets.only(bottom: 16),
             decoration: BoxDecoration(
-              color: isDark ? AppTheme.darkSurface : Colors.white,
+              color: isDark ? context.surfaceColor : Colors.white,
               borderRadius: BorderRadius.circular(16),
               boxShadow: [
                 BoxShadow(
@@ -391,7 +432,7 @@ class ParaAudioDetailScreen extends StatelessWidget {
                 children: [
                   Icon(
                     Icons.folder_rounded,
-                    color: AppTheme.primaryGreen,
+                    color: context.primaryColor,
                     size: 24,
                   ),
                   const SizedBox(width: 12),
@@ -408,14 +449,14 @@ class ParaAudioDetailScreen extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                     decoration: BoxDecoration(
-                      color: AppTheme.primaryGreen.withValues(alpha: 0.1),
+                      color: context.primaryColor.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: AppText(
                       '${surahAudios.length} غږونه',
                       style: TextStyle(
                         fontSize: 12,
-                        color: AppTheme.primaryGreen,
+                        color: context.primaryColor,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -428,13 +469,13 @@ class ParaAudioDetailScreen extends StatelessWidget {
                     width: 40,
                     height: 40,
                     decoration: BoxDecoration(
-                      color: AppTheme.primaryGreen.withValues(alpha: 0.1),
+                      color: context.primaryColor.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Center(
                       child: Icon(
                         Icons.music_note_rounded,
-                        color: AppTheme.primaryGreen,
+                        color: context.primaryColor,
                         size: 20,
                       ),
                     ),
@@ -457,23 +498,36 @@ class ParaAudioDetailScreen extends StatelessWidget {
                   trailing: IconButton(
                     icon: Icon(
                       Icons.play_circle_filled_rounded,
-                      color: AppTheme.primaryGreen,
+                      color: context.primaryColor,
                       size: 32,
                     ),
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => FullScreenAudioPlayer(
-                            audioUrl: '',  // URL not needed as we have local file
-                            title: '${audio.surahName} - آیت ${audio.ayahIndex}',
-                            surahIndex: audio.surahIndex,
-                            ayahIndex: audio.ayahIndex,
-                            autoPlay: true,
-                            sectionType: sectionType,
+                    onPressed: () async {
+                      // Check if file exists before playing
+                      final file = File(audio.filePath);
+                      if (await file.exists()) {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => FullScreenAudioPlayer(
+                              audioUrl: '',  // URL not needed as we have local file
+                              title: '${audio.surahName} - آیت ${audio.ayahIndex}',
+                              surahIndex: audio.surahIndex,
+                              ayahIndex: audio.ayahIndex,
+                              autoPlay: true,
+                              sectionType: sectionType,
+                            ),
                           ),
-                        ),
-                      );
+                        );
+                      } else {
+                        // File was deleted, refresh the list
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: AppText('Audio file not found'),
+                            backgroundColor: Colors.red,
+                          ),
+                        );
+                        Navigator.pop(context, true);
+                      }
                     },
                   ),
                 );

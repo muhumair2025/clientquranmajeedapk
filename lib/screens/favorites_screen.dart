@@ -9,6 +9,8 @@ import '../services/notes_service.dart';
 import '../localization/app_localizations_extension.dart';
 import '../providers/font_provider.dart';
 import 'quran_reader_screen.dart';
+import 'quran_navigation_screen.dart';
+import '../utils/theme_extensions.dart';
 
 class FavoritesScreen extends StatefulWidget {
   const FavoritesScreen({super.key});
@@ -115,10 +117,10 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
     final isDark = theme.brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: isDark ? AppTheme.darkBackground : AppTheme.lightBackground,
+      backgroundColor: isDark ? context.backgroundColor : context.backgroundColor,
       appBar: AppBar(
         title: AppText(context.l.favorites ?? 'Favorites'),
-        backgroundColor: AppTheme.primaryGold,
+        backgroundColor: context.primaryColor,
         foregroundColor: Colors.white,
         elevation: 0,
       ),
@@ -134,7 +136,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           CircularProgressIndicator(
-            valueColor: AlwaysStoppedAnimation<Color>(AppTheme.primaryGold),
+            valueColor: AlwaysStoppedAnimation<Color>(context.primaryColor),
           ),
           const SizedBox(height: 16),
           AppText(
@@ -199,18 +201,18 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
                 color: isDark 
-                    ? AppTheme.primaryGold.withValues(alpha: 0.1)
-                    : AppTheme.primaryGold.withValues(alpha: 0.05),
+                    ? context.primaryColor.withValues(alpha: 0.1)
+                    : context.primaryColor.withValues(alpha: 0.05),
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(
-                  color: AppTheme.primaryGold.withValues(alpha: 0.2),
+                  color: context.primaryColor.withValues(alpha: 0.2),
                   width: 2,
                 ),
               ),
               child: Icon(
                 Icons.favorite_border_rounded,
             size: 80,
-                color: AppTheme.primaryGold,
+                color: context.primaryColor,
               ),
           ),
             const SizedBox(height: 24),
@@ -228,11 +230,11 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
               decoration: BoxDecoration(
                 color: isDark 
-                    ? Colors.blue.withValues(alpha: 0.1)
-                    : Colors.blue.withValues(alpha: 0.05),
+                    ? context.primaryColor.withValues(alpha: 0.1)
+                    : context.primaryColor.withValues(alpha: 0.05),
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
-                  color: Colors.blue.withValues(alpha: 0.2),
+                  color: context.primaryColor.withValues(alpha: 0.2),
                   width: 1,
                 ),
               ),
@@ -241,7 +243,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                 children: [
                   Icon(
                     Icons.info_outline,
-                    color: Colors.blue,
+                    color: context.primaryColor,
                     size: 20,
                   ),
                   const SizedBox(width: 8),
@@ -259,42 +261,53 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
               ),
             ),
             const SizedBox(height: 24),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    AppTheme.primaryGold,
-                    AppTheme.primaryGold.withValues(alpha: 0.8),
+            InkWell(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const QuranNavigationScreen(),
+                  ),
+                );
+              },
+              borderRadius: BorderRadius.circular(25),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      context.primaryColor,
+                      context.primaryColor.withValues(alpha: 0.8),
+                    ],
+                  ),
+                  borderRadius: BorderRadius.circular(25),
+                  boxShadow: [
+                    BoxShadow(
+                      color: context.primaryColor.withValues(alpha: 0.3),
+                      blurRadius: 8,
+                      offset: const Offset(0, 4),
+                    ),
                   ],
                 ),
-                borderRadius: BorderRadius.circular(25),
-                boxShadow: [
-                  BoxShadow(
-                    color: AppTheme.primaryGold.withValues(alpha: 0.3),
-                    blurRadius: 8,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(
-                    Icons.menu_book_rounded,
-                    color: Colors.white,
-                    size: 18,
-                  ),
-                  const SizedBox(width: 8),
-                  AppText(
-                    'Start Reading Quran',
-                    style: const TextStyle(
-                      fontSize: 16,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(
+                      Icons.menu_book_rounded,
                       color: Colors.white,
-                      fontWeight: FontWeight.bold,
+                      size: 18,
                     ),
-                  ),
-                ],
+                    const SizedBox(width: 8),
+                    AppText(
+                      'Start Reading Quran',
+                      style: const TextStyle(
+                        fontSize: 16,
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ],
@@ -313,7 +326,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
-        color: isDark ? AppTheme.darkSurface : Colors.white,
+        color: isDark ? context.surfaceColor : Colors.white,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
@@ -324,8 +337,8 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
         ],
         border: Border.all(
           color: isDark 
-              ? AppTheme.primaryGold.withValues(alpha: 0.2)
-              : AppTheme.primaryGold.withValues(alpha: 0.1),
+              ? context.primaryColor.withValues(alpha: 0.2)
+              : context.primaryColor.withValues(alpha: 0.1),
           width: 1,
         ),
       ),
@@ -343,15 +356,15 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                   decoration: BoxDecoration(
                       gradient: LinearGradient(
                         colors: [
-                          AppTheme.primaryGold.withValues(alpha: 0.15),
-                          AppTheme.primaryGold.withValues(alpha: 0.08),
+                          context.primaryColor.withValues(alpha: 0.15),
+                          context.primaryColor.withValues(alpha: 0.08),
                         ],
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                       ),
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
-                        color: AppTheme.primaryGold.withValues(alpha: 0.3),
+                        color: context.primaryColor.withValues(alpha: 0.3),
                         width: 1,
                       ),
                     ),
@@ -360,7 +373,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                       children: [
                         Icon(
                           Icons.menu_book_rounded,
-                          color: AppTheme.primaryGold,
+                          color: context.primaryColor,
                           size: 16,
                         ),
                         const SizedBox(width: 6),
@@ -369,7 +382,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                             '$surahName',
                     style: TextStyle(
                               fontSize: 14,
-                      color: AppTheme.primaryGold,
+                      color: context.primaryColor,
                       fontWeight: FontWeight.bold,
                     ),
                             overflow: TextOverflow.ellipsis,
@@ -379,7 +392,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                 Container(
                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                   decoration: BoxDecoration(
-                            color: AppTheme.primaryGold,
+                            color: context.primaryColor,
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: AppText(
@@ -409,19 +422,19 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                   gradient: LinearGradient(
                     colors: isDark 
                         ? [
-                            AppTheme.primaryGold.withValues(alpha: 0.12),
-                            AppTheme.primaryGold.withValues(alpha: 0.06),
+                            context.primaryColor.withValues(alpha: 0.12),
+                            context.primaryColor.withValues(alpha: 0.06),
                           ]
                         : [
-                            AppTheme.primaryGold.withValues(alpha: 0.08),
-                            AppTheme.primaryGold.withValues(alpha: 0.03),
+                            context.primaryColor.withValues(alpha: 0.08),
+                            context.primaryColor.withValues(alpha: 0.03),
                           ],
                     begin: Alignment.topRight,
                     end: Alignment.bottomLeft,
                   ),
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
-                    color: AppTheme.primaryGold.withValues(alpha: 0.2),
+                    color: context.primaryColor.withValues(alpha: 0.2),
                     width: 1,
                   ),
                 ),
@@ -496,11 +509,11 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
                   color: isDark 
-                      ? Colors.blue.withValues(alpha: 0.08)
-                      : Colors.blue.withValues(alpha: 0.05),
+                      ? context.primaryColor.withValues(alpha: 0.08)
+                      : context.primaryColor.withValues(alpha: 0.05),
                   borderRadius: BorderRadius.circular(10),
                   border: Border.all(
-                    color: Colors.blue.withValues(alpha: 0.2),
+                    color: context.primaryColor.withValues(alpha: 0.2),
                     width: 1,
                   ),
                 ),
@@ -546,10 +559,10 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                             ),
                           ),
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: hasNote ? AppTheme.primaryGreen : Colors.grey[600],
+                            backgroundColor: hasNote ? context.primaryColor : Colors.grey[600],
                             foregroundColor: Colors.white,
                             elevation: 1,
-                            shadowColor: (hasNote ? AppTheme.primaryGreen : Colors.grey[600])?.withValues(alpha: 0.3),
+                            shadowColor: (hasNote ? context.primaryColor : Colors.grey[600])?.withValues(alpha: 0.3),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(8),
                             ),
@@ -608,10 +621,10 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                       color: Colors.white,
                     ),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: AppTheme.primaryGold,
+                      backgroundColor: context.primaryColor,
                       foregroundColor: Colors.white,
                       elevation: 1,
-                      shadowColor: AppTheme.primaryGold.withValues(alpha: 0.3),
+                      shadowColor: context.primaryColor.withValues(alpha: 0.3),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),
                       ),
@@ -633,11 +646,11 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
                       color: isDark 
-                          ? AppTheme.primaryGreen.withValues(alpha: 0.1)
-                          : AppTheme.primaryGreen.withValues(alpha: 0.08),
+                          ? context.primaryColor.withValues(alpha: 0.1)
+                          : context.primaryColor.withValues(alpha: 0.08),
                       borderRadius: BorderRadius.circular(10),
                       border: Border.all(
-                        color: AppTheme.primaryGreen.withValues(alpha: 0.3),
+                        color: context.primaryColor.withValues(alpha: 0.3),
                         width: 1,
                       ),
                     ),
@@ -647,7 +660,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                         Container(
                           padding: const EdgeInsets.all(6),
                           decoration: BoxDecoration(
-                            color: AppTheme.primaryGreen,
+                            color: context.primaryColor,
                             borderRadius: BorderRadius.circular(6),
                           ),
                           child: const Icon(
@@ -665,7 +678,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                                 'Your Note:',
                                 style: TextStyle(
                                   fontSize: 11,
-                          color: AppTheme.primaryGreen,
+                          color: context.primaryColor,
                                   fontWeight: FontWeight.bold,
                                 ),
                         ),
@@ -703,7 +716,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
     final result = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: isDark ? AppTheme.darkSurface : Colors.white,
+        backgroundColor: isDark ? context.surfaceColor : Colors.white,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
         ),
@@ -751,11 +764,11 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
                 color: isDark 
-                    ? AppTheme.primaryGold.withValues(alpha: 0.1)
-                    : AppTheme.primaryGold.withValues(alpha: 0.05),
+                    ? context.primaryColor.withValues(alpha: 0.1)
+                    : context.primaryColor.withValues(alpha: 0.05),
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(
-                  color: AppTheme.primaryGold.withValues(alpha: 0.3),
+                  color: context.primaryColor.withValues(alpha: 0.3),
                   width: 1,
                 ),
               ),
@@ -763,7 +776,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                 children: [
                   Icon(
                     Icons.menu_book_rounded,
-                    color: AppTheme.primaryGold,
+                    color: context.primaryColor,
                     size: 16,
                   ),
                   const SizedBox(width: 8),
@@ -772,7 +785,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                       '${_getSurahName(favorite.surahIndex)} - Ayah ${favorite.ayahIndex}',
                       style: TextStyle(
                         fontSize: 14,
-                        color: AppTheme.primaryGold,
+                        color: context.primaryColor,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -859,7 +872,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                 ),
               ],
             ),
-            backgroundColor: AppTheme.primaryGreen,
+            backgroundColor: context.primaryColor,
             duration: const Duration(seconds: 2),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(8),
@@ -1001,7 +1014,7 @@ class _NotesDialogState extends State<NotesDialog> {
                           ? (context.l.noteRemoved ?? 'Note removed')
                           : (context.l.noteSaved ?? 'Note saved'),
                     ),
-                    backgroundColor: AppTheme.primaryGreen,
+                    backgroundColor: context.primaryColor,
                   ),
                 );
               }

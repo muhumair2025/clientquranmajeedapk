@@ -3,7 +3,7 @@ import 'app_localizations.dart';
 class AppLocalizationsUr extends AppLocalizations {
   // App Information
   @override
-  String get appTitle => 'قرآن مجید';
+  String get appTitle => 'أبو حسان إسحاق السواتي';
   @override
   String get appDescription => 'مکمل قرآن کریم تفسیر اور ترجمے کے ساتھ';
 
@@ -808,4 +808,16 @@ class AppLocalizationsUr extends AppLocalizations {
   String get uthmaniScript => 'عثمانی خط';
   @override
   String get pages => 'صفحات';
+  
+  // Content Screen
+  @override
+  String get contentNotAvailable => 'مواد دستیاب نہیں';
+  @override
+  String get openPdf => 'پی ڈی ایف کھولیں';
+  @override
+  String get pdfDownloaded => 'پی ڈی ایف ڈاؤن لوڈ ہو گیا';
+  @override
+  String get downloadPdf => 'پی ڈی ایف ڈاؤن لوڈ کریں';
+  @override
+  String get items => 'آئٹمز';
 } 

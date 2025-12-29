@@ -8,6 +8,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:crypto/crypto.dart';
 import '../models/category_models.dart';
 import '../models/latest_content_models.dart';
+import '../models/content_models.dart';
 
 /// Service for fetching categories and content from Content Management API
 /// Implements local storage caching to support offline viewing
@@ -30,6 +31,8 @@ class ContentApiService {
   static const String _categoriesCacheTimeKey = 'cached_categories_time';
   static const String _latestContentCacheKey = 'cached_latest_content';
   static const String _latestContentCacheTimeKey = 'cached_latest_content_time';
+  static const String _subcategoryCachePrefix = 'cached_subcategory_';
+  static const String _subcategoryContentsCachePrefix = 'cached_subcategory_contents_';
 
   // Get API configuration from .env.local
   static String get _baseUrl {
@@ -682,6 +685,253 @@ class ContentApiService {
     
     // Construct full URL
     return 'https://quranxmlmaker.ssatechs.com/$cleanPath';
+  }
+
+  // ==================== SUBCATEGORY CONTENTS ====================
+
+  /// Get subcategory with its contents/materials (with caching support)
+  /// Endpoint: GET /api/subcategories/{id}
+  /// If forceRefresh is false, returns cached data first and refreshes in background
+  /// If forceRefresh is true, fetches from API (but keeps cache if API fails)
+  Future<SubcategoryContents> getSubcategoryContents(
+    int subcategoryId, {
+    bool forceRefresh = false,
+  }) async {
+    try {
+      // If not forcing refresh, try to get cached data first
+      if (!forceRefresh) {
+        final cachedData = await _getCachedSubcategoryContents(subcategoryId);
+        if (cachedData != null) {
+          debugPrint('✅ Loaded subcategory $subcategoryId contents from cache');
+          
+          // Fetch fresh data in background to update cache
+          _fetchAndCacheSubcategoryContents(subcategoryId).then((freshData) {
+            if (freshData != null) {
+              debugPrint('✅ Background refresh: Updated subcategory $subcategoryId cache');
+            }
+          }).catchError((e) {
+            debugPrint('⚠️ Background refresh failed for subcategory $subcategoryId: $e');
+          });
+          
+          return cachedData;
+        }
+      }
+
+      // No cache or force refresh - fetch from API
+      debugPrint('📡 Fetching subcategory contents for ID: $subcategoryId');
+      final data = await _fetchAndCacheSubcategoryContents(subcategoryId);
+      
+      if (data != null) {
+        return data;
+      }
+
+      // If API fails, try cache as fallback
+      final cachedData = await _getCachedSubcategoryContents(subcategoryId);
+      if (cachedData != null) {
+        debugPrint('⚠️ API failed, using cached data for subcategory $subcategoryId');
+        return cachedData;
+      }
+
+      throw ContentApiException('Failed to load subcategory contents');
+    } catch (e) {
+      debugPrint('❌ Error in getSubcategoryContents: $e');
+      
+      // Try to return cached data as last resort
+      final cachedData = await _getCachedSubcategoryContents(subcategoryId);
+      if (cachedData != null) {
+        return cachedData;
+      }
+      
+      if (e is ContentApiException) rethrow;
+      throw ContentApiException('Error loading subcategory contents: $e');
+    }
+  }
+
+  /// Fetch subcategory contents from API and cache
+  Future<SubcategoryContents?> _fetchAndCacheSubcategoryContents(int subcategoryId) async {
+    try {
+      final response = await _dio.get(
+        '$_baseUrl/subcategories/$subcategoryId',
+        options: Options(
+          headers: _headers,
+          validateStatus: (status) => status != null && status < 500,
+        ),
+      );
+
+      if (response.statusCode == 401) {
+        debugPrint('❌ Unauthorized: Invalid API key for subcategory $subcategoryId');
+        return null;
+      }
+
+      if (response.statusCode == 404) {
+        debugPrint('❌ Subcategory $subcategoryId not found');
+        return null;
+      }
+
+      if (response.statusCode == 200 && response.data != null) {
+        final jsonData = response.data as Map<String, dynamic>;
+        
+        if (jsonData['success'] == true && jsonData['data'] != null) {
+          debugPrint('✅ Fetched subcategory $subcategoryId with contents');
+          final subcategoryContents = SubcategoryContents.fromJson(
+            jsonData['data'] as Map<String, dynamic>,
+          );
+          
+          // Cache the data
+          await _cacheSubcategoryContents(subcategoryId, subcategoryContents);
+          
+          return subcategoryContents;
+        }
+      }
+      return null;
+    } on DioException catch (e) {
+      debugPrint('❌ Network error for subcategory $subcategoryId: ${e.message}');
+      return null;
+    } catch (e) {
+      debugPrint('❌ Error fetching subcategory $subcategoryId: $e');
+      return null;
+    }
+  }
+
+  /// Get cached subcategory contents
+  Future<SubcategoryContents?> _getCachedSubcategoryContents(int subcategoryId) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final cachedJson = prefs.getString('$_subcategoryContentsCachePrefix$subcategoryId');
+      
+      if (cachedJson != null) {
+        final jsonData = json.decode(cachedJson) as Map<String, dynamic>;
+        return SubcategoryContents.fromJson(jsonData);
+      }
+      return null;
+    } catch (e) {
+      debugPrint('❌ Error reading subcategory cache: $e');
+      return null;
+    }
+  }
+
+  /// Cache subcategory contents
+  Future<void> _cacheSubcategoryContents(int subcategoryId, SubcategoryContents data) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final jsonString = json.encode(data.toJson());
+      await prefs.setString('$_subcategoryContentsCachePrefix$subcategoryId', jsonString);
+      debugPrint('✅ Cached subcategory $subcategoryId contents');
+    } catch (e) {
+      debugPrint('❌ Error caching subcategory contents: $e');
+    }
+  }
+
+  /// Clear all subcategory contents cache
+  Future<void> clearSubcategoryContentsCache() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final keys = prefs.getKeys().where(
+        (key) => key.startsWith(_subcategoryContentsCachePrefix),
+      );
+      for (final key in keys) {
+        await prefs.remove(key);
+      }
+      debugPrint('✅ Cleared all subcategory contents cache');
+    } catch (e) {
+      debugPrint('❌ Error clearing subcategory cache: $e');
+    }
+  }
+
+  /// Get single content/material item
+  /// Endpoint: GET /api/contents/{id}
+  Future<ContentItem> getContentDetail(int contentId) async {
+    try {
+      debugPrint('📡 Fetching content detail for ID: $contentId');
+      
+      final response = await _dio.get(
+        '$_baseUrl/contents/$contentId',
+        options: Options(
+          headers: _headers,
+          validateStatus: (status) => status != null && status < 500,
+        ),
+      );
+
+      if (response.statusCode == 401) {
+        debugPrint('❌ Unauthorized: Invalid API key for content $contentId');
+        throw ContentApiException('Unauthorized: Invalid API key', 401);
+      }
+
+      if (response.statusCode == 404) {
+        debugPrint('❌ Content $contentId not found');
+        throw ContentApiException('Content not found', 404);
+      }
+
+      if (response.statusCode == 200 && response.data != null) {
+        final jsonData = response.data as Map<String, dynamic>;
+        
+        if (jsonData['success'] == true && jsonData['data'] != null) {
+          debugPrint('✅ Fetched content $contentId');
+          return ContentItem.fromJson(jsonData['data'] as Map<String, dynamic>);
+        } else {
+          throw ContentApiException('Invalid response format');
+        }
+      } else {
+        throw ContentApiException('Failed to load content: ${response.statusCode}');
+      }
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 401) {
+        throw ContentApiException('Unauthorized: Check API key', 401);
+      } else if (e.response?.statusCode == 404) {
+        throw ContentApiException('Content not found', 404);
+      } else {
+        throw ContentApiException('Network error: ${e.message}');
+      }
+    } catch (e) {
+      if (e is ContentApiException) rethrow;
+      throw ContentApiException('Error loading content: $e');
+    }
+  }
+
+  /// Search content across all materials
+  /// Endpoint: GET /api/search?q={query}
+  Future<List<ContentItem>> searchContent(String query) async {
+    if (query.trim().isEmpty) {
+      throw ContentApiException('Search query cannot be empty');
+    }
+
+    try {
+      debugPrint('🔍 Searching content for: $query');
+      
+      final response = await _dio.get(
+        '$_baseUrl/search',
+        queryParameters: {'q': query},
+        options: Options(
+          headers: _headers,
+          validateStatus: (status) => status != null && status < 500,
+        ),
+      );
+
+      if (response.statusCode == 401) {
+        throw ContentApiException('Unauthorized: Invalid API key', 401);
+      }
+
+      if (response.statusCode == 200 && response.data != null) {
+        final jsonData = response.data as Map<String, dynamic>;
+        
+        if (jsonData['success'] == true && jsonData['data'] != null) {
+          final List<dynamic> resultsList = jsonData['data'] as List<dynamic>;
+          debugPrint('✅ Found ${resultsList.length} search results');
+          return resultsList
+              .map((item) => ContentItem.fromJson(item as Map<String, dynamic>))
+              .toList();
+        } else {
+          return [];
+        }
+      } else {
+        throw ContentApiException('Failed to search: ${response.statusCode}');
+      }
+    } on DioException catch (e) {
+      throw ContentApiException('Network error: ${e.message}');
+    } catch (e) {
+      if (e is ContentApiException) rethrow;
+      throw ContentApiException('Error searching content: $e');
+    }
   }
 }
 

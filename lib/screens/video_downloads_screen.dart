@@ -5,6 +5,7 @@ import '../themes/app_theme.dart';
 import '../widgets/media_viewers.dart';
 import '../localization/app_localizations_extension.dart';
 import 'dart:io';
+import '../utils/theme_extensions.dart';
 
 class VideoDownloadsScreen extends StatefulWidget {
   final String sectionType;
@@ -173,10 +174,10 @@ class _VideoDownloadsScreenState extends State<VideoDownloadsScreen> {
     final isDark = theme.brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: isDark ? AppTheme.darkBackground : AppTheme.lightBackground,
+      backgroundColor: isDark ? context.backgroundColor : context.backgroundColor,
       appBar: AppBar(
         title: AppText(context.l.videoDownloads),
-        backgroundColor: AppTheme.primaryGreen,
+        backgroundColor: context.primaryColor,
         foregroundColor: Colors.white,
       ),
       body: _buildBody(context, isDark),
@@ -190,7 +191,7 @@ class _VideoDownloadsScreenState extends State<VideoDownloadsScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             CircularProgressIndicator(
-              valueColor: AlwaysStoppedAnimation<Color>(AppTheme.primaryGreen),
+              valueColor: AlwaysStoppedAnimation<Color>(context.primaryColor),
             ),
             const SizedBox(height: 16),
             AppText(
@@ -252,8 +253,8 @@ class _VideoDownloadsScreenState extends State<VideoDownloadsScreen> {
 
         return GestureDetector(
           onTap: hasVideos
-              ? () {
-                  Navigator.push(
+              ? () async {
+                  final result = await Navigator.push(
                     context,
                     MaterialPageRoute(
                       builder: (context) => ParaVideoDetailScreen(
@@ -264,12 +265,16 @@ class _VideoDownloadsScreenState extends State<VideoDownloadsScreen> {
                       ),
                     ),
                   );
+                  // Refresh if files were deleted
+                  if (result == true) {
+                    _loadDownloadedVideos();
+                  }
                 }
               : null,
           child: Container(
             decoration: BoxDecoration(
               color: isDark
-                  ? (hasVideos ? AppTheme.darkSurface : AppTheme.darkSurface.withValues(alpha: 0.5))
+                  ? (hasVideos ? context.surfaceColor : context.surfaceColor.withValues(alpha: 0.5))
                   : (hasVideos ? Colors.white : Colors.grey[100]),
               borderRadius: BorderRadius.circular(16),
               boxShadow: hasVideos
@@ -283,7 +288,7 @@ class _VideoDownloadsScreenState extends State<VideoDownloadsScreen> {
                   : null,
               border: Border.all(
                 color: hasVideos
-                    ? AppTheme.primaryGold.withValues(alpha: 0.3)
+                    ? context.primaryColor.withValues(alpha: 0.3)
                     : Colors.grey.withValues(alpha: 0.2),
                 width: 1,
               ),
@@ -293,28 +298,32 @@ class _VideoDownloadsScreenState extends State<VideoDownloadsScreen> {
               children: [
                 Icon(
                   Icons.folder_rounded,
-                  size: 40,
-                  color: hasVideos ? AppTheme.primaryGold : Colors.grey[400],
+                  size: 36,
+                  color: hasVideos ? context.primaryColor : Colors.grey[400],
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 6),
                 AppText(
                   context.l.paraNumber.replaceAll('{number}', paraNumber.toString()),
                   style: TextStyle(
-                    fontSize: 14,
+                    fontSize: 13,
                     fontWeight: FontWeight.bold,
                     color: hasVideos
                         ? (isDark ? Colors.white : Colors.black87)
                         : Colors.grey[500],
                   ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
                 if (hasVideos) ...[
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 2),
                   AppText(
                     context.l.videosCount.replaceAll('{count}', videoCount.toString()),
                     style: TextStyle(
-                      fontSize: 12,
-                      color: AppTheme.primaryGold,
+                      fontSize: 11,
+                      color: context.primaryColor,
                     ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ],
               ],
@@ -360,13 +369,45 @@ class ParaVideoDetailScreen extends StatelessWidget {
     final videosBySurah = _groupVideosBySurah();
 
     return Scaffold(
-      backgroundColor: isDark ? AppTheme.darkBackground : AppTheme.lightBackground,
+      backgroundColor: isDark ? context.backgroundColor : context.backgroundColor,
       appBar: AppBar(
-                        title: AppText('$paraName - ${context.l.para} $paraNumber'),
-        backgroundColor: AppTheme.primaryGold,
+        title: AppText('$paraName - ${context.l.para} $paraNumber'),
+        backgroundColor: context.primaryColor,
         foregroundColor: Colors.white,
       ),
-      body: ListView.builder(
+      body: videos.isEmpty
+          ? Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.folder_off_rounded,
+                    size: 80,
+                    color: Colors.grey[400],
+                  ),
+                  const SizedBox(height: 20),
+                  AppText(
+                    context.l.noVideoDownloads,
+                    style: TextStyle(
+                      fontSize: 18,
+                      color: Colors.grey[600],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: () => Navigator.pop(context, true),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: context.primaryColor,
+                    ),
+                    child: AppText(
+                      'Go Back',
+                      style: const TextStyle(color: Colors.white),
+                    ),
+                  ),
+                ],
+              ),
+            )
+          : ListView.builder(
         padding: const EdgeInsets.all(16),
         itemCount: videosBySurah.length,
         itemBuilder: (context, index) {
@@ -376,7 +417,7 @@ class ParaVideoDetailScreen extends StatelessWidget {
           return Container(
             margin: const EdgeInsets.only(bottom: 16),
             decoration: BoxDecoration(
-              color: isDark ? AppTheme.darkSurface : Colors.white,
+              color: isDark ? context.surfaceColor : Colors.white,
               borderRadius: BorderRadius.circular(16),
               boxShadow: [
                 BoxShadow(
@@ -391,7 +432,7 @@ class ParaVideoDetailScreen extends StatelessWidget {
                 children: [
                   Icon(
                     Icons.folder_rounded,
-                    color: AppTheme.primaryGold,
+                    color: context.primaryColor,
                     size: 24,
                   ),
                   const SizedBox(width: 12),
@@ -408,14 +449,14 @@ class ParaVideoDetailScreen extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                     decoration: BoxDecoration(
-                      color: AppTheme.primaryGold.withValues(alpha: 0.1),
+                      color: context.primaryColor.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: AppText(
                       context.l.videosCount.replaceAll('{count}', surahVideos.length.toString()),
                       style: TextStyle(
                         fontSize: 12,
-                        color: AppTheme.primaryGold,
+                        color: context.primaryColor,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -428,13 +469,13 @@ class ParaVideoDetailScreen extends StatelessWidget {
                     width: 40,
                     height: 40,
                     decoration: BoxDecoration(
-                      color: AppTheme.primaryGold.withValues(alpha: 0.1),
+                      color: context.primaryColor.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Center(
                       child: Icon(
                         Icons.video_library_rounded,
-                        color: AppTheme.primaryGold,
+                        color: context.primaryColor,
                         size: 20,
                       ),
                     ),
@@ -457,23 +498,36 @@ class ParaVideoDetailScreen extends StatelessWidget {
                   trailing: IconButton(
                     icon: Icon(
                       Icons.play_circle_filled_rounded,
-                      color: AppTheme.primaryGold,
+                      color: context.primaryColor,
                       size: 32,
                     ),
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => FullScreenVideoPlayer(
-                            videoUrl: '',  // URL not needed as we have local file
-                            title: '${video.surahName} - آیت ${video.ayahIndex}',
-                            surahIndex: video.surahIndex,
-                            ayahIndex: video.ayahIndex,
-                            autoPlay: true,
-                            sectionType: sectionType,
+                    onPressed: () async {
+                      // Check if file exists before playing
+                      final file = File(video.filePath);
+                      if (await file.exists()) {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => FullScreenVideoPlayer(
+                              videoUrl: '',  // URL not needed as we have local file
+                              title: '${video.surahName} - آیت ${video.ayahIndex}',
+                              surahIndex: video.surahIndex,
+                              ayahIndex: video.ayahIndex,
+                              autoPlay: true,
+                              sectionType: sectionType,
+                            ),
                           ),
-                        ),
-                      );
+                        );
+                      } else {
+                        // File was deleted, refresh the list
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: AppText('Video file not found'),
+                            backgroundColor: Colors.red,
+                          ),
+                        );
+                        Navigator.pop(context, true);
+                      }
                     },
                   ),
                 );

@@ -1,12 +1,13 @@
 import '../widgets/app_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:xml/xml.dart';
 import 'dart:async';
 import 'dart:math' as math;
 import '../themes/app_theme.dart';
 import '../localization/app_localizations_extension.dart';
+import '../services/mushaf_database_service.dart';
 import 'quran_reader_screen.dart';
+import '../utils/theme_extensions.dart';
 
 class QuranSearchScreen extends StatefulWidget {
   const QuranSearchScreen({super.key});
@@ -15,132 +16,40 @@ class QuranSearchScreen extends StatefulWidget {
   State<QuranSearchScreen> createState() => _QuranSearchScreenState();
 }
 
-class _QuranSearchScreenState extends State<QuranSearchScreen> with SingleTickerProviderStateMixin {
-  late TabController _tabController;
+class _QuranSearchScreenState extends State<QuranSearchScreen> {
   final TextEditingController _searchController = TextEditingController();
-  final TextEditingController _ayahNumberController = TextEditingController();
+  final FocusNode _searchFocusNode = FocusNode();
   
   List<SearchResult> searchResults = [];
   bool isLoading = false;
   bool isLoadingQuranData = true;
-  Timer? _searchDebounceTimer;
+  String _lastSearchQuery = '';
   
   // Cache for expensive operations
   final Map<String, String> _normalizedTextCache = {};
-  final Map<String, List<RegExp>> _searchPatternsCache = {};
-  String _lastSearchQuery = '';
   
   // Quran data
   Map<int, SurahData> surahsData = {};
-  Map<int, Map<int, String>> translationsData = {};
-  
-  // Selected surah for navigation
-  int? selectedSurahIndex;
-  int? maxAyahForSelectedSurah;
 
-  // Enhanced character mapping for intelligent search normalization
-  static final Map<String, List<String>> characterVariations = {
-    // Arabic/Urdu/Pashto variations of similar letters
-    'ک': ['ك', 'ڪ', 'ګ', 'گ'], // Different forms of kaaf
-    'ك': ['ک', 'ڪ', 'ګ', 'گ'],
-    'ی': ['ي', 'ئ', 'ے', 'ى', 'ې'], // Different forms of ya
-    'ي': ['ی', 'ئ', 'ے', 'ى', 'ې'],
-    'ہ': ['ه', 'ۀ', 'ە', 'ح', 'خ'], // Different forms of ha
-    'ه': ['ہ', 'ۀ', 'ە', 'ح', 'خ'],
-    'و': ['ؤ', 'ۋ', 'ۇ'], // Different forms of waw
-    'ا': ['أ', 'إ', 'آ', 'ء', 'ٱ'], // Different forms of alif
-    'ت': ['ة', 'ٹ', 'ث'], // Ta and related letters
-    'ة': ['ت', 'ٹ', 'ث'],
-    'د': ['ذ', 'ڈ'], // Dal and related letters
-    'ذ': ['د', 'ڈ'],
-    'ر': ['ڑ', 'ړ', 'ز'], // Different forms of ra
-    'ز': ['ذ', 'ژ', 'ر'],
-    'ن': ['ں', 'ڻ'], // Noon and variations
-    'س': ['ص', 'ث'], // Sin and related letters
-    'ط': ['ت', 'ٹ'], // Ta variations
-    'ظ': ['ز', 'ذ'], // Za variations
-    'ع': ['غ'], // Ain and ghain
-    'غ': ['ع'],
-    'ف': ['پ'], // Fa and pa
-    'پ': ['ف'],
-    'ق': ['ک', 'ك'], // Qaf and kaaf
-    'ل': ['ڵ'], // Lam variations
-    'م': ['ۂ'], // Meem variations
-    'ژ': ['ز', 'ذ'], // Zhe and za
-    'گ': ['ګ', 'ک', 'ك'], // Gaf variations
-    'چ': ['ج'], // Che and jeem
-    'ج': ['چ'],
-    'ښ': ['ش'], // Pashto specific
-    'ږ': ['ژ', 'ز'],
-    'ړ': ['ر'],
-    'ډ': ['د'],
-    'ټ': ['ت'],
-    'څ': ['ج'],
-    'ځ': ['ج'],
-  };
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
     _loadQuranData();
   }
 
   @override
   void dispose() {
-    _tabController.dispose();
     _searchController.dispose();
-    _ayahNumberController.dispose();
-    _searchDebounceTimer?.cancel();
+    _searchFocusNode.dispose();
     super.dispose();
   }
 
   Future<void> _loadQuranData() async {
     try {
-      // Load Arabic text
-      final String arabicData = await rootBundle.loadString('assets/quran_data/quran_arabic.xml');
-      final arabicDocument = XmlDocument.parse(arabicData);
-      
-      // Load Pashto translation
-      final String translationData = await rootBundle.loadString('assets/quran_data/quran_tr_ps.xml');
-      final translationDocument = XmlDocument.parse(translationData);
-      
-      // Parse Arabic text
-      for (var suraElement in arabicDocument.findAllElements('sura')) {
-        int surahIndex = int.parse(suraElement.getAttribute('index')!);
-        String surahName = suraElement.getAttribute('name')!;
-        
-        List<AyahData> ayahs = [];
-        for (var ayaElement in suraElement.findAllElements('aya')) {
-          int ayahIndex = int.parse(ayaElement.getAttribute('index')!);
-          String text = ayaElement.getAttribute('text')!;
-          
-          ayahs.add(AyahData(
-            ayahIndex: ayahIndex,
-            text: text,
-          ));
-        }
-        
-        surahsData[surahIndex] = SurahData(
-          index: surahIndex,
-          name: surahName,
-          ayahs: ayahs,
-        );
-      }
-      
-      // Parse translations
-      for (var suraElement in translationDocument.findAllElements('sura')) {
-        int surahIndex = int.parse(suraElement.getAttribute('index')!);
-        Map<int, String> surahTranslations = {};
-        
-        for (var ayaElement in suraElement.findAllElements('aya')) {
-          int ayahIndex = int.parse(ayaElement.getAttribute('index')!);
-          String translation = ayaElement.getAttribute('text') ?? '';
-          surahTranslations[ayahIndex] = translation;
-        }
-        
-        translationsData[surahIndex] = surahTranslations;
-      }
+      // Database is already initialized in main.dart
+      // Just load surah names and metadata for navigation
+      await _loadSurahMetadata();
       
       setState(() {
         isLoadingQuranData = false;
@@ -150,6 +59,67 @@ class _QuranSearchScreenState extends State<QuranSearchScreen> with SingleTicker
       setState(() {
         isLoadingQuranData = false;
       });
+    }
+  }
+  
+  /// Get all ayahs from database in one efficient query
+  Future<List<Map<String, dynamic>>> _getAllAyahsFromDatabase() async {
+    try {
+      // Single query to get all ayahs - much faster than 6236 individual queries!
+      return await MushafDatabaseService.getAllAyahs();
+    } catch (e) {
+      debugPrint('❌ Error loading all ayahs: $e');
+      return [];
+    }
+  }
+  
+  /// Load surah names and ayah counts from database
+  Future<void> _loadSurahMetadata() async {
+    try {
+      // Surah names (standard Quran surah names)
+      const surahNames = [
+        'الفاتحة', 'البقرة', 'آل عمران', 'النساء', 'المائدة', 'الأنعام', 'الأعراف', 'الأنفال',
+        'التوبة', 'يونس', 'هود', 'يوسف', 'الرعد', 'إبراهيم', 'الحجر', 'النحل',
+        'الإسراء', 'الكهف', 'مريم', 'طه', 'الأنبياء', 'الحج', 'المؤمنون', 'النور',
+        'الفرقان', 'الشعراء', 'النمل', 'القصص', 'العنكبوت', 'الروم', 'لقمان', 'السجدة',
+        'الأحزاب', 'سبأ', 'فاطر', 'يس', 'الصافات', 'ص', 'الزمر', 'غافر',
+        'فصلت', 'الشورى', 'الزخرف', 'الدخان', 'الجاثية', 'الأحقاف', 'محمد', 'الفتح',
+        'الحجرات', 'ق', 'الذاريات', 'الطور', 'النجم', 'القمر', 'الرحمن', 'الواقعة',
+        'الحديد', 'المجادلة', 'الحشر', 'الممتحنة', 'الصف', 'الجمعة', 'المنافقون', 'التغابن',
+        'الطلاق', 'التحريم', 'الملك', 'القلم', 'الحاقة', 'المعارج', 'نوح', 'الجن',
+        'المزمل', 'المدثر', 'القيامة', 'الإنسان', 'المرسلات', 'النبأ', 'النازعات', 'عبس',
+        'التكوير', 'الانفطار', 'المطففين', 'الانشقاق', 'البروج', 'الطارق', 'الأعلى', 'الغاشية',
+        'الفجر', 'البلد', 'الشمس', 'الليل', 'الضحى', 'الشرح', 'التين', 'العلق',
+        'القدر', 'البينة', 'الزلزلة', 'العاديات', 'القارعة', 'التكاثر', 'العصر', 'الهمزة',
+        'الفيل', 'قريش', 'الماعون', 'الكوثر', 'الكافرون', 'النصر', 'المسد', 'الإخلاص',
+        'الفلق', 'الناس'
+      ];
+      
+      // Ayah counts per surah
+      const ayahCounts = [
+        7, 286, 200, 176, 120, 165, 206, 75, 129, 109, 123, 111, 43, 52, 99, 128,
+        111, 110, 98, 135, 112, 78, 118, 64, 77, 227, 93, 88, 69, 60, 34, 30,
+        73, 54, 45, 83, 182, 88, 75, 85, 54, 53, 89, 59, 37, 35, 38, 29,
+        18, 45, 60, 49, 62, 55, 78, 96, 29, 22, 24, 13, 14, 11, 11, 18,
+        12, 12, 30, 52, 52, 44, 28, 28, 20, 56, 40, 31, 50, 40, 46, 42,
+        29, 19, 36, 25, 22, 17, 19, 26, 30, 20, 15, 21, 11, 8, 8, 19,
+        5, 8, 8, 11, 11, 8, 3, 9, 5, 4, 7, 3, 6, 3, 5, 4, 5, 6
+      ];
+      
+      // Build surah data structure
+      for (int i = 0; i < surahNames.length; i++) {
+        int surahIndex = i + 1;
+        surahsData[surahIndex] = SurahData(
+          index: surahIndex,
+          name: surahNames[i],
+          ayahs: List.generate(
+            ayahCounts[i],
+            (j) => AyahData(ayahIndex: j + 1, text: ''),
+          ),
+        );
+      }
+    } catch (e) {
+      debugPrint('Error loading surah metadata: $e');
     }
   }
 
@@ -239,37 +209,6 @@ class _QuranSearchScreenState extends State<QuranSearchScreen> with SingleTicker
     return normalized.replaceAll(RegExp(r'\s+'), '');
   }
 
-  // Create search pattern that handles character variations
-  RegExp _createSearchPattern(String query) {
-    String pattern = '';
-    
-    for (int i = 0; i < query.length; i++) {
-      String char = query[i];
-      
-      // Check if this character has variations
-      bool hasVariation = false;
-      for (var entry in characterVariations.entries) {
-        if (entry.key == char || entry.value.contains(char)) {
-          // Create character class with all variations
-          List<String> allVariations = [entry.key, ...entry.value];
-          pattern += '[${allVariations.join('')}]';
-          hasVariation = true;
-          break;
-        }
-      }
-      
-      if (!hasVariation) {
-        // Escape special regex characters
-        if (RegExp(r'[\[\](){}+*?^$|.\-\\]').hasMatch(char)) {
-          pattern += '\\$char';
-        } else {
-          pattern += char;
-        }
-      }
-    }
-    
-    return RegExp(pattern, caseSensitive: false);
-  }
 
   void _performTextSearch(String query) {
     if (query.isEmpty) {
@@ -299,9 +238,6 @@ class _QuranSearchScreenState extends State<QuranSearchScreen> with SingleTicker
       String cleanQuery = query.trim();
       String normalizedQuery = _normalizeAppText(cleanQuery);
       
-      // Create multiple search strategies for better matching
-      List<RegExp> searchPatterns = _createMultipleSearchPatterns(cleanQuery);
-      
       // Early exit for very short queries
       if (cleanQuery.length < 2) {
         if (mounted) {
@@ -313,64 +249,70 @@ class _QuranSearchScreenState extends State<QuranSearchScreen> with SingleTicker
         return;
       }
       
-      // Search through all surahs and ayahs (Arabic text only)
-      int processedCount = 0;
-      const batchSize = 50; // Process in batches to prevent blocking
-      
-      for (var entry in surahsData.entries) {
-        final surahIndex = entry.key;
-        final surahData = entry.value;
+      // ✨ OPTIMIZED DATABASE SEARCH - Load all text at once!
+      try {
+        // Get all ayahs from database in one efficient query
+        final allAyahs = await _getAllAyahsFromDatabase();
         
-        for (var ayah in surahData.ayahs) {
-          // Only search in Arabic text
-          MatchResult arabicMatch = _analyzeMatch(ayah.text, cleanQuery, normalizedQuery, searchPatterns);
+        // Now search through the cached data (much faster!)
+        int processedCount = 0;
+        const batchSize = 100;
+        
+        for (var ayahData in allAyahs) {
+          // Safe casting with null checks
+          final arabicText = ayahData['text'] as String?;
+          final surahNum = ayahData['sura'] as int?;
+          final ayahNum = ayahData['ayah'] as int?;
           
-          // Add result if match found in Arabic text
-          if (arabicMatch.found) {
+          // Skip if any field is null
+          if (arabicText == null || surahNum == null || ayahNum == null) continue;
+          
+          // Analyze match quality
+          final matchResult = _analyzeMatch(arabicText, cleanQuery, normalizedQuery, []);
+          
+          if (matchResult.found) {
+            final surahData = surahsData[surahNum];
+            if (surahData == null) continue;
+            
+            // Calculate relevance score
             double relevanceScore = _calculateRelevance(
-              ayah.text,
+              arabicText,
               cleanQuery,
               normalizedQuery,
             );
             
             // Apply confidence multiplier
-            relevanceScore *= arabicMatch.confidence;
-            
-            // Get translation for display (but not for searching)
-            String? translation = translationsData[surahIndex]?[ayah.ayahIndex];
+            relevanceScore *= matchResult.confidence;
             
             results.add(SearchResult(
-              surahIndex: surahIndex,
+              surahIndex: surahNum,
               surahName: surahData.name,
-              ayahIndex: ayah.ayahIndex,
-              ayahText: ayah.text,
-              translation: translation ?? '',
-              matchType: 'arabic', // Always Arabic since we only search Arabic
+              ayahIndex: ayahNum,
+              ayahText: arabicText,
+              translation: '',
+              matchType: 'arabic',
               relevanceScore: relevanceScore,
             ));
           }
           
-          // Yield control periodically to prevent blocking
+          // Yield control periodically to keep UI responsive
           processedCount++;
           if (processedCount % batchSize == 0) {
-            // Allow other operations to run
             await Future.delayed(Duration.zero);
           }
         }
+      } catch (e) {
+        debugPrint('❌ Database search error: $e');
       }
 
-      // Advanced sorting: prioritize exact matches, then by relevance
+      // Sort sequentially: Surah 1 first, then Surah 2, etc.
       results.sort((a, b) {
-        // First sort by match type priority (exact matches first)
-        int aPriority = _getMatchPriority(a, cleanQuery);
-        int bPriority = _getMatchPriority(b, cleanQuery);
+        // First by surah number
+        int surahCompare = a.surahIndex.compareTo(b.surahIndex);
+        if (surahCompare != 0) return surahCompare;
         
-        if (aPriority != bPriority) {
-          return bPriority.compareTo(aPriority); // Higher priority first
-        }
-        
-        // Then by relevance score
-        return b.relevanceScore.compareTo(a.relevanceScore);
+        // Then by ayah number within the same surah
+        return a.ayahIndex.compareTo(b.ayahIndex);
       });
       
       // Remove duplicate or very similar results
@@ -389,43 +331,6 @@ class _QuranSearchScreenState extends State<QuranSearchScreen> with SingleTicker
         });
       }
     });
-  }
-  
-  // Create multiple search patterns for better matching (with caching)
-  List<RegExp> _createMultipleSearchPatterns(String query) {
-    // Check cache first
-    if (_searchPatternsCache.containsKey(query)) {
-      return _searchPatternsCache[query]!;
-    }
-    
-    List<RegExp> patterns = [];
-    
-    try {
-      // 1. Exact pattern (case-insensitive)
-      patterns.add(RegExp(RegExp.escape(query), caseSensitive: false));
-      
-      // 2. Flexible character variation pattern
-      patterns.add(_createSearchPattern(query));
-      
-      // 3. Word-boundary pattern for complete word matches
-      patterns.add(RegExp(r'\b' + RegExp.escape(query) + r'\b', caseSensitive: false));
-      
-      // 4. Normalized pattern
-      String normalizedQuery = _normalizeAppText(query);
-      if (normalizedQuery != query.toLowerCase()) {
-        patterns.add(RegExp(RegExp.escape(normalizedQuery), caseSensitive: false));
-      }
-    } catch (e) {
-      // Fallback to simple pattern
-      patterns.add(RegExp(RegExp.escape(query), caseSensitive: false));
-    }
-    
-    // Cache result (limit cache size)
-    if (_searchPatternsCache.length < 100) {
-      _searchPatternsCache[query] = patterns;
-    }
-    
-    return patterns;
   }
   
   // Analyze match quality and confidence with space-flexible search
@@ -690,133 +595,33 @@ class _QuranSearchScreenState extends State<QuranSearchScreen> with SingleTicker
 
     if (isLoadingQuranData) {
       return Scaffold(
-        backgroundColor: isDark ? AppTheme.darkBackground : AppTheme.lightBackground,
+        backgroundColor: isDark ? context.backgroundColor : context.backgroundColor,
         appBar: AppBar(
           title: AppText(context.l.quranSearch),
-          backgroundColor: AppTheme.primaryGreen,
+          backgroundColor: context.primaryColor,
           foregroundColor: Colors.white,
         ),
         body: Center(
           child: CircularProgressIndicator(
-            valueColor: AlwaysStoppedAnimation<Color>(AppTheme.primaryGreen),
+            valueColor: AlwaysStoppedAnimation<Color>(context.primaryColor),
           ),
         ),
       );
     }
 
     return Scaffold(
-      backgroundColor: isDark ? AppTheme.darkBackground : AppTheme.lightBackground,
+      backgroundColor: isDark ? context.backgroundColor : context.backgroundColor,
       appBar: AppBar(
         title: AppText(context.l.quranSearch),
-        backgroundColor: AppTheme.primaryGreen,
+        backgroundColor: context.primaryColor,
         foregroundColor: Colors.white,
         elevation: 0,
       ),
-      body: Column(
-        children: [
-          // Tab selector
-          Container(
-            color: isDark ? AppTheme.darkSurface : Colors.white,
-            child: Column(
-              children: [
-                Container(
-                  margin: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: isDark ? AppTheme.darkBackground : AppTheme.lightGray,
-                    borderRadius: BorderRadius.circular(25),
-                  ),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: GestureDetector(
-                          onTap: () => _tabController.animateTo(0),
-                          child: AnimatedBuilder(
-                            animation: _tabController,
-                            builder: (context, child) {
-                              final isSelected = _tabController.index == 0;
-                              return Container(
-                                padding: const EdgeInsets.symmetric(vertical: 12),
-                                decoration: BoxDecoration(
-                                  color: isSelected ? Colors.white : Colors.transparent,
-                                  borderRadius: BorderRadius.circular(25),
-                                  boxShadow: isSelected ? [
-                                    BoxShadow(
-                                      color: Colors.black.withValues(alpha: 0.1),
-                                      blurRadius: 4,
-                                      offset: const Offset(0, 2),
-                                    ),
-                                  ] : null,
-                                ),
-                                child: AppText(
-                                  context.l.textSearch,
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w600,
-                                    color: isSelected ? AppTheme.primaryGreen : Colors.grey[600],
-                                  ),
-                                ),
-                              );
-                            },
-                          ),
-                        ),
-                      ),
-                      Expanded(
-                        child: GestureDetector(
-                          onTap: () => _tabController.animateTo(1),
-                          child: AnimatedBuilder(
-                            animation: _tabController,
-                            builder: (context, child) {
-                              final isSelected = _tabController.index == 1;
-                              return Container(
-                                padding: const EdgeInsets.symmetric(vertical: 12),
-                                decoration: BoxDecoration(
-                                  color: isSelected ? AppTheme.primaryGold : Colors.transparent,
-                                  borderRadius: BorderRadius.circular(25),
-                                  boxShadow: isSelected ? [
-                                    BoxShadow(
-                                      color: Colors.black.withValues(alpha: 0.1),
-                                      blurRadius: 4,
-                                      offset: const Offset(0, 2),
-                                    ),
-                                  ] : null,
-                                ),
-                                child: AppText(
-                                  context.l.directNavigation,
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w600,
-                                    color: isSelected ? Colors.white : Colors.grey[600],
-                                  ),
-                                ),
-                              );
-                            },
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-          // Tab content
-          Expanded(
-            child: TabBarView(
-              controller: _tabController,
-              children: [
-                _buildTextSearchTab(),
-                _buildNavigationTab(),
-              ],
-            ),
-          ),
-        ],
-      ),
+      body: _buildSearchContent(),
     );
   }
 
-  Widget _buildTextSearchTab() {
+  Widget _buildSearchContent() {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
@@ -824,37 +629,31 @@ class _QuranSearchScreenState extends State<QuranSearchScreen> with SingleTicker
       children: [
         // Search input
         Container(
-          color: isDark ? AppTheme.darkSurface : Colors.white,
+          color: isDark ? context.surfaceColor : Colors.white,
           padding: const EdgeInsets.all(16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Container(
                 decoration: BoxDecoration(
-                  color: isDark ? AppTheme.darkBackground : AppTheme.lightGray,
+                  color: isDark ? context.backgroundColor : AppTheme.lightGray,
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: TextField(
                   controller: _searchController,
+                  focusNode: _searchFocusNode,
                   textDirection: TextDirection.rtl,
-                  onChanged: (value) {
-                    // Improved debounce search with cancellation
-                    if (_searchDebounceTimer?.isActive ?? false) {
-                      _searchDebounceTimer!.cancel();
+                  textInputAction: TextInputAction.search,
+                  onSubmitted: (value) {
+                    // Search when user presses Enter/Search button
+                    if (value.trim().isNotEmpty) {
+                      _performTextSearch(value.trim());
+                    } else {
+                      setState(() {
+                        searchResults = [];
+                        _lastSearchQuery = '';
+                      });
                     }
-                    
-                    _searchDebounceTimer = Timer(const Duration(milliseconds: 400), () {
-                      if (_searchController.text == value) {
-                        if (value.trim().isNotEmpty) {
-                          _performTextSearch(value.trim());
-                        } else {
-                          setState(() {
-                            searchResults = [];
-                            _lastSearchQuery = '';
-                          });
-                        }
-                      }
-                    });
                   },
                   decoration: InputDecoration(
                     hintText: context.l.searchInArabicText,
@@ -864,20 +663,35 @@ class _QuranSearchScreenState extends State<QuranSearchScreen> with SingleTicker
                     ),
                     prefixIcon: Icon(
                       Icons.search_rounded,
-                      color: AppTheme.primaryGreen,
+                      color: context.primaryColor,
                       size: 24,
                     ),
-                    suffixIcon: _searchController.text.isNotEmpty
-                        ? IconButton(
+                    suffixIcon: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (_searchController.text.isNotEmpty)
+                          IconButton(
                             icon: Icon(Icons.clear_rounded, color: Colors.grey[500]),
                             onPressed: () {
                               _searchController.clear();
                               setState(() {
                                 searchResults = [];
+                                _lastSearchQuery = '';
                               });
                             },
-                          )
-                        : null,
+                          ),
+                        IconButton(
+                          icon: Icon(Icons.search_rounded, color: context.primaryColor),
+                          onPressed: () {
+                            final text = _searchController.text.trim();
+                            if (text.isNotEmpty) {
+                              _searchFocusNode.unfocus();
+                              _performTextSearch(text);
+                            }
+                          },
+                        ),
+                      ],
+                    ),
                     border: InputBorder.none,
                     contentPadding: const EdgeInsets.symmetric(
                       horizontal: 16,
@@ -891,19 +705,12 @@ class _QuranSearchScreenState extends State<QuranSearchScreen> with SingleTicker
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   AppText(
-                    context.l.smartSearchSystem,
+                    '🔍 Enter Arabic text and tap Search button or press Enter',
+                    textAlign: TextAlign.center,
                     style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.grey[600],
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  AppText(
-                    context.l.searchFeatures,
-                    style: TextStyle(
-                      fontSize: 11,
-                      color: Colors.grey[500],
-                      height: 1.3,
+                      fontSize: 13,
+                      color: context.primaryColor,
+                      fontWeight: FontWeight.w500,
                     ),
                   ),
                 ],
@@ -916,40 +723,48 @@ class _QuranSearchScreenState extends State<QuranSearchScreen> with SingleTicker
           child: isLoading
               ? Center(
                   child: CircularProgressIndicator(
-                    valueColor: AlwaysStoppedAnimation<Color>(AppTheme.primaryGreen),
+                    valueColor: AlwaysStoppedAnimation<Color>(context.primaryColor),
                   ),
                 )
               : searchResults.isEmpty
                   ? Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.search_rounded,
-                            size: 80,
-                            color: Colors.grey[400],
-                          ),
-                          const SizedBox(height: 20),
-                          AppText(
-                            _searchController.text.isEmpty
-                                ? context.l.searchPlaceholder
-                                : context.l.noResultsFound,
-                            style: TextStyle(
-                              fontSize: 16,
-                              color: Colors.grey[600],
-                            ),
-                          ),
-                          if (_searchController.text.isNotEmpty) ...[
-                            const SizedBox(height: 10),
-                            AppText(
-                              context.l.tryDifferentText,
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: Colors.grey[500],
+                      child: SingleChildScrollView(
+                        child: Padding(
+                          padding: const EdgeInsets.all(24.0),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.search_rounded,
+                                size: 80,
+                                color: Colors.grey[400],
                               ),
-                            ),
-                          ],
-                        ],
+                              const SizedBox(height: 20),
+                              AppText(
+                                _searchController.text.isEmpty
+                                    ? context.l.searchPlaceholder
+                                    : context.l.noResultsFound,
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  color: Colors.grey[600],
+                                ),
+                              ),
+                              if (_searchController.text.isNotEmpty) ...[
+                                const SizedBox(height: 10),
+                                AppText(
+                                  context.l.tryDifferentText,
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: Colors.grey[500],
+                                  ),
+                                ),
+                              ],
+                            ],
+                          ),
+                        ),
                       ),
                     )
                   : ListView.builder(
@@ -958,71 +773,68 @@ class _QuranSearchScreenState extends State<QuranSearchScreen> with SingleTicker
                       itemBuilder: (context, index) {
                         final result = searchResults[index];
                         return Container(
-                          margin: const EdgeInsets.only(bottom: 12),
+                          margin: const EdgeInsets.only(bottom: 8),
                           decoration: BoxDecoration(
-                            color: isDark ? AppTheme.darkSurface : Colors.white,
-                            borderRadius: BorderRadius.circular(16),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.08),
-                                blurRadius: 8,
-                                offset: const Offset(0, 2),
-                              ),
-                            ],
+                            color: isDark ? context.surfaceColor : Colors.white,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: context.primaryColor.withOpacity(0.1),
+                              width: 1,
+                            ),
                           ),
                           child: Material(
                             color: Colors.transparent,
                             child: InkWell(
-                              borderRadius: BorderRadius.circular(16),
+                              borderRadius: BorderRadius.circular(12),
                               onTap: () => _navigateToAyah(result.surahIndex, result.ayahIndex),
                               child: Padding(
-                                padding: const EdgeInsets.all(16),
+                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.end,
                                   children: [
-                                    // Surah and Ayah info
+                                    // Surah and Ayah info - Compact
                                     Row(
                                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                       children: [
                                         Container(
                                           padding: const EdgeInsets.symmetric(
-                                            horizontal: 12,
-                                            vertical: 6,
+                                            horizontal: 8,
+                                            vertical: 4,
                                           ),
                                           decoration: BoxDecoration(
-                                            color: AppTheme.primaryGreen.withValues(alpha: 0.1),
-                                            borderRadius: BorderRadius.circular(8),
+                                            color: context.primaryColor.withValues(alpha: 0.12),
+                                            borderRadius: BorderRadius.circular(6),
                                           ),
                                           child: AppText(
-                                            '${context.l.ayah} ${result.ayahIndex}',
+                                            '${result.ayahIndex}',
                                             style: TextStyle(
-                                              fontSize: 12,
-                                              color: AppTheme.primaryGreen,
-                                              fontWeight: FontWeight.bold,
+                                              fontSize: 11,
+                                              color: context.primaryColor,
+                                              fontWeight: FontWeight.w600,
                                             ),
                                           ),
                                         ),
                                         AppText(
                                           result.surahName,
                                           style: TextStyle(
-                                            fontSize: 16,
-                                            fontWeight: FontWeight.bold,
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.w600,
                                             color: isDark ? Colors.white : Colors.black87,
                                           ),
                                         ),
                                       ],
                                     ),
-                                    const SizedBox(height: 12),
+                                    const SizedBox(height: 8),
                                     // Arabic text with highlight (search only in Arabic)
                                     _buildHighlightedAppText(
                                       result.ayahText,
                                       _searchController.text,
                                       TextStyle(
-                                        fontSize: 22,
-                                        fontFamily: 'Al Qalam Quran Majeed',
+                                        fontSize: 18,
+                                        fontFamily: 'Noorehuda',
                                         color: isDark ? Colors.white : Colors.black87,
-                                        height: 2.2,
-                                        letterSpacing: 0.5,
+                                        height: 1.8,
+                                        letterSpacing: 0.3,
                                       ),
                                     ),
                                   ],
@@ -1038,249 +850,6 @@ class _QuranSearchScreenState extends State<QuranSearchScreen> with SingleTicker
     );
   }
 
-  Widget _buildNavigationTab() {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        children: [
-          // Instructions
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: AppTheme.primaryGreen.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Row(
-              children: [
-                Icon(
-                  Icons.info_outline_rounded,
-                  color: AppTheme.primaryGreen,
-                  size: 24,
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: AppText(
-                    context.l.selectSurahFirst,
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: AppTheme.primaryGreen,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 24),
-          // Surah selector
-          Container(
-            decoration: BoxDecoration(
-              color: isDark ? AppTheme.darkSurface : Colors.white,
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.08),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.all(16),
-                  child:                   AppText(
-                    context.l.selectSurah,
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: isDark ? Colors.white : Colors.black87,
-                    ),
-                  ),
-                ),
-                const Divider(height: 0),
-                SizedBox(
-                  height: 300,
-                  child: ListView.builder(
-                    itemCount: surahsData.length,
-                    itemBuilder: (context, index) {
-                      final surahIndex = index + 1;
-                      final surahData = surahsData[surahIndex];
-                      if (surahData == null) return const SizedBox.shrink();
-
-                      final isSelected = selectedSurahIndex == surahIndex;
-
-                      return ListTile(
-                        selected: isSelected,
-                        selectedTileColor: AppTheme.primaryGreen.withValues(alpha: 0.1),
-                        onTap: () {
-                          setState(() {
-                            selectedSurahIndex = surahIndex;
-                            maxAyahForSelectedSurah = surahData.ayahs.length;
-                            _ayahNumberController.clear();
-                          });
-                        },
-                        leading: Container(
-                          width: 40,
-                          height: 40,
-                          decoration: BoxDecoration(
-                            color: isSelected
-                                ? AppTheme.primaryGreen
-                                : AppTheme.primaryGreen.withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Center(
-                            child: AppText(
-                              '$surahIndex',
-                              style: TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.bold,
-                                color: isSelected ? Colors.white : AppTheme.primaryGreen,
-                              ),
-                            ),
-                          ),
-                        ),
-                        title: AppText(
-                          surahData.name,
-                          textAlign: TextAlign.right,
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                            color: isDark ? Colors.white : Colors.black87,
-                          ),
-                        ),
-                        subtitle: AppText(
-                          '${context.l.verses}: ${surahData.ayahs.length}',
-                          textAlign: TextAlign.right,
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.grey[600],
-                          ),
-                        ),
-                        trailing: isSelected
-                            ? Icon(
-                                Icons.check_circle_rounded,
-                                color: AppTheme.primaryGreen,
-                              )
-                            : null,
-                      );
-                    },
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 24),
-          // Ayah number input
-          if (selectedSurahIndex != null) ...[
-            Container(
-              decoration: BoxDecoration(
-                color: isDark ? AppTheme.darkSurface : Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.08),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  AppText(
-                    '${context.l.enterAyahNumber} (1/$maxAyahForSelectedSurah)',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: isDark ? Colors.white : Colors.black87,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: TextField(
-                          controller: _ayahNumberController,
-                          keyboardType: TextInputType.number,
-                          textAlign: TextAlign.center,
-                          decoration: InputDecoration(
-                            hintText: '1/$maxAyahForSelectedSurah',
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide(
-                                color: AppTheme.primaryGreen.withValues(alpha: 0.3),
-                              ),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide(
-                                color: AppTheme.primaryGreen,
-                                width: 2,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      ElevatedButton(
-                        onPressed: () {
-                          final ayahNumber = int.tryParse(_ayahNumberController.text);
-                          if (ayahNumber != null &&
-                              ayahNumber > 0 &&
-                              ayahNumber <= maxAyahForSelectedSurah!) {
-                            _navigateToAyah(selectedSurahIndex!, ayahNumber);
-                          } else {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: AppText(
-                                  context.l.ayahNumberRange.replaceAll('{min}', '1').replaceAll('{max}', '$maxAyahForSelectedSurah'),
-                                  style: TextStyle(),
-                                ),
-                                backgroundColor: Colors.red,
-                              ),
-                            );
-                          }
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppTheme.primaryGreen,
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 32,
-                            vertical: 16,
-                          ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        child: Row(
-                          children: [
-                            Icon(Icons.navigation_rounded, color: Colors.white),
-                            const SizedBox(width: 8),
-                            AppText(
-                              context.l.navigate,
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ],
-      ),
-    );
-  }
 
   Widget _buildHighlightedAppText(String text, String query, TextStyle style) {
     if (query.isEmpty) {
@@ -1314,7 +883,7 @@ class _QuranSearchScreenState extends State<QuranSearchScreen> with SingleTicker
   List<TextSpan> _createHighlightSpans(String text, String query, TextStyle style) {
     final spans = <TextSpan>[];
     final highlightStyle = style.copyWith(
-      backgroundColor: AppTheme.primaryGold.withValues(alpha: 0.3),
+      backgroundColor: context.accentColor.withValues(alpha: 0.3),
       fontWeight: FontWeight.bold,
     );
     
@@ -1323,40 +892,22 @@ class _QuranSearchScreenState extends State<QuranSearchScreen> with SingleTicker
       return spans;
     }
     
-    // Try different highlighting strategies in order of preference
-    List<_HighlightMatch> allMatches = [];
+    // IMPROVED: Use word-based matching to avoid splitting words
+    List<_HighlightMatch> matches = _findWordBasedMatches(text, query);
     
-    // 1. Try exact match first (most precise)
-    allMatches.addAll(_findExactMatches(text, query));
-    
-    // 2. If no exact matches, try case-insensitive
-    if (allMatches.isEmpty) {
-      allMatches.addAll(_findCaseInsensitiveMatches(text, query));
-    }
-    
-    // 3. If still no matches, try normalized matching (without diacritics)
-    if (allMatches.isEmpty) {
-      allMatches.addAll(_findNormalizedMatches(text, query));
-    }
-    
-    // 4. If still no matches, try partial matching for longer queries
-    if (allMatches.isEmpty && query.length >= 3) {
-      allMatches.addAll(_findPartialMatches(text, query));
-    }
-    
-    if (allMatches.isEmpty) {
+    if (matches.isEmpty) {
       spans.add(TextSpan(text: text, style: style));
       return spans;
     }
     
-    // Sort matches by position and merge overlapping ones
-    allMatches.sort((a, b) => a.start.compareTo(b.start));
-    allMatches = _mergeOverlappingMatches(allMatches);
+    // Sort and merge overlapping matches
+    matches.sort((a, b) => a.start.compareTo(b.start));
+    matches = _mergeOverlappingMatches(matches);
     
     // Build spans with highlighting
     int lastEnd = 0;
     
-    for (final match in allMatches) {
+    for (final match in matches) {
       // Add text before match
       if (match.start > lastEnd) {
         spans.add(TextSpan(
@@ -1385,105 +936,82 @@ class _QuranSearchScreenState extends State<QuranSearchScreen> with SingleTicker
     return spans;
   }
   
-
-  
-  // Find exact matches
-  List<_HighlightMatch> _findExactMatches(String text, String query) {
+  /// Find matches based on complete words (don't split words!)
+  List<_HighlightMatch> _findWordBasedMatches(String text, String query) {
     List<_HighlightMatch> matches = [];
-    int index = 0;
     
-    while (index < text.length) {
-      int foundIndex = text.indexOf(query, index);
-      if (foundIndex == -1) break;
-      
-      matches.add(_HighlightMatch(foundIndex, foundIndex + query.length));
-      index = foundIndex + 1;
-    }
-    
-    return matches;
-  }
-  
-  // Find case-insensitive matches
-  List<_HighlightMatch> _findCaseInsensitiveMatches(String text, String query) {
-    List<_HighlightMatch> matches = [];
-    String lowerText = text.toLowerCase();
-    String lowerQuery = query.toLowerCase();
-    int index = 0;
-    
-    while (index < lowerText.length) {
-      int foundIndex = lowerText.indexOf(lowerQuery, index);
-      if (foundIndex == -1) break;
-      
-      matches.add(_HighlightMatch(foundIndex, foundIndex + query.length));
-      index = foundIndex + 1;
-    }
-    
-    return matches;
-  }
-  
-  // Find normalized matches (without diacritics)
-  List<_HighlightMatch> _findNormalizedMatches(String text, String query) {
-    List<_HighlightMatch> matches = [];
-    String normalizedText = _normalizeAppText(text);
-    String normalizedQuery = _normalizeAppText(query);
+    // Normalize for comparison
+    final normalizedText = _normalizeAppText(text);
+    final normalizedQuery = _normalizeAppText(query);
     
     if (normalizedQuery.isEmpty) return matches;
     
+    // Method 1: Try to find exact phrase in normalized text
     int index = 0;
     while (index < normalizedText.length) {
       int foundIndex = normalizedText.indexOf(normalizedQuery, index);
       if (foundIndex == -1) break;
       
-      // Map back to original text positions
-      int originalStart = _mapNormalizedToOriginal(text, normalizedText, foundIndex);
-      int originalEnd = _mapNormalizedToOriginal(text, normalizedText, foundIndex + normalizedQuery.length);
-      
-      if (originalStart != -1 && originalEnd != -1 && originalEnd > originalStart) {
-        matches.add(_HighlightMatch(originalStart, originalEnd));
+      // Map back to original text with word boundary awareness
+      final matchInfo = _findOriginalTextBounds(text, normalizedText, foundIndex, normalizedQuery.length);
+      if (matchInfo != null) {
+        matches.add(matchInfo);
       }
       
-      index = foundIndex + 1;
+      index = foundIndex + normalizedQuery.length;
     }
     
     return matches;
   }
   
-  // Find partial matches for longer queries
-  List<_HighlightMatch> _findPartialMatches(String text, String query) {
-    List<_HighlightMatch> matches = [];
+  
+  
+  /// Find the original text bounds for a normalized match
+  _HighlightMatch? _findOriginalTextBounds(String originalText, String normalizedText, int normalizedStart, int normalizedLength) {
+    int charCountInNormalized = 0;
+    int originalStart = -1;
+    int originalEnd = -1;
     
-    // Try to find the longest possible substring matches
-    for (int len = query.length; len >= 3; len--) {
-      for (int i = 0; i <= query.length - len; i++) {
-        String subQuery = query.substring(i, i + len);
-        matches.addAll(_findCaseInsensitiveMatches(text, subQuery));
-        
-        if (matches.isNotEmpty) {
-          return matches; // Return first successful partial match
-        }
+    for (int i = 0; i < originalText.length; i++) {
+      // Get normalized version of current character
+      final char = originalText[i];
+      
+      // Skip diacritics and special characters that get removed in normalization
+      if (_isDiacritic(char)) continue;
+      
+      // This character counts in normalized text
+      if (charCountInNormalized == normalizedStart && originalStart == -1) {
+        originalStart = i;
+      }
+      
+      charCountInNormalized++;
+      
+      if (charCountInNormalized == normalizedStart + normalizedLength) {
+        originalEnd = i + 1;
+        break;
       }
     }
     
-    return matches;
+    if (originalStart >= 0 && originalEnd > originalStart) {
+      return _HighlightMatch(originalStart, originalEnd);
+    }
+    
+    return null;
   }
   
-  // Map normalized position back to original text position
-  int _mapNormalizedToOriginal(String originalText, String normalizedText, int normalizedIndex) {
-    int originalIndex = 0;
-    int normalizedCount = 0;
+  /// Check if character is a diacritic mark
+  bool _isDiacritic(String char) {
+    if (char.isEmpty) return false;
+    final code = char.codeUnitAt(0);
     
-    while (originalIndex < originalText.length && normalizedCount < normalizedIndex) {
-      String char = originalText[originalIndex];
-      String normalizedChar = _normalizeAppText(char);
-      
-      if (normalizedChar.isNotEmpty) {
-        normalizedCount++;
-      }
-      originalIndex++;
-    }
-    
-    return originalIndex;
+    // Arabic diacritics range
+    return (code >= 0x064B && code <= 0x065F) ||  // Main diacritics
+           code == 0x0670 ||                        // Superscript alef
+           (code >= 0x06D6 && code <= 0x06ED) ||  // Extended diacritics
+           (code >= 0x08E3 && code <= 0x08FE);     // More diacritics
   }
+  
+
   
   // Merge overlapping matches
   List<_HighlightMatch> _mergeOverlappingMatches(List<_HighlightMatch> matches) {
@@ -1508,36 +1036,6 @@ class _QuranSearchScreenState extends State<QuranSearchScreen> with SingleTicker
     merged.add(current);
     return merged;
   }
-  
-  // Map normalized text matches back to original text positions
-  List<Match> _mapNormalizedMatches(String originalText, String normalizedText, List<Match> normalizedMatches) {
-    List<Match> mappedMatches = [];
-    
-    // Simple mapping - this is a basic implementation
-    // In practice, you might need more sophisticated position mapping
-    for (Match normalizedMatch in normalizedMatches) {
-      String matchedText = normalizedText.substring(normalizedMatch.start, normalizedMatch.end);
-      
-      // Find corresponding position in original text
-      int originalStart = -1;
-      for (int i = 0; i <= originalText.length - matchedText.length; i++) {
-        String segment = originalText.substring(i, i + matchedText.length);
-        if (_normalizeAppText(segment) == matchedText) {
-          originalStart = i;
-          break;
-        }
-      }
-      
-      if (originalStart >= 0) {
-        mappedMatches.add(_CustomMatch(
-          originalStart,
-          originalStart + matchedText.length,
-        ));
-      }
-    }
-    
-    return mappedMatches;
-  }
 }
 
 // Helper class for highlight matches
@@ -1546,6 +1044,15 @@ class _HighlightMatch {
   final int end;
   
   _HighlightMatch(this.start, this.end);
+}
+
+// Helper class for word information
+class WordInfo {
+  final String word;
+  final int start;
+  final int end;
+  
+  WordInfo(this.word, this.start, this.end);
 }
 
 // Search result model
@@ -1582,33 +1089,6 @@ class MatchResult {
   });
 }
 
-// Custom Match implementation for position mapping
-class _CustomMatch implements Match {
-  @override
-  final int start;
-  @override
-  final int end;
-  
-  _CustomMatch(this.start, this.end);
-  
-  @override
-  String? operator [](int group) => null;
-  
-  @override
-  String? group(int group) => null;
-  
-  @override
-  int get groupCount => 0;
-  
-  @override
-  List<String?> groups(List<int> groupIndices) => [];
-  
-  @override
-  String get input => '';
-  
-  @override
-  Pattern get pattern => RegExp('');
-}
 
 // Data models
 class SurahData {

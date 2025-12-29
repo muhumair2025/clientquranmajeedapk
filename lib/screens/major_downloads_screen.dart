@@ -4,6 +4,7 @@ import '../themes/app_theme.dart';
 import '../localization/app_localizations_extension.dart';
 import 'audio_downloads_screen.dart';
 import 'video_downloads_screen.dart';
+import '../utils/theme_extensions.dart';
 
 class MajorDownloadsScreen extends StatefulWidget {
   const MajorDownloadsScreen({super.key});
@@ -18,7 +19,7 @@ class _MajorDownloadsScreenState extends State<MajorDownloadsScreen> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     
     return Scaffold(
-      backgroundColor: isDark ? AppTheme.darkBackground : Colors.grey.shade50,
+      backgroundColor: isDark ? context.backgroundColor : Colors.grey.shade50,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(20),
@@ -31,7 +32,7 @@ class _MajorDownloadsScreenState extends State<MajorDownloadsScreen> {
                 style: TextStyle(
                   fontSize: 22,
                   fontWeight: FontWeight.bold,
-                  color: isDark ? Colors.white : AppTheme.darkBackground,
+                  color: isDark ? Colors.white : context.backgroundColor,
                 ),
                 textDirection: TextDirection.rtl,
               ),
@@ -58,8 +59,8 @@ class _MajorDownloadsScreenState extends State<MajorDownloadsScreen> {
                       subtitle: context.l.vocabularyDescription,
                       icon: Icons.school_rounded,
                       gradientColors: [
-                        AppTheme.primaryGreen,
-                        AppTheme.primaryGreen.withValues(alpha: 0.8),
+                        context.primaryColor,
+                        context.primaryColor.withValues(alpha: 0.8),
                       ],
                       onAudioTap: () => _navigateToAudioDownloads('lughat'),
                       onVideoTap: () => _navigateToVideoDownloads('lughat'),
@@ -76,8 +77,8 @@ class _MajorDownloadsScreenState extends State<MajorDownloadsScreen> {
                       subtitle: context.l.commentaryDescription,
                       icon: Icons.library_books_rounded,
                       gradientColors: [
-                        AppTheme.primaryGreen.withValues(alpha: 0.8),
-                        AppTheme.primaryGreen.withValues(alpha: 0.6),
+                        context.primaryColor.withValues(alpha: 0.8),
+                        context.primaryColor.withValues(alpha: 0.6),
                       ],
                       onAudioTap: () => _navigateToAudioDownloads('tafseer'),
                       onVideoTap: () => _navigateToVideoDownloads('tafseer'),
@@ -94,8 +95,8 @@ class _MajorDownloadsScreenState extends State<MajorDownloadsScreen> {
                       subtitle: context.l.benefitsDescription,
                       icon: Icons.star_rounded,
                       gradientColors: [
-                        AppTheme.primaryGreen.withValues(alpha: 0.7),
-                        AppTheme.primaryGreen.withValues(alpha: 0.5),
+                        context.primaryColor.withValues(alpha: 0.7),
+                        context.primaryColor.withValues(alpha: 0.5),
                       ],
                       onAudioTap: () => _navigateToAudioDownloads('faidi'),
                       onVideoTap: () => _navigateToVideoDownloads('faidi'),

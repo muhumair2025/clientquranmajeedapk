@@ -3,7 +3,7 @@ import 'app_localizations.dart';
 class AppLocalizationsEn extends AppLocalizations {
   // App Information
   @override
-  String get appTitle => 'Quran Majeed';
+  String get appTitle => 'Abu Hassaan Ishaq Swati';
   @override
   String get appDescription => 'Complete Quran with translation and commentary';
 
@@ -767,4 +767,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get uthmaniScript => 'Uthmani Script';
   @override
   String get pages => 'pages';
+  
+  // Content Screen
+  @override
+  String get contentNotAvailable => 'Content not available';
+  @override
+  String get openPdf => 'Open PDF';
+  @override
+  String get pdfDownloaded => 'PDF Downloaded';
+  @override
+  String get downloadPdf => 'Download PDF';
+  @override
+  String get items => 'items';
 } 

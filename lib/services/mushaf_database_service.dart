@@ -201,6 +201,28 @@ class MushafDatabaseService {
     }
   }
   
+  /// Get all ayahs from database in one efficient query (for search)
+  /// Returns list of maps with 'sura', 'ayah', and 'text' keys
+  static Future<List<Map<String, dynamic>>> getAllAyahs() async {
+    if (_arabicTextDb == null) {
+      throw Exception('Arabic text database not initialized');
+    }
+    
+    try {
+      final results = await _arabicTextDb!.query(
+        'arabic_text',
+        columns: ['sura', 'ayah', 'text'],
+        orderBy: 'sura ASC, ayah ASC',
+      );
+      
+      debugPrint('✅ Loaded ${results.length} ayahs for search');
+      return results;
+    } catch (e) {
+      debugPrint('❌ Error fetching all ayahs: $e');
+      return [];
+    }
+  }
+  
   /// Get page number for a specific surah
   static Future<int?> getPageForSurah(int surahNumber) async {
     if (_ayahInfoDb == null) {
@@ -223,6 +245,32 @@ class MushafDatabaseService {
       return null;
     } catch (e) {
       debugPrint('❌ Error fetching page for surah $surahNumber: $e');
+      return null;
+    }
+  }
+  
+  /// Get page number for a specific ayah (surah:ayah)
+  static Future<int?> getPageForAyah(int surahNumber, int ayahNumber) async {
+    if (_ayahInfoDb == null) {
+      throw Exception('Ayah info database not initialized');
+    }
+    
+    try {
+      final results = await _ayahInfoDb!.query(
+        'glyphs',
+        columns: ['page_number'],
+        where: 'sura_number = ? AND ayah_number = ?',
+        whereArgs: [surahNumber, ayahNumber],
+        limit: 1,
+      );
+      
+      if (results.isNotEmpty) {
+        return results.first['page_number'] as int?;
+      }
+      
+      return null;
+    } catch (e) {
+      debugPrint('❌ Error fetching page for ayah $surahNumber:$ayahNumber: $e');
       return null;
     }
   }

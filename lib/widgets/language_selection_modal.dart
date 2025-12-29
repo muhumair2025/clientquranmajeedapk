@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../providers/language_provider.dart';
 import '../themes/app_theme.dart';
 import '../localization/app_localizations_extension.dart';
+import '../utils/theme_extensions.dart';
 
 
 class LanguageSelectionModal extends StatelessWidget {
@@ -51,7 +52,7 @@ class LanguageSelectionModal extends StatelessWidget {
                 children: [
                   Icon(
                     Icons.language_rounded,
-                    color: AppTheme.primaryGreen,
+                    color: context.primaryColor,
                     size: 28,
                   ),
                   const SizedBox(width: 16),
@@ -139,12 +140,12 @@ class LanguageSelectionModal extends StatelessWidget {
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             color: isSelected 
-                ? AppTheme.primaryGreen.withValues(alpha: 0.1)
+                ? context.primaryColor.withValues(alpha: 0.1)
                 : Colors.transparent,
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
               color: isSelected 
-                  ? AppTheme.primaryGreen 
+                  ? context.primaryColor 
                   : (isDark ? Colors.grey[700]! : Colors.grey[300]!),
               width: isSelected ? 2 : 1,
             ),
@@ -157,7 +158,7 @@ class LanguageSelectionModal extends StatelessWidget {
                 height: 48,
                 decoration: BoxDecoration(
                   color: isSelected 
-                      ? AppTheme.primaryGreen.withValues(alpha: 0.1)
+                      ? context.primaryColor.withValues(alpha: 0.1)
                       : (isDark ? Colors.grey[800] : Colors.grey[100]),
                   borderRadius: BorderRadius.circular(12),
                 ),
@@ -182,7 +183,7 @@ class LanguageSelectionModal extends StatelessWidget {
                         fontSize: 18,
                         fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
                         color: isSelected 
-                            ? AppTheme.primaryGreen 
+                            ? context.primaryColor 
                             : (isDark ? Colors.white : Colors.black87),
                       ),
                     ),
@@ -203,7 +204,7 @@ class LanguageSelectionModal extends StatelessWidget {
               if (isSelected)
                 Icon(
                   Icons.check_circle_rounded,
-                  color: AppTheme.primaryGreen,
+                  color: context.primaryColor,
                   size: 24,
                 ),
             ],
@@ -262,7 +263,7 @@ class LanguageSelectionModal extends StatelessWidget {
             ),
           ],
         ),
-        backgroundColor: AppTheme.primaryGreen,
+        backgroundColor: context.primaryColor,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),

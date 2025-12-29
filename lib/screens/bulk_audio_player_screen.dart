@@ -11,6 +11,7 @@ import '../services/tafseer_service.dart';
 import '../services/faidi_service.dart';
 import '../services/common_models.dart';
 import '../providers/font_provider.dart';
+import '../utils/theme_extensions.dart';
 
 enum PlaybackMode { single, sequential, repeat }
 
@@ -532,7 +533,7 @@ class _BulkAudioPlayerScreenState extends State<BulkAudioPlayerScreen>
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: AppText(message),
-          backgroundColor: AppTheme.primaryGreen,
+          backgroundColor: context.primaryColor,
         ),
       );
     }
@@ -697,7 +698,7 @@ class _BulkAudioPlayerScreenState extends State<BulkAudioPlayerScreen>
     return Consumer<FontProvider>(
       builder: (context, fontProvider, child) {
         return Scaffold(
-          backgroundColor: isDark ? AppTheme.darkBackground : AppTheme.lightBackground,
+          backgroundColor: isDark ? context.backgroundColor : context.backgroundColor,
           appBar: AppBar(
             title: AppText(
               context.l.bulkAudioPlayer,
@@ -705,7 +706,7 @@ class _BulkAudioPlayerScreenState extends State<BulkAudioPlayerScreen>
                 fontFamily: fontProvider.selectedFontOption.family,
               ),
             ),
-            backgroundColor: AppTheme.primaryGreen,
+            backgroundColor: context.primaryColor,
             foregroundColor: Colors.white,
             actions: [
               IconButton(
@@ -731,7 +732,7 @@ class _BulkAudioPlayerScreenState extends State<BulkAudioPlayerScreen>
             margin: const EdgeInsets.all(16),
             height: MediaQuery.of(context).size.height * 0.5,
             decoration: BoxDecoration(
-              color: isDark ? AppTheme.darkSurface : Colors.white,
+              color: isDark ? context.surfaceColor : Colors.white,
               borderRadius: BorderRadius.circular(16),
               boxShadow: [
                 BoxShadow(
@@ -761,7 +762,7 @@ class _BulkAudioPlayerScreenState extends State<BulkAudioPlayerScreen>
               style: context.textStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
-                color: AppTheme.primaryGreen,
+                color: context.primaryColor,
               ),
               textAlign: TextAlign.right,
               textDirection: TextDirection.rtl,
@@ -819,18 +820,18 @@ class _BulkAudioPlayerScreenState extends State<BulkAudioPlayerScreen>
                         padding: const EdgeInsets.symmetric(vertical: 10),
                         decoration: BoxDecoration(
                           color: isSelected 
-                              ? AppTheme.primaryGreen 
-                              : (isDark ? AppTheme.darkBackground : AppTheme.lightGray),
+                              ? context.primaryColor 
+                              : (isDark ? context.backgroundColor : AppTheme.lightGray),
                           borderRadius: BorderRadius.circular(10),
                           border: Border.all(
                             color: isSelected 
-                                ? AppTheme.primaryGreen 
-                                : AppTheme.primaryGreen.withValues(alpha: 0.2),
+                                ? context.primaryColor 
+                                : context.primaryColor.withValues(alpha: 0.2),
                             width: isSelected ? 2 : 1.5,
                           ),
                           boxShadow: isSelected ? [
                             BoxShadow(
-                              color: AppTheme.primaryGreen.withValues(alpha: 0.3),
+                              color: context.primaryColor.withValues(alpha: 0.3),
                               blurRadius: 8,
                               offset: const Offset(0, 2),
                             ),
@@ -871,11 +872,11 @@ class _BulkAudioPlayerScreenState extends State<BulkAudioPlayerScreen>
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
               decoration: BoxDecoration(
                 color: isDark 
-                    ? AppTheme.primaryGreen.withOpacity(_autoPlayNext ? 0.15 : 0.08)
-                    : AppTheme.primaryGreen.withOpacity(_autoPlayNext ? 0.1 : 0.05),
+                    ? context.primaryColor.withOpacity(_autoPlayNext ? 0.15 : 0.08)
+                    : context.primaryColor.withOpacity(_autoPlayNext ? 0.1 : 0.05),
                 borderRadius: BorderRadius.circular(10),
                 border: Border.all(
-                  color: AppTheme.primaryGreen.withOpacity(_autoPlayNext ? 0.4 : 0.2),
+                  color: context.primaryColor.withOpacity(_autoPlayNext ? 0.4 : 0.2),
                   width: _autoPlayNext ? 2 : 1,
                 ),
               ),
@@ -894,7 +895,7 @@ class _BulkAudioPlayerScreenState extends State<BulkAudioPlayerScreen>
                       });
                       _saveSettings();
                     },
-                    activeColor: AppTheme.primaryGreen,
+                    activeColor: context.primaryColor,
                   ),
                   const SizedBox(width: 12),
                   Expanded(
@@ -905,14 +906,14 @@ class _BulkAudioPlayerScreenState extends State<BulkAudioPlayerScreen>
                         Icon(
                           _autoPlayNext ? Icons.playlist_play_rounded : Icons.block_rounded,
                           size: 18,
-                          color: AppTheme.primaryGreen,
+                          color: context.primaryColor,
                         ),
                         const SizedBox(width: 8),
                         AppText(
                           context.l.autoPlayNext,
                           style: context.textStyle(
                             fontSize: 13,
-                            color: AppTheme.primaryGreen,
+                            color: context.primaryColor,
                             fontWeight: FontWeight.w600,
                           ),
                           textAlign: TextAlign.right,
@@ -943,11 +944,11 @@ class _BulkAudioPlayerScreenState extends State<BulkAudioPlayerScreen>
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
         decoration: BoxDecoration(
           color: isDark 
-              ? AppTheme.primaryGreen.withOpacity(0.08)
-              : AppTheme.primaryGreen.withOpacity(0.05),
+              ? context.primaryColor.withOpacity(0.08)
+              : context.primaryColor.withOpacity(0.05),
           borderRadius: BorderRadius.circular(8),
           border: Border.all(
-            color: AppTheme.primaryGreen.withOpacity(0.3),
+            color: context.primaryColor.withOpacity(0.3),
             width: 1.5,
           ),
         ),
@@ -958,7 +959,7 @@ class _BulkAudioPlayerScreenState extends State<BulkAudioPlayerScreen>
             Icon(
               Icons.arrow_drop_down_rounded,
               size: 22,
-              color: AppTheme.primaryGreen,
+              color: context.primaryColor,
             ),
             const SizedBox(width: 6),
             Expanded(
@@ -979,7 +980,7 @@ class _BulkAudioPlayerScreenState extends State<BulkAudioPlayerScreen>
                     '${context.l.ayah} $value',
                     style: context.textStyle(
                       fontSize: 13,
-                      color: AppTheme.primaryGreen,
+                      color: context.primaryColor,
                       fontWeight: FontWeight.bold,
                     ),
                     textAlign: TextAlign.right,
@@ -1003,7 +1004,7 @@ class _BulkAudioPlayerScreenState extends State<BulkAudioPlayerScreen>
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: isDark ? AppTheme.darkSurface : Colors.white,
+              color: isDark ? context.surfaceColor : Colors.white,
               borderRadius: BorderRadius.circular(16),
               boxShadow: [
                 BoxShadow(
@@ -1020,7 +1021,7 @@ class _BulkAudioPlayerScreenState extends State<BulkAudioPlayerScreen>
                   style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
-                    color: AppTheme.primaryGreen,
+                    color: context.primaryColor,
                     fontFamily: fontProvider.selectedFontOption.family,
                   ),
                   textAlign: TextAlign.center,
@@ -1049,7 +1050,7 @@ class _BulkAudioPlayerScreenState extends State<BulkAudioPlayerScreen>
                             ? (20 + (index % 3) * 10).toDouble()
                             : 20,
                         decoration: BoxDecoration(
-                          color: AppTheme.primaryGreen.withValues(
+                          color: context.primaryColor.withValues(
                             alpha: _isPlaying ? 0.8 : 0.3,
                           ),
                           borderRadius: BorderRadius.circular(2),
@@ -1069,10 +1070,10 @@ class _BulkAudioPlayerScreenState extends State<BulkAudioPlayerScreen>
             children: [
               SliderTheme(
                 data: SliderTheme.of(context).copyWith(
-                  activeTrackColor: AppTheme.primaryGreen,
-                  inactiveTrackColor: AppTheme.primaryGreen.withValues(alpha: 0.3),
-                  thumbColor: AppTheme.primaryGreen,
-                  overlayColor: AppTheme.primaryGreen.withValues(alpha: 0.2),
+                  activeTrackColor: context.primaryColor,
+                  inactiveTrackColor: context.primaryColor.withValues(alpha: 0.3),
+                  thumbColor: context.primaryColor,
+                  overlayColor: context.primaryColor.withValues(alpha: 0.2),
                   trackHeight: 4,
                 ),
                 child: Slider(
@@ -1127,7 +1128,7 @@ class _BulkAudioPlayerScreenState extends State<BulkAudioPlayerScreen>
                 icon: const Icon(Icons.skip_previous_rounded),
                 iconSize: 36,
                 color: (_currentAyahIndex > _fromAyahIndex || _currentSurahIndex > _fromSurahIndex)
-                    ? AppTheme.primaryGreen
+                    ? context.primaryColor
                     : Colors.grey[400],
               ),
               
@@ -1140,17 +1141,17 @@ class _BulkAudioPlayerScreenState extends State<BulkAudioPlayerScreen>
                 },
                 icon: const Icon(Icons.replay_10_rounded),
                 iconSize: 32,
-                color: AppTheme.primaryGreen,
+                color: context.primaryColor,
               ),
               
               // Play/Pause
               Container(
                 decoration: BoxDecoration(
-                  color: AppTheme.primaryGreen,
+                  color: context.primaryColor,
                   shape: BoxShape.circle,
                   boxShadow: [
                     BoxShadow(
-                      color: AppTheme.primaryGreen.withValues(alpha: 0.3),
+                      color: context.primaryColor.withValues(alpha: 0.3),
                       blurRadius: 12,
                       spreadRadius: 2,
                     ),
@@ -1189,7 +1190,7 @@ class _BulkAudioPlayerScreenState extends State<BulkAudioPlayerScreen>
                 },
                 icon: const Icon(Icons.forward_10_rounded),
                 iconSize: 32,
-                color: AppTheme.primaryGreen,
+                color: context.primaryColor,
               ),
               
               // Next Ayah
@@ -1200,7 +1201,7 @@ class _BulkAudioPlayerScreenState extends State<BulkAudioPlayerScreen>
                 icon: const Icon(Icons.skip_next_rounded),
                 iconSize: 36,
                 color: (_currentAyahIndex < _toAyahIndex || _currentSurahIndex < _toSurahIndex)
-                    ? AppTheme.primaryGreen
+                    ? context.primaryColor
                     : Colors.grey[400],
               ),
             ],
@@ -1214,11 +1215,11 @@ class _BulkAudioPlayerScreenState extends State<BulkAudioPlayerScreen>
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: BoxDecoration(
               color: isDark 
-                  ? AppTheme.primaryGreen.withOpacity(0.08)
-                  : AppTheme.primaryGreen.withOpacity(0.05),
+                  ? context.primaryColor.withOpacity(0.08)
+                  : context.primaryColor.withOpacity(0.05),
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
-                color: AppTheme.primaryGreen.withOpacity(0.2),
+                color: context.primaryColor.withOpacity(0.2),
                 width: 1,
               ),
             ),
@@ -1238,7 +1239,7 @@ class _BulkAudioPlayerScreenState extends State<BulkAudioPlayerScreen>
                         _getDownloadStatusAppText(),
                         style: context.textStyle(
                           fontSize: 13,
-                          color: AppTheme.primaryGreen,
+                          color: context.primaryColor,
                           fontWeight: FontWeight.w600,
                         ),
                         textAlign: TextAlign.right,
@@ -1250,8 +1251,8 @@ class _BulkAudioPlayerScreenState extends State<BulkAudioPlayerScreen>
                           borderRadius: BorderRadius.circular(4),
                           child: LinearProgressIndicator(
                             value: _downloadProgress,
-                            backgroundColor: AppTheme.primaryGreen.withOpacity(0.2),
-                            valueColor: const AlwaysStoppedAnimation<Color>(AppTheme.primaryGreen),
+                            backgroundColor: context.primaryColor.withOpacity(0.2),
+                            valueColor: AlwaysStoppedAnimation<Color>(context.primaryColor),
                             minHeight: 6,
                           ),
                         ),
@@ -1260,7 +1261,7 @@ class _BulkAudioPlayerScreenState extends State<BulkAudioPlayerScreen>
                           '${(_downloadProgress * 100).toInt()}%',
                           style: context.textStyle(
                             fontSize: 11,
-                            color: AppTheme.primaryGreen,
+                            color: context.primaryColor,
                           ),
                           textAlign: TextAlign.right,
                         ),
@@ -1278,7 +1279,7 @@ class _BulkAudioPlayerScreenState extends State<BulkAudioPlayerScreen>
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: isDark ? AppTheme.darkSurface : AppTheme.lightGray,
+              color: isDark ? context.surfaceColor : AppTheme.lightGray,
               borderRadius: BorderRadius.circular(12),
             ),
             child: Row(
@@ -1308,7 +1309,7 @@ class _BulkAudioPlayerScreenState extends State<BulkAudioPlayerScreen>
                 ),
                 Icon(
                   _getPlaybackModeIcon(_playbackMode),
-                  color: AppTheme.primaryGreen,
+                  color: context.primaryColor,
                   size: 20,
                 ),
               ],
@@ -1362,7 +1363,7 @@ class _BulkAudioPlayerScreenState extends State<BulkAudioPlayerScreen>
             height: MediaQuery.of(context).size.height * 0.6,
             margin: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: isDark ? AppTheme.darkSurface : Colors.white,
+              color: isDark ? context.surfaceColor : Colors.white,
               borderRadius: BorderRadius.circular(16),
             ),
             child: Column(
@@ -1429,7 +1430,7 @@ class _BulkAudioPlayerScreenState extends State<BulkAudioPlayerScreen>
                             Navigator.pop(context);
                           },
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: AppTheme.primaryGreen,
+                            backgroundColor: context.primaryColor,
                             foregroundColor: Colors.white,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(8),
@@ -1454,7 +1455,7 @@ class _BulkAudioPlayerScreenState extends State<BulkAudioPlayerScreen>
                               Navigator.pop(context);
                             },
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: AppTheme.primaryGold,
+                              backgroundColor: context.accentColor,
                               foregroundColor: Colors.white,
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(8),
@@ -1484,7 +1485,7 @@ class _BulkAudioPlayerScreenState extends State<BulkAudioPlayerScreen>
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(color: AppTheme.primaryGreen),
+                        borderSide: BorderSide(color: context.primaryColor),
                       ),
                     ),
                     onSubmitted: (value) {
@@ -1572,13 +1573,13 @@ class _BulkAudioPlayerScreenState extends State<BulkAudioPlayerScreen>
                           child: Container(
                             decoration: BoxDecoration(
                               color: isSelected 
-                                  ? AppTheme.primaryGreen
+                                  ? context.primaryColor
                                   : isEnabled
-                                      ? (isDark ? AppTheme.darkBackground : AppTheme.lightGray)
+                                      ? (isDark ? context.backgroundColor : AppTheme.lightGray)
                                       : Colors.grey[300],
                               borderRadius: BorderRadius.circular(8),
                               border: isSelected ? null : Border.all(
-                                color: AppTheme.primaryGreen.withValues(alpha: 0.3),
+                                color: context.primaryColor.withValues(alpha: 0.3),
                               ),
                             ),
                             child: Center(
@@ -1654,13 +1655,13 @@ class _BulkAudioPlayerScreenState extends State<BulkAudioPlayerScreen>
       case DownloadStatus.failed:
         return Container(
           decoration: BoxDecoration(
-            color: AppTheme.primaryGreen.withOpacity(0.15),
+            color: context.primaryColor.withOpacity(0.15),
             borderRadius: BorderRadius.circular(8),
           ),
           child: IconButton(
             onPressed: _startDownload,
             icon: const Icon(Icons.download_rounded),
-            color: AppTheme.primaryGreen,
+            color: context.primaryColor,
           ),
         );
       case DownloadStatus.downloading:
@@ -1678,13 +1679,13 @@ class _BulkAudioPlayerScreenState extends State<BulkAudioPlayerScreen>
       case DownloadStatus.paused:
         return Container(
           decoration: BoxDecoration(
-            color: AppTheme.primaryGreen.withOpacity(0.15),
+            color: context.primaryColor.withOpacity(0.15),
             borderRadius: BorderRadius.circular(8),
           ),
           child: IconButton(
             onPressed: _resumeDownloadCurrent,
             icon: const Icon(Icons.play_arrow_rounded),
-            color: AppTheme.primaryGreen,
+            color: context.primaryColor,
           ),
         );
       case DownloadStatus.completed:
