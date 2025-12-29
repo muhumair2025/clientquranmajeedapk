@@ -1,3 +1,4 @@
+import '../widgets/app_text.dart';
 import 'package:flutter/material.dart';
 import '../themes/app_theme.dart';
 import '../localization/app_localizations_extension.dart';
@@ -17,7 +18,7 @@ class PlaceholderPage extends StatelessWidget {
             color: AppTheme.primaryGreen,
           ),
           const SizedBox(height: 20),
-          Text(
+          AppText(
             context.l.underDevelopment,
             style: Theme.of(context).textTheme.headlineMedium?.copyWith(
               color: AppTheme.primaryGreen,
@@ -25,7 +26,7 @@ class PlaceholderPage extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 10),
-          Text(
+          AppText(
             context.l.featureNotAvailable,
             style: Theme.of(context).textTheme.bodyLarge?.copyWith(
               color: Colors.grey[600],

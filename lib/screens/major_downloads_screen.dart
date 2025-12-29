@@ -1,3 +1,4 @@
+import '../widgets/app_text.dart';
 import 'package:flutter/material.dart';
 import '../themes/app_theme.dart';
 import '../localization/app_localizations_extension.dart';
@@ -25,23 +26,21 @@ class _MajorDownloadsScreenState extends State<MajorDownloadsScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Header
-              Text(
+              AppText(
                 context.l.downloads,
                 style: TextStyle(
                   fontSize: 22,
                   fontWeight: FontWeight.bold,
                   color: isDark ? Colors.white : AppTheme.darkBackground,
-                  fontFamily: 'Bahij Badr Bold',
                 ),
                 textDirection: TextDirection.rtl,
               ),
               const SizedBox(height: 4),
-              Text(
+              AppText(
                 context.l.downloadContent,
                 style: TextStyle(
                   fontSize: 14,
                   color: isDark ? Colors.white70 : Colors.grey.shade600,
-                  fontFamily: 'Bahij Badr Light',
                 ),
                 textDirection: TextDirection.rtl,
               ),
@@ -164,23 +163,21 @@ class _MajorDownloadsScreenState extends State<MajorDownloadsScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
+                      AppText(
                         title,
                         style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
                           color: Colors.white,
-                          fontFamily: 'Bahij Badr Bold',
                         ),
                         textDirection: TextDirection.rtl,
                       ),
                       const SizedBox(height: 2),
-                      Text(
+                      AppText(
                         subtitle,
                         style: TextStyle(
                           fontSize: 12,
                           color: Colors.white.withValues(alpha: 0.8),
-                          fontFamily: 'Bahij Badr Light',
                         ),
                         textDirection: TextDirection.rtl,
                       ),
@@ -256,7 +253,7 @@ class _MajorDownloadsScreenState extends State<MajorDownloadsScreen> {
               size: 20,
             ),
             const SizedBox(width: 8),
-            Text(
+            AppText(
               label,
               style: TextStyle(
                 fontSize: 14,
@@ -264,7 +261,6 @@ class _MajorDownloadsScreenState extends State<MajorDownloadsScreen> {
                 color: isEnabled 
                     ? Colors.white 
                     : Colors.white.withValues(alpha: 0.5),
-                fontFamily: 'Bahij Badr Medium',
               ),
               textDirection: TextDirection.rtl,
             ),

@@ -1,3 +1,4 @@
+import '../widgets/app_text.dart';
 import 'package:flutter/material.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:provider/provider.dart';
@@ -90,16 +91,22 @@ class _BulkAudioPlayerScreenState extends State<BulkAudioPlayerScreen>
     try {
       final prefs = await SharedPreferences.getInstance();
       
-      // Load saved settings
-      final savedFromAyah = prefs.getInt('bulk_audio_from_ayah') ?? _fromAyahIndex;
-      final savedToAyah = prefs.getInt('bulk_audio_to_ayah') ?? _toAyahIndex;
+      // Create surah-specific key to avoid conflicts between different surahs
+      final settingsKey = 'bulk_audio_${widget.sectionType}_${widget.initialSurahIndex}';
+      
+      // Only load saved range if it's for the SAME surah and section, otherwise use passed values
+      final savedFromAyah = prefs.getInt('${settingsKey}_from_ayah');
+      final savedToAyah = prefs.getInt('${settingsKey}_to_ayah');
       final savedPlaybackMode = prefs.getInt('bulk_audio_playback_mode') ?? PlaybackMode.sequential.index;
       final savedAutoPlayNext = prefs.getBool('bulk_audio_auto_play_next') ?? true;
       
       setState(() {
-        _fromAyahIndex = savedFromAyah;
-        _toAyahIndex = savedToAyah;
-        _currentAyahIndex = _fromAyahIndex; // Start from the selected "from" ayah
+        // Keep the passed initial ayah - don't override it with saved values
+        // The from/to range can be loaded from saved settings only if we want to remember the range
+        // But current ayah should always start from the passed initialAyahIndex
+        _fromAyahIndex = widget.initialAyahIndex; // Always use passed value
+        _toAyahIndex = widget.initialAyahIndex;   // Start with same ayah
+        _currentAyahIndex = widget.initialAyahIndex; // Start from the passed ayah
         _playbackMode = PlaybackMode.values[savedPlaybackMode];
         _autoPlayNext = savedAutoPlayNext;
       });
@@ -175,6 +182,13 @@ class _BulkAudioPlayerScreenState extends State<BulkAudioPlayerScreen>
         _playNextAyah();
       } else if (_playbackMode == PlaybackMode.repeat) {
         _playCurrentAyah();
+      }
+    });
+
+    // Listen for audio player errors
+    _audioPlayer.onLog.listen((msg) {
+      if (msg.contains('Error') || msg.contains('error')) {
+        debugPrint('AudioPlayer log: $msg');
       }
     });
   }
@@ -386,14 +400,20 @@ class _BulkAudioPlayerScreenState extends State<BulkAudioPlayerScreen>
           }
         } catch (e) {
           debugPrint('Audio playback error: $e');
-          _showError('Audio playback error: $e');
+          setState(() {
+            _isLoading = false;
+          });
+          _showError(e.toString());
         }
       } else {
         _showError(context.l.vocabularyAudioNotAvailable);
       }
     } catch (e) {
       debugPrint('Error getting audio data: $e');
-      _showError('Error loading audio: $e');
+      setState(() {
+        _isLoading = false;
+      });
+      _showError(e.toString());
     }
   }
 
@@ -452,7 +472,8 @@ class _BulkAudioPlayerScreenState extends State<BulkAudioPlayerScreen>
         }
       }
     } catch (e) {
-      _showError('Playback error: $e');
+      debugPrint('Playback error: $e');
+      _showError(e.toString());
     }
   }
 
@@ -460,10 +481,49 @@ class _BulkAudioPlayerScreenState extends State<BulkAudioPlayerScreen>
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(message),
+          content: AppText(_getFriendlyErrorMessage(message)),
           backgroundColor: Colors.red,
         ),
       );
+    }
+  }
+
+  String _getFriendlyErrorMessage(dynamic error) {
+    String errorStr = error.toString().toLowerCase();
+    
+    // Network/Connection related errors
+    if (errorStr.contains('network') || 
+        errorStr.contains('connection') || 
+        errorStr.contains('timeout') ||
+        errorStr.contains('unknownhostexception') ||
+        errorStr.contains('unable to resolve host') ||
+        errorStr.contains('no address associated') ||
+        errorStr.contains('eai_nodata') ||
+        errorStr.contains('socketexception') ||
+        errorStr.contains('host lookup') ||
+        errorStr.contains('failed host lookup') ||
+        errorStr.contains('no internet') ||
+        errorStr.contains('unreachable')) {
+      return context.l.networkConnectionError;
+    } else if (errorStr.contains('media_error') || 
+               errorStr.contains('mediaplayer') ||
+               errorStr.contains('failed to set source') ||
+               errorStr.contains('platformexception') && errorStr.contains('audio')) {
+      return context.l.networkConnectionError;
+    } else if (errorStr.contains('permission') || errorStr.contains('denied')) {
+      return context.l.filePermissionError;
+    } else if (errorStr.contains('space') || errorStr.contains('storage')) {
+      return context.l.insufficientSpaceError;
+    } else if (errorStr.contains('format') || errorStr.contains('codec')) {
+      return context.l.unsupportedFormatError;
+    } else if (errorStr.contains('404') || errorStr.contains('not found')) {
+      return context.l.fileNotFoundError;
+    } else if (errorStr.contains('500') || errorStr.contains('server')) {
+      return context.l.serverError;
+    } else if (errorStr.contains('cancelled') || errorStr.contains('canceled')) {
+      return context.l.downloadCancelledStatus;
+    } else {
+      return context.l.unknownError;
     }
   }
 
@@ -471,7 +531,7 @@ class _BulkAudioPlayerScreenState extends State<BulkAudioPlayerScreen>
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(message),
+          content: AppText(message),
           backgroundColor: AppTheme.primaryGreen,
         ),
       );
@@ -519,7 +579,7 @@ class _BulkAudioPlayerScreenState extends State<BulkAudioPlayerScreen>
           }
           
           if (mounted) {
-            _showError('${context.l.downloadError}: $error');
+            _showError(error);
           }
         },
       );
@@ -540,7 +600,7 @@ class _BulkAudioPlayerScreenState extends State<BulkAudioPlayerScreen>
         setState(() {
           _downloadStatus = DownloadStatus.failed;
         });
-        _showError('${context.l.downloadError}: $e');
+        _showError(e.toString());
       }
     }
   }
@@ -601,7 +661,7 @@ class _BulkAudioPlayerScreenState extends State<BulkAudioPlayerScreen>
           }
           
           if (mounted) {
-            _showError('${context.l.downloadError}: $error');
+            _showError(error);
           }
         },
       );
@@ -610,7 +670,7 @@ class _BulkAudioPlayerScreenState extends State<BulkAudioPlayerScreen>
         setState(() {
           _downloadStatus = DownloadStatus.failed;
         });
-        _showError('${context.l.downloadError}: $e');
+        _showError(e.toString());
       }
     }
   }
@@ -625,7 +685,7 @@ class _BulkAudioPlayerScreenState extends State<BulkAudioPlayerScreen>
       });
       _showSuccessSnackBar(context.l.fileDeletedSuccess);
     } catch (e) {
-      _showError('Delete error: $e');
+      _showError(e.toString());
     }
   }
 
@@ -639,7 +699,7 @@ class _BulkAudioPlayerScreenState extends State<BulkAudioPlayerScreen>
         return Scaffold(
           backgroundColor: isDark ? AppTheme.darkBackground : AppTheme.lightBackground,
           appBar: AppBar(
-            title: Text(
+            title: AppText(
               context.l.bulkAudioPlayer,
               style: TextStyle(
                 fontFamily: fontProvider.selectedFontOption.family,
@@ -696,7 +756,7 @@ class _BulkAudioPlayerScreenState extends State<BulkAudioPlayerScreen>
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             // Settings Header
-            Text(
+            AppText(
               context.l.playbackSettings,
               style: context.textStyle(
                 fontSize: 16,
@@ -785,8 +845,8 @@ class _BulkAudioPlayerScreenState extends State<BulkAudioPlayerScreen>
                               color: isSelected ? Colors.white : (isDark ? Colors.white70 : Colors.black54),
                             ),
                             const SizedBox(width: 4),
-                            Text(
-                              _getPlaybackModeText(mode),
+                            AppText(
+                              _getPlaybackModeAppText(mode),
                               textAlign: TextAlign.center,
                               style: context.textStyle(
                                 fontSize: 12,
@@ -848,7 +908,7 @@ class _BulkAudioPlayerScreenState extends State<BulkAudioPlayerScreen>
                           color: AppTheme.primaryGreen,
                         ),
                         const SizedBox(width: 8),
-                        Text(
+                        AppText(
                           context.l.autoPlayNext,
                           style: context.textStyle(
                             fontSize: 13,
@@ -905,7 +965,7 @@ class _BulkAudioPlayerScreenState extends State<BulkAudioPlayerScreen>
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  Text(
+                  AppText(
                     label,
                     style: context.textStyle(
                       fontSize: 11,
@@ -915,7 +975,7 @@ class _BulkAudioPlayerScreenState extends State<BulkAudioPlayerScreen>
                     textDirection: TextDirection.rtl,
                   ),
                   const SizedBox(height: 2),
-                  Text(
+                  AppText(
                     '${context.l.ayah} $value',
                     style: context.textStyle(
                       fontSize: 13,
@@ -955,7 +1015,7 @@ class _BulkAudioPlayerScreenState extends State<BulkAudioPlayerScreen>
             ),
             child: Column(
               children: [
-                Text(
+                AppText(
                   widget.surahName,
                   style: TextStyle(
                     fontSize: 20,
@@ -966,7 +1026,7 @@ class _BulkAudioPlayerScreenState extends State<BulkAudioPlayerScreen>
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 8),
-                Text(
+                AppText(
                   '${context.l.ayah} $_currentAyahIndex',
                   style: TextStyle(
                     fontSize: 16,
@@ -1031,7 +1091,7 @@ class _BulkAudioPlayerScreenState extends State<BulkAudioPlayerScreen>
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(
+                    AppText(
                       _formatDuration(_position),
                       style: TextStyle(
                         fontSize: 12,
@@ -1039,7 +1099,7 @@ class _BulkAudioPlayerScreenState extends State<BulkAudioPlayerScreen>
                         fontFamily: fontProvider.selectedFontOption.family,
                       ),
                     ),
-                    Text(
+                    AppText(
                       _formatDuration(_duration),
                       style: TextStyle(
                         fontSize: 12,
@@ -1174,8 +1234,8 @@ class _BulkAudioPlayerScreenState extends State<BulkAudioPlayerScreen>
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
-                      Text(
-                        _getDownloadStatusText(),
+                      AppText(
+                        _getDownloadStatusAppText(),
                         style: context.textStyle(
                           fontSize: 13,
                           color: AppTheme.primaryGreen,
@@ -1196,7 +1256,7 @@ class _BulkAudioPlayerScreenState extends State<BulkAudioPlayerScreen>
                           ),
                         ),
                         const SizedBox(height: 4),
-                        Text(
+                        AppText(
                           '${(_downloadProgress * 100).toInt()}%',
                           style: context.textStyle(
                             fontSize: 11,
@@ -1227,7 +1287,7 @@ class _BulkAudioPlayerScreenState extends State<BulkAudioPlayerScreen>
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
+                    AppText(
                       context.l.playingRange,
                       style: TextStyle(
                         fontSize: 12,
@@ -1235,7 +1295,7 @@ class _BulkAudioPlayerScreenState extends State<BulkAudioPlayerScreen>
                         fontFamily: fontProvider.selectedFontOption.family,
                       ),
                     ),
-                    Text(
+                    AppText(
                       '${context.l.ayah} $_fromAyahIndex - $_toAyahIndex',
                       style: TextStyle(
                         fontSize: 14,
@@ -1259,7 +1319,7 @@ class _BulkAudioPlayerScreenState extends State<BulkAudioPlayerScreen>
     );
   }
 
-  String _getPlaybackModeText(PlaybackMode mode) {
+  String _getPlaybackModeAppText(PlaybackMode mode) {
     switch (mode) {
       case PlaybackMode.single:
         return context.l.single;
@@ -1324,7 +1384,7 @@ class _BulkAudioPlayerScreenState extends State<BulkAudioPlayerScreen>
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(
+                      AppText(
                         isFrom ? context.l.fromAyah : context.l.toAyah,
                         style: TextStyle(
                           fontSize: 18,
@@ -1375,7 +1435,7 @@ class _BulkAudioPlayerScreenState extends State<BulkAudioPlayerScreen>
                               borderRadius: BorderRadius.circular(8),
                             ),
                           ),
-                          child: Text('${context.l.ayah} 1'),
+                          child: AppText('${context.l.ayah} 1'),
                         ),
                       ),
                       const SizedBox(width: 8),
@@ -1400,7 +1460,7 @@ class _BulkAudioPlayerScreenState extends State<BulkAudioPlayerScreen>
                                 borderRadius: BorderRadius.circular(8),
                               ),
                             ),
-                            child: Text('${context.l.ayah} ${_getMaxAyahForCurrentSurah()}'),
+                            child: AppText('${context.l.ayah} ${_getMaxAyahForCurrentSurah()}'),
                           ),
                         ),
                     ],
@@ -1522,7 +1582,7 @@ class _BulkAudioPlayerScreenState extends State<BulkAudioPlayerScreen>
                               ),
                             ),
                             child: Center(
-                              child: Text(
+                              child: AppText(
                                 '$ayahNumber',
                                 style: TextStyle(
                                   fontSize: 14,
@@ -1573,7 +1633,7 @@ class _BulkAudioPlayerScreenState extends State<BulkAudioPlayerScreen>
     return surahAyahCounts[_currentSurahIndex] ?? 286; // Default to max if not found
   }
 
-  String _getDownloadStatusText() {
+  String _getDownloadStatusAppText() {
     switch (_downloadStatus) {
       case DownloadStatus.notStarted:
         return context.l.audioNotDownloaded;

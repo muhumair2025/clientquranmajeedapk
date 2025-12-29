@@ -1,3 +1,4 @@
+import '../widgets/app_text.dart';
 import 'package:flutter/material.dart';
 import 'package:xml/xml.dart';
 import 'package:flutter/services.dart';
@@ -81,7 +82,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
     return _surahNames[surahIndex] ?? 'Surah $surahIndex';
   }
 
-  String _getAyahText(int surahIndex, int ayahIndex) {
+  String _getAyahAppText(int surahIndex, int ayahIndex) {
     final text = _ayahTexts[surahIndex]?[ayahIndex] ?? '';
     if (text.isEmpty) {
       debugPrint('Favorites: No Arabic text found for Surah $surahIndex, Ayah $ayahIndex');
@@ -116,7 +117,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
     return Scaffold(
       backgroundColor: isDark ? AppTheme.darkBackground : AppTheme.lightBackground,
       appBar: AppBar(
-        title: Text(context.l.favorites ?? 'Favorites'),
+        title: AppText(context.l.favorites ?? 'Favorites'),
         backgroundColor: AppTheme.primaryGold,
         foregroundColor: Colors.white,
         elevation: 0,
@@ -136,12 +137,11 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
             valueColor: AlwaysStoppedAnimation<Color>(AppTheme.primaryGold),
           ),
           const SizedBox(height: 16),
-          Text(
+          AppText(
             context.l.loading ?? 'Loading...',
             style: TextStyle(
               fontSize: 16,
               color: isDark ? Colors.white : Colors.black87,
-              fontFamily: 'Bahij Badr Light',
             ),
           ),
         ],
@@ -160,7 +160,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
               children: [
                 Icon(Icons.error, color: Colors.red, size: 48),
                 SizedBox(height: 16),
-                Text('Error loading favorites: ${snapshot.error}'),
+                AppText('Error loading favorites: ${snapshot.error}'),
               ],
             ),
           );
@@ -214,13 +214,12 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
               ),
           ),
             const SizedBox(height: 24),
-          Text(
+          AppText(
             context.l.noFavorites ?? 'No favorite ayahs yet',
             style: TextStyle(
                 fontSize: 22,
-                fontWeight: FontWeight.bold,
                 color: isDark ? Colors.white : Colors.black87,
-                fontFamily: 'Bahij Badr Bold',
+                fontWeight: FontWeight.bold,
               ),
               textAlign: TextAlign.center,
             ),
@@ -247,12 +246,11 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                   ),
                   const SizedBox(width: 8),
                   Flexible(
-                    child: Text(
+                    child: AppText(
             context.l.addFavoritesFromReader ?? 'Add favorites from the Quran reader',
             style: TextStyle(
                         fontSize: 15,
                         color: isDark ? Colors.white.withValues(alpha: 0.9) : Colors.black87,
-              fontFamily: 'Bahij Badr Light',
             ),
             textAlign: TextAlign.center,
                     ),
@@ -288,13 +286,12 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                     size: 18,
                   ),
                   const SizedBox(width: 8),
-                  Text(
+                  AppText(
                     'Start Reading Quran',
                     style: const TextStyle(
                       fontSize: 16,
-                      fontWeight: FontWeight.bold,
                       color: Colors.white,
-                      fontFamily: 'Bahij Badr Bold',
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
                 ],
@@ -309,7 +306,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
   Widget _buildFavoriteAyahCard(FavoriteAyah favorite, bool isDark) {
     return Consumer<FontProvider>(
       builder: (context, fontProvider, child) {
-        final ayahText = _getAyahText(favorite.surahIndex, favorite.ayahIndex);
+        final ayahText = _getAyahAppText(favorite.surahIndex, favorite.ayahIndex);
         final translation = _getTranslation(favorite.surahIndex, favorite.ayahIndex);
         final surahName = _getSurahName(favorite.surahIndex);
 
@@ -368,13 +365,12 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                         ),
                         const SizedBox(width: 6),
                         Flexible(
-                  child: Text(
+                  child: AppText(
                             '$surahName',
                     style: TextStyle(
                               fontSize: 14,
-                      fontWeight: FontWeight.bold,
                       color: AppTheme.primaryGold,
-                      fontFamily: 'Bahij Badr Bold',
+                      fontWeight: FontWeight.bold,
                     ),
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -386,13 +382,12 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                             color: AppTheme.primaryGold,
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: Text(
+                  child: AppText(
                             '${favorite.ayahIndex}',
                             style: const TextStyle(
                       fontSize: 12,
-                      fontWeight: FontWeight.bold,
                               color: Colors.white,
-                      fontFamily: 'Bahij Badr Bold',
+                      fontWeight: FontWeight.bold,
                             ),
                           ),
                         ),
@@ -433,7 +428,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Text(
+                    AppText(
                       ayahText.isNotEmpty ? ayahText : 'آیت متن دستیاب نہیں',
                   style: TextStyle(
                         fontSize: 16,
@@ -448,7 +443,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                     if (ayahText.isEmpty)
                       Padding(
                         padding: const EdgeInsets.only(top: 8),
-                        child: Text(
+                        child: AppText(
                           'Arabic text not loaded',
                           style: TextStyle(
                             fontSize: 12,
@@ -481,7 +476,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                       size: 24,
                     ),
                     const SizedBox(height: 8),
-                    Text(
+                    AppText(
                       'Arabic text not available',
                       style: TextStyle(
                         fontSize: 14,
@@ -509,12 +504,11 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                     width: 1,
                   ),
                 ),
-                child: Text(
+                child: AppText(
                 translation,
                 style: TextStyle(
                     fontSize: 15,
                     color: isDark ? Colors.white.withValues(alpha: 0.9) : Colors.black87,
-                  fontFamily: 'Bahij Badr Light',
                     height: 1.5,
                 ),
                 textDirection: TextDirection.rtl,
@@ -543,7 +537,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                             size: 14,
                             color: Colors.white,
                           ),
-                          label: Text(
+                          label: AppText(
                             hasNote ? 'Note' : 'Note',
                             style: const TextStyle(
                               fontSize: 11,
@@ -579,7 +573,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                       size: 14,
                       color: Colors.white,
                     ),
-                    label: const Text(
+                    label: const AppText(
                       'Remove',
                 style: TextStyle(
                         fontSize: 11,
@@ -667,22 +661,20 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(
+                              AppText(
                                 'Your Note:',
                                 style: TextStyle(
                                   fontSize: 11,
                           color: AppTheme.primaryGreen,
                                   fontWeight: FontWeight.bold,
-                                  fontFamily: 'Bahij Badr Bold',
                                 ),
                         ),
                               const SizedBox(height: 2),
-                              Text(
+                              AppText(
                             note,
                             style: TextStyle(
                                   fontSize: 13,
                                   color: isDark ? Colors.white.withValues(alpha: 0.9) : Colors.black87,
-                              fontFamily: 'Bahij Badr Light',
                                   height: 1.3,
                             ),
                                 maxLines: 3,
@@ -731,13 +723,12 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
             ),
             const SizedBox(width: 12),
             Expanded(
-              child: Text(
+              child: AppText(
                 context.l.removeFavorite ?? 'Remove Favorite',
                 style: TextStyle(
                   fontSize: 18,
-                  fontWeight: FontWeight.bold,
                   color: isDark ? Colors.white : Colors.black87,
-                  fontFamily: 'Bahij Badr Bold',
+                  fontWeight: FontWeight.bold,
                 ),
               ),
             ),
@@ -747,12 +738,11 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
+            AppText(
               context.l.removeFavoriteConfirm ?? 'Are you sure you want to remove this ayah from favorites?',
               style: TextStyle(
                 fontSize: 16,
                 color: isDark ? Colors.white.withValues(alpha: 0.9) : Colors.black87,
-                fontFamily: 'Bahij Badr Light',
                 height: 1.4,
               ),
             ),
@@ -778,13 +768,12 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                   ),
                   const SizedBox(width: 8),
                   Expanded(
-                    child: Text(
+                    child: AppText(
                       '${_getSurahName(favorite.surahIndex)} - Ayah ${favorite.ayahIndex}',
                       style: TextStyle(
                         fontSize: 14,
-                        fontWeight: FontWeight.w600,
                         color: AppTheme.primaryGold,
-                        fontFamily: 'Bahij Badr Bold',
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
                   ),
@@ -804,7 +793,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                   borderRadius: BorderRadius.circular(8),
                 ),
               ),
-              child: Text(
+              child: AppText(
                 context.l.cancel ?? 'Cancel',
                 style: const TextStyle(
                   fontSize: 14,
@@ -823,7 +812,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                 size: 18,
                 color: Colors.white,
               ),
-              label: Text(
+              label: AppText(
                 context.l.remove ?? 'Remove',
                 style: const TextStyle(
                   fontSize: 14,
@@ -862,7 +851,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                   size: 20,
                 ),
                 const SizedBox(width: 8),
-                Text(
+                AppText(
                   context.l.removedFromFavorites ?? 'Removed from favorites',
                   style: const TextStyle(
                     fontWeight: FontWeight.w600,
@@ -890,6 +879,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
           surahIndex: favorite.surahIndex,
           surahName: _getSurahName(favorite.surahIndex),
           initialAyahIndex: favorite.ayahIndex,
+          highlightInitialAyah: true, // Highlight favorited ayah
         ),
       ),
     );
@@ -958,10 +948,10 @@ class _NotesDialogState extends State<NotesDialog> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return AlertDialog(
-      title: Text(
+      title: AppText(
         '${widget.surahName} - آیت ${widget.ayahIndex}',
         style: const TextStyle(
-          fontFamily: 'Bahij Badr Bold',
+                      fontWeight: FontWeight.bold,
         ),
       ),
       content: _isLoading
@@ -984,7 +974,6 @@ class _NotesDialogState extends State<NotesDialog> {
                   contentPadding: const EdgeInsets.all(12),
                 ),
                 style: TextStyle(
-                  fontFamily: 'Bahij Badr Light',
                   color: isDark ? Colors.white : Colors.black87,
                 ),
               ),
@@ -992,7 +981,7 @@ class _NotesDialogState extends State<NotesDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: Text(context.l.cancel ?? 'Cancel'),
+          child: AppText(context.l.cancel ?? 'Cancel'),
         ),
         if (!_isLoading)
           TextButton(
@@ -1007,7 +996,7 @@ class _NotesDialogState extends State<NotesDialog> {
                 Navigator.pop(context);
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content: Text(
+                    content: AppText(
                       _noteController.text.trim().isEmpty
                           ? (context.l.noteRemoved ?? 'Note removed')
                           : (context.l.noteSaved ?? 'Note saved'),
@@ -1017,7 +1006,7 @@ class _NotesDialogState extends State<NotesDialog> {
                 );
               }
             },
-            child: Text(context.l.save ?? 'Save'),
+            child: AppText(context.l.save ?? 'Save'),
           ),
       ],
     );

@@ -1,3 +1,4 @@
+import '../widgets/app_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:xml/xml.dart';
@@ -189,7 +190,7 @@ class _QuranNavigationScreenState extends State<QuranNavigationScreen>
         Scaffold(
       backgroundColor: isDark ? AppTheme.darkBackground : AppTheme.lightBackground,
       appBar: AppBar(
-        title: Text(context.l.quranKareem),
+        title: AppText(context.l.quranKareem),
         backgroundColor: AppTheme.primaryGreen,
         foregroundColor: Colors.white,
         elevation: 0,
@@ -243,7 +244,7 @@ class _QuranNavigationScreenState extends State<QuranNavigationScreen>
                                     ),
                                   ] : null,
                                 ),
-                                child: Text(
+                                child: AppText(
                                   context.l.paras,
                                   textAlign: TextAlign.center,
                                   style: TextStyle(
@@ -277,7 +278,7 @@ class _QuranNavigationScreenState extends State<QuranNavigationScreen>
                                     ),
                                   ] : null,
                                 ),
-                                child: Text(
+                                child: AppText(
                                   context.l.surahs,
                                   textAlign: TextAlign.center,
                                   style: TextStyle(
@@ -418,6 +419,7 @@ class _QuranNavigationScreenState extends State<QuranNavigationScreen>
                       surahIndex: 0, // Will be ignored when paraIndex is provided
                       paraIndex: paraNumber,
                       paraName: _getParaName(paraNumber),
+                      highlightInitialAyah: true, // Highlight first ayah of para
                     ),
                   ),
                 );
@@ -456,7 +458,7 @@ class _QuranNavigationScreenState extends State<QuranNavigationScreen>
                           // Para number text
                           Positioned.fill(
                             child: Center(
-                              child: Text(
+                              child: AppText(
                                 '$paraNumber',
                                 style: TextStyle(
                                   fontSize: 16,
@@ -490,7 +492,7 @@ class _QuranNavigationScreenState extends State<QuranNavigationScreen>
                                   'assets/drawable/para_$paraNumber.png',
                                   fit: BoxFit.contain,
                                   errorBuilder: (context, error, stackTrace) {
-                                    return Text(
+                                    return AppText(
                                       _getParaName(paraNumber),
                                       style: TextStyle(
                                         fontSize: 18,
@@ -507,7 +509,7 @@ class _QuranNavigationScreenState extends State<QuranNavigationScreen>
                           ),
                           const SizedBox(height: 2),
                           // Ayah count
-                          Text(
+                          AppText(
                             context.l.ayahsCount.replaceAll('{count}', _getParaAyahCount(paraNumber).toString()),
                             style: TextStyle(
                               fontSize: 12,
@@ -527,7 +529,7 @@ class _QuranNavigationScreenState extends State<QuranNavigationScreen>
                         color: AppTheme.primaryGold.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(8),
                       ),
-                      child: Text(
+                      child: AppText(
                         _getParaEmoji(paraNumber),
                         style: const TextStyle(fontSize: 16),
                       ),
@@ -595,6 +597,7 @@ class _QuranNavigationScreenState extends State<QuranNavigationScreen>
                     builder: (context) => QuranReaderScreen(
                       surahIndex: surahNumber,
                       surahName: surah['name'],
+                      highlightInitialAyah: true, // Highlight first ayah of surah
                     ),
                   ),
                 );
@@ -633,7 +636,7 @@ class _QuranNavigationScreenState extends State<QuranNavigationScreen>
                           // Surah number text
                           Positioned.fill(
                             child: Center(
-                              child: Text(
+                              child: AppText(
                                 '$surahNumber',
                                 style: TextStyle(
                                   fontSize: 16,
@@ -667,7 +670,7 @@ class _QuranNavigationScreenState extends State<QuranNavigationScreen>
                                   'assets/drawable/sname_$surahNumber.webp',
                                   fit: BoxFit.contain,
                                   errorBuilder: (context, error, stackTrace) {
-                                    return Text(
+                                    return AppText(
                                       surah['name'],
                                       style: TextStyle(
                                         fontSize: 18,
@@ -684,7 +687,7 @@ class _QuranNavigationScreenState extends State<QuranNavigationScreen>
                           ),
                           const SizedBox(height: 2),
                           // Ayah count
-                          Text(
+                          AppText(
                             context.l.ayahsCount.replaceAll('{count}', surah['ayahCount'].toString()),
                             style: TextStyle(
                               fontSize: 12,
@@ -748,7 +751,7 @@ class _QuranNavigationScreenState extends State<QuranNavigationScreen>
                         fit: BoxFit.contain,
                         errorBuilder: (context, error, stackTrace) {
                           // Fallback to emoji if image fails to load
-                          return Text(
+                          return AppText(
                             surah['isMakki'] ? '🕋' : '🕌',
                             style: const TextStyle(fontSize: 16),
                           );
@@ -1064,6 +1067,7 @@ class _QuranNavigationScreenState extends State<QuranNavigationScreen>
                                   initialAyahIndex: progress.ayahIndex,
                                   paraIndex: progress.paraIndex,
                                   paraName: progress.paraName,
+                                  highlightInitialAyah: true, // Highlight reading progress ayah
                                 ),
                               ),
                             );
@@ -1080,14 +1084,14 @@ class _QuranNavigationScreenState extends State<QuranNavigationScreen>
                             crossAxisAlignment: CrossAxisAlignment.start,
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              const Text(
+                              const AppText(
                                 'Continue Reading',
                                 style: TextStyle(
                                   fontSize: 12,
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
-                              Text(
+                              AppText(
                                 '${progress.surahName} - Ayah ${progress.ayahIndex}',
                                 style: const TextStyle(
                                   fontSize: 10,
@@ -1179,7 +1183,7 @@ class _QuranNavigationScreenState extends State<QuranNavigationScreen>
                     minWidth: 20,
                     minHeight: 20,
                     ),
-                    child: Text(
+                    child: AppText(
                       favoritesCount > 99 ? '99+' : favoritesCount.toString(),
                       style: const TextStyle(
                         color: Colors.white,
@@ -1290,7 +1294,7 @@ class _SurahAyahModalState extends State<SurahAyahModal> {
       });
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error loading ayahs: $e')),
+          SnackBar(content: AppText('Error loading ayahs: $e')),
         );
       }
     }
@@ -1439,17 +1443,22 @@ class _SurahAyahModalState extends State<SurahAyahModal> {
           surahIndex: widget.surah['number'],
           surahName: widget.surah['name'],
           initialAyahIndex: ayahIndex,
+          highlightInitialAyah: true, // Highlight the selected ayah
         ),
       ),
     );
   }
   
   // Create truncated highlighted text widget for ayah modal (one line with ellipsis)
-  Widget _buildTruncatedHighlightedText(String text, String? searchTerm, bool isHighlighted, TextStyle baseStyle) {
+  // Smart truncation: if match is at the end (would be truncated), show text centered around the match
+  Widget _buildTruncatedHighlightedAppText(String text, String? searchTerm, bool isHighlighted, TextStyle baseStyle) {
+    // Force Noorehuda font for Arabic Quranic text
+    final arabicStyle = baseStyle.copyWith(fontFamily: 'Noorehuda');
+    
     if (!isHighlighted || searchTerm == null || searchTerm.isEmpty) {
       return Text(
         text,
-        style: baseStyle,
+        style: arabicStyle,
         textDirection: TextDirection.rtl,
         textAlign: TextAlign.right,
         maxLines: 1,
@@ -1461,7 +1470,7 @@ class _SurahAyahModalState extends State<SurahAyahModal> {
     if (cleanSearchTerm.length < 2) {
       return Text(
         text,
-        style: baseStyle,
+        style: arabicStyle,
         textDirection: TextDirection.rtl,
         textAlign: TextAlign.right,
         maxLines: 1,
@@ -1496,7 +1505,7 @@ class _SurahAyahModalState extends State<SurahAyahModal> {
     if (allMatches.isEmpty) {
       return Text(
         text,
-        style: baseStyle,
+        style: arabicStyle,
         textDirection: TextDirection.rtl,
         textAlign: TextAlign.right,
         maxLines: 1,
@@ -1508,35 +1517,66 @@ class _SurahAyahModalState extends State<SurahAyahModal> {
     allMatches.sort((a, b) => a.start.compareTo(b.start));
     allMatches = _mergeOverlappingMatches(allMatches);
     
+    // Smart truncation: if match is far from the start, truncate around the match
+    // For RTL Arabic text: start of string = right side, end = left side
+    // We want to show the match visible, so truncate the text to center around first match
+    final firstMatch = allMatches.first;
+    String displayText = text;
+    int offsetAdjustment = 0;
+    
+    // If text is long and match is far from start (would be truncated in single line)
+    // Approximately 40-50 chars visible in one line at font size 18
+    const int visibleChars = 45;
+    const int contextChars = 15; // Characters to show before match
+    
+    if (text.length > visibleChars && firstMatch.start > contextChars) {
+      // Truncate start to show match in view
+      final truncateStart = firstMatch.start - contextChars;
+      displayText = '...${text.substring(truncateStart)}';
+      offsetAdjustment = truncateStart - 3; // -3 for the "..." prefix
+      
+      // Adjust all match positions
+      allMatches = allMatches.map((m) => _NavHighlightMatch(
+        m.start - truncateStart + 3, // +3 for "..."
+        m.end - truncateStart + 3,
+      )).where((m) => m.start >= 0 && m.end <= displayText.length).toList();
+    }
+    
     // Build spans with highlighting
     List<TextSpan> spans = [];
     int lastEnd = 0;
     
     for (final match in allMatches) {
+      // Ensure bounds are valid
+      final safeStart = match.start.clamp(0, displayText.length);
+      final safeEnd = match.end.clamp(0, displayText.length);
+      
+      if (safeStart >= safeEnd) continue;
+      
       // Add text before match
-      if (match.start > lastEnd) {
+      if (safeStart > lastEnd) {
         spans.add(TextSpan(
-          text: text.substring(lastEnd, match.start),
-          style: baseStyle,
+          text: displayText.substring(lastEnd, safeStart),
+          style: arabicStyle,
         ));
       }
       
       // Add highlighted match
       spans.add(TextSpan(
-        text: text.substring(match.start, match.end),
-        style: baseStyle.copyWith(
+        text: displayText.substring(safeStart, safeEnd),
+        style: arabicStyle.copyWith(
           backgroundColor: AppTheme.primaryGold.withValues(alpha: 0.3),
           color: AppTheme.primaryGreen,
           fontWeight: FontWeight.bold,
         ),
       ));
       
-      lastEnd = match.end;
+      lastEnd = safeEnd;
     }
     
     // Add remaining text
-    if (lastEnd < text.length) {
-      spans.add(TextSpan(text: text.substring(lastEnd), style: baseStyle));
+    if (lastEnd < displayText.length) {
+      spans.add(TextSpan(text: displayText.substring(lastEnd), style: arabicStyle));
     }
     
     return RichText(
@@ -1549,9 +1589,9 @@ class _SurahAyahModalState extends State<SurahAyahModal> {
   }
 
   // Create highlighted text widget for search results (optimized for complete word highlighting)
-  Widget _buildHighlightedText(String text, String? searchTerm, bool isHighlighted, TextStyle baseStyle) {
+  Widget _buildHighlightedAppText(String text, String? searchTerm, bool isHighlighted, TextStyle baseStyle) {
     if (!isHighlighted || searchTerm == null || searchTerm.isEmpty) {
-      return Text(
+      return AppText(
         text,
         style: baseStyle,
         textDirection: TextDirection.rtl,
@@ -1561,7 +1601,7 @@ class _SurahAyahModalState extends State<SurahAyahModal> {
     
     final cleanSearchTerm = searchTerm.trim();
     if (cleanSearchTerm.length < 2) {
-      return Text(
+      return AppText(
         text,
         style: baseStyle,
         textDirection: TextDirection.rtl,
@@ -1594,7 +1634,7 @@ class _SurahAyahModalState extends State<SurahAyahModal> {
     }
     
     if (allMatches.isEmpty) {
-      return Text(
+      return AppText(
         text,
         style: baseStyle,
         textDirection: TextDirection.rtl,
@@ -1796,7 +1836,7 @@ class _SurahAyahModalState extends State<SurahAyahModal> {
                     Expanded(
                       child: Column(
                         children: [
-                          Text(
+                          AppText(
                             surahName,
                             style: TextStyle(
                               fontSize: 20,
@@ -1807,7 +1847,7 @@ class _SurahAyahModalState extends State<SurahAyahModal> {
                             textDirection: TextDirection.rtl,
                           ),
                           const SizedBox(height: 4),
-                          Text(
+                          AppText(
                             'Surah $surahNumber • ${context.l.totalAyahsInfo}: $totalAyahs (1-$totalAyahs)',
                             style: TextStyle(
                               fontSize: 14,
@@ -1876,7 +1916,7 @@ class _SurahAyahModalState extends State<SurahAyahModal> {
                 ? const Center(child: CircularProgressIndicator())
                 : filteredAyahs.isEmpty
                     ? Center(
-                        child: Text(
+                        child: AppText(
                           _searchQuery.isEmpty ? context.l.noAyahsFound : context.l.noResultsFound,
                           style: TextStyle(
                             color: isDark ? Colors.white60 : Colors.grey[600],
@@ -1940,7 +1980,7 @@ class _SurahAyahModalState extends State<SurahAyahModal> {
                                             // Ayah number text
                                             Positioned.fill(
                                               child: Center(
-                                                child: Text(
+                                                child: AppText(
                                                   '$ayahIndex',
                                                   style: TextStyle(
                                                     fontSize: 12,
@@ -1956,17 +1996,17 @@ class _SurahAyahModalState extends State<SurahAyahModal> {
                                       
                                       const SizedBox(width: 12),
                                       
-                                      // Ayah text with highlighting and font settings (truncated to one line)
+                                      // Ayah text with highlighting - always use Noorehuda font
                                       Expanded(
-                                        child: _buildTruncatedHighlightedText(
+                                        child: _buildTruncatedHighlightedAppText(
                                           ayahText,
                                           ayah['searchTerm'],
                                           ayah['highlighted'] ?? false,
                                           TextStyle(
-                                            fontSize: 18.0, // Fixed 18 pixel font size
+                                            fontSize: 18.0,
                                             height: 1.4,
                                             color: isDark ? Colors.white : Colors.black,
-                                            fontFamily: fontProvider.selectedFontOption.family,
+                                            fontFamily: 'Noorehuda',
                                           ),
                                         ),
                                       ),

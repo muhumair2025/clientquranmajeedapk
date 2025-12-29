@@ -1,0 +1,993 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<asma_ul_husna>
+  <name id="1">
+    <arabic>اللّٰهُ</arabic>
+    <transliteration>Allah</transliteration>
+    <translations>
+      <en>The Greatest Name</en>
+      <ur>اللہ</ur>
+      <ps>الله</ps>
+      <ar>الاسم الأعظم</ar>
+    </translations>
+  </name>
+  <name id="2">
+    <arabic>الرَّحْمَٰنُ</arabic>
+    <transliteration>Ar-Rahman</transliteration>
+    <translations>
+      <en>The All-Compassionate</en>
+      <ur>بڑا مہربان</ur>
+      <ps>ډېر مهربان</ps>
+      <ar>الرحمن الرحيم</ar>
+    </translations>
+  </name>
+  <name id="3">
+    <arabic>الرَّحِيمُ</arabic>
+    <transliteration>Ar-Rahim</transliteration>
+    <translations>
+      <en>The All-Merciful</en>
+      <ur>نہایت رحم والا</ur>
+      <ps>رحم کوونکی</ps>
+      <ar>الرحيم</ar>
+    </translations>
+  </name>
+  <name id="4">
+    <arabic>الْمَلِكُ</arabic>
+    <transliteration>Al-Malik</transliteration>
+    <translations>
+      <en>The Absolute Ruler</en>
+      <ur>بادشاہ</ur>
+      <ps>پاچا / واکدار</ps>
+      <ar>الملك المالك</ar>
+    </translations>
+  </name>
+  <name id="5">
+    <arabic>الْقُدُّوسُ</arabic>
+    <transliteration>Al-Quddus</transliteration>
+    <translations>
+      <en>The Pure One</en>
+      <ur>پاک ذات</ur>
+      <ps>ډېر پاک</ps>
+      <ar>المقدس الطاهر</ar>
+    </translations>
+  </name>
+  <name id="6">
+    <arabic>السَّلَامُ</arabic>
+    <transliteration>As-Salam</transliteration>
+    <translations>
+      <en>The Source of Peace</en>
+      <ur>سلامتی والا</ur>
+      <ps>د سولې سرچینه</ps>
+      <ar>السلام المسلِّم</ar>
+    </translations>
+  </name>
+  <name id="7">
+    <arabic>الْمُؤْمِنُ</arabic>
+    <transliteration>Al-Mu'min</transliteration>
+    <translations>
+      <en>The Inspirer of Faith</en>
+      <ur>امان دینے والا</ur>
+      <ps>امن ورکوونکی</ps>
+      <ar>المؤمن المصدق</ar>
+    </translations>
+  </name>
+  <name id="8">
+    <arabic>الْمُهَيْمِنُ</arabic>
+    <transliteration>Al-Muhaymin</transliteration>
+    <translations>
+      <en>The Guardian</en>
+      <ur>نگہبان</ur>
+      <ps>ساتونکی</ps>
+      <ar>المهيمن الرقيب</ar>
+    </translations>
+  </name>
+  <name id="9">
+    <arabic>الْعَزِيزُ</arabic>
+    <transliteration>Al-Aziz</transliteration>
+    <translations>
+      <en>The Victorious</en>
+      <ur>غالب / عزت والا</ur>
+      <ps>برلاسی / عزت منده</ps>
+      <ar>العزيز القوي</ar>
+    </translations>
+  </name>
+  <name id="10">
+    <arabic>الْجَبَّارُ</arabic>
+    <transliteration>Al-Jabbar</transliteration>
+    <translations>
+      <en>The Compeller</en>
+      <ur>زبردست</ur>
+      <ps>زورور</ps>
+      <ar>الجبار القاهر</ar>
+    </translations>
+  </name>
+  <name id="11">
+    <arabic>الْمُتَكَبِّرُ</arabic>
+    <transliteration>Al-Mutakabbir</transliteration>
+    <translations>
+      <en>The Greatest</en>
+      <ur>بڑائی والا</ur>
+      <ps>لوړ رتبه</ps>
+      <ar>المتكبر العظيم</ar>
+    </translations>
+  </name>
+  <name id="12">
+    <arabic>الْخَالِقُ</arabic>
+    <transliteration>Al-Khaliq</transliteration>
+    <translations>
+      <en>The Creator</en>
+      <ur>پیدا کرنے والا</ur>
+      <ps>پیدا کوونکی</ps>
+      <ar>الخالق البارئ</ar>
+    </translations>
+  </name>
+  <name id="13">
+    <arabic>الْبَارِئُ</arabic>
+    <transliteration>Al-Bari</transliteration>
+    <translations>
+      <en>The Maker of Order</en>
+      <ur>پیدا کرنے والا (ٹھیک بنانے والا)</ur>
+      <ps>جوړوونکی</ps>
+      <ar>البارئ المبدع</ar>
+    </translations>
+  </name>
+  <name id="14">
+    <arabic>الْمُصَوِّرُ</arabic>
+    <transliteration>Al-Musawwir</transliteration>
+    <translations>
+      <en>The Shaper of Beauty</en>
+      <ur>صورت گری کرنے والا</ur>
+      <ps>صورت جوړوونکی</ps>
+      <ar>المصور الخالق</ar>
+    </translations>
+  </name>
+  <name id="15">
+    <arabic>الْغَفَّارُ</arabic>
+    <transliteration>Al-Ghaffar</transliteration>
+    <translations>
+      <en>The Forgiving</en>
+      <ur>بہت بخشنے والا</ur>
+      <ps>ډېر بښونکی</ps>
+      <ar>الغفار الغفور</ar>
+    </translations>
+  </name>
+  <name id="16">
+    <arabic>الْقَهَّارُ</arabic>
+    <transliteration>Al-Qahhar</transliteration>
+    <translations>
+      <en>The Subduer</en>
+      <ur>قہر والا / زبردست</ur>
+      <ps>قهر لرونکی</ps>
+      <ar>القهار الغالب</ar>
+    </translations>
+  </name>
+  <name id="17">
+    <arabic>الْوَهَّابُ</arabic>
+    <transliteration>Al-Wahhab</transliteration>
+    <translations>
+      <en>The Giver of All</en>
+      <ur>بہت عطا کرنے والا</ur>
+      <ps>ډېر ورکوونکی</ps>
+      <ar>الوهاب المعطي</ar>
+    </translations>
+  </name>
+  <name id="18">
+    <arabic>الرَّزَّاقُ</arabic>
+    <transliteration>Ar-Razzaq</transliteration>
+    <translations>
+      <en>The Sustainer</en>
+      <ur>رزق دینے والا</ur>
+      <ps>روزي ورکوونکی</ps>
+      <ar>الرزاق المعطي</ar>
+    </translations>
+  </name>
+  <name id="19">
+    <arabic>الْفَتَّاحُ</arabic>
+    <transliteration>Al-Fattah</transliteration>
+    <translations>
+      <en>The Opener</en>
+      <ur>کشادگی دینے والا</ur>
+      <ps>پرانیستونکی</ps>
+      <ar>الفتاح الحاكم</ar>
+    </translations>
+  </name>
+  <name id="20">
+    <arabic>اَلْعَلِيْمُ</arabic>
+    <transliteration>Al-Alim</transliteration>
+    <translations>
+      <en>The Knower of All</en>
+      <ur>سب کچھ جاننے والا</ur>
+      <ps>ټول پوهیدونکی</ps>
+      <ar>العليم الخبير</ar>
+    </translations>
+  </name>
+  <name id="21">
+    <arabic>الْقَابِضُ</arabic>
+    <transliteration>Al-Qabid</transliteration>
+    <translations>
+      <en>The Constrictor</en>
+      <ur>تنگی کرنے والا</ur>
+      <ps>تنګوونکی</ps>
+      <ar>القابض الباسط</ar>
+    </translations>
+  </name>
+  <name id="22">
+    <arabic>الْبَاسِطُ</arabic>
+    <transliteration>Al-Basit</transliteration>
+    <translations>
+      <en>The Reliever</en>
+      <ur>کشادگی دینے والا</ur>
+      <ps>پراخوونکی</ps>
+      <ar>الباسط الموسع</ar>
+    </translations>
+  </name>
+  <name id="23">
+    <arabic>الْخَافِضُ</arabic>
+    <transliteration>Al-Khafid</transliteration>
+    <translations>
+      <en>The Abaser</en>
+      <ur>ذلیل کرنے والا</ur>
+      <ps>ټیټوونکی</ps>
+      <ar>الخافض المذل</ar>
+    </translations>
+  </name>
+  <name id="24">
+    <arabic>الرَّافِعُ</arabic>
+    <transliteration>Ar-Rafi</transliteration>
+    <translations>
+      <en>The Exalter</en>
+      <ur>بلند کرنے والا</ur>
+      <ps>لوړوونکی</ps>
+      <ar>الرافع المعز</ar>
+    </translations>
+  </name>
+  <name id="25">
+    <arabic>الْمُعِزُّ</arabic>
+    <transliteration>Al-Mu'izz</transliteration>
+    <translations>
+      <en>The Bestower of Honors</en>
+      <ur>عزت دینے والا</ur>
+      <ps>عزت ورکوونکی</ps>
+      <ar>المعز المكرم</ar>
+    </translations>
+  </name>
+  <name id="26">
+    <arabic>المُذِلُّ</arabic>
+    <transliteration>Al-Mudhill</transliteration>
+    <translations>
+      <en>The Humiliator</en>
+      <ur>ذلیل کرنے والا</ur>
+      <ps>سپک کوونکی</ps>
+      <ar>المذل الخافض</ar>
+    </translations>
+  </name>
+  <name id="27">
+    <arabic>السَّمِيعُ</arabic>
+    <transliteration>As-Sami</transliteration>
+    <translations>
+      <en>The Hearer of All</en>
+      <ur>سب کچھ سننے والا</ur>
+      <ps>ټول اورېدونکی</ps>
+      <ar>السميع المجيب</ar>
+    </translations>
+  </name>
+  <name id="28">
+    <arabic>الْبَصِيرُ</arabic>
+    <transliteration>Al-Basir</transliteration>
+    <translations>
+      <en>The Seer of All</en>
+      <ur>سب کچھ دیکھنے والا</ur>
+      <ps>ټول لیدونکی</ps>
+      <ar>البصير الرقيب</ar>
+    </translations>
+  </name>
+  <name id="29">
+    <arabic>الْحَكَمُ</arabic>
+    <transliteration>Al-Hakam</transliteration>
+    <translations>
+      <en>The Judge</en>
+      <ur>فیصلہ کرنے والا</ur>
+      <ps>فیصله کوونکی</ps>
+      <ar>الحكم العدل</ar>
+    </translations>
+  </name>
+  <name id="30">
+    <arabic>الْعَدْلُ</arabic>
+    <transliteration>Al-Adl</transliteration>
+    <translations>
+      <en>The Just</en>
+      <ur>انصاف کرنے والا</ur>
+      <ps>عادل</ps>
+      <ar>العدل المنصف</ar>
+    </translations>
+  </name>
+  <name id="31">
+    <arabic>اللَّطِيفُ</arabic>
+    <transliteration>Al-Latif</transliteration>
+    <translations>
+      <en>The Subtle One</en>
+      <ur>نرمی کرنے والا</ur>
+      <ps>نرموالی</ps>
+      <ar>اللطيف الرحيم</ar>
+    </translations>
+  </name>
+  <name id="32">
+    <arabic>الْخَبِيرُ</arabic>
+    <transliteration>Al-Khabir</transliteration>
+    <translations>
+      <en>The All-Aware</en>
+      <ur>باخبر</ur>
+      <ps>خبردار</ps>
+      <ar>الخبير العليم</ar>
+    </translations>
+  </name>
+  <name id="33">
+    <arabic>الْحَلِيمُ</arabic>
+    <transliteration>Al-Halim</transliteration>
+    <translations>
+      <en>The Forbearing</en>
+      <ur>بردبار</ur>
+      <ps>زغم لرونکی</ps>
+      <ar>الحليم الصبور</ar>
+    </translations>
+  </name>
+  <name id="34">
+    <arabic>الْعَظِيمُ</arabic>
+    <transliteration>Al-Azim</transliteration>
+    <translations>
+      <en>The Magnificent</en>
+      <ur>عظمت والا</ur>
+      <ps>عظیم</ps>
+      <ar>العظيم الجليل</ar>
+    </translations>
+  </name>
+  <name id="35">
+    <arabic>الْغَفُورُ</arabic>
+    <transliteration>Al-Ghafur</transliteration>
+    <translations>
+      <en>The Forgiving</en>
+      <ur>بخشنے والا</ur>
+      <ps>بښونکی</ps>
+      <ar>الغفور الرحيم</ar>
+    </translations>
+  </name>
+  <name id="36">
+    <arabic>الشَّكُورُ</arabic>
+    <transliteration>Ash-Shakur</transliteration>
+    <translations>
+      <en>The Rewarder of Thankfulness</en>
+      <ur>قدر دان</ur>
+      <ps>شکریه کوونکی</ps>
+      <ar>الشكور الحميد</ar>
+    </translations>
+  </name>
+  <name id="37">
+    <arabic>الْعَلِيُّ</arabic>
+    <transliteration>Al-Ali</transliteration>
+    <translations>
+      <en>The Highest</en>
+      <ur>بلند و بالا</ur>
+      <ps>ډېر لوړ</ps>
+      <ar>العلي الأعلى</ar>
+    </translations>
+  </name>
+  <name id="38">
+    <arabic>الْكَبِيرُ</arabic>
+    <transliteration>Al-Kabir</transliteration>
+    <translations>
+      <en>The Greatest</en>
+      <ur>بہت بڑا</ur>
+      <ps>ډېر لوی</ps>
+      <ar>الكبير العظيم</ar>
+    </translations>
+  </name>
+  <name id="39">
+    <arabic>الْحَفِيظُ</arabic>
+    <transliteration>Al-Hafiz</transliteration>
+    <translations>
+      <en>The Preserver</en>
+      <ur>محفوظ رکھنے والا</ur>
+      <ps>ساتونکی</ps>
+      <ar>الحفيظ الحافظ</ar>
+    </translations>
+  </name>
+  <name id="40">
+    <arabic>الْمُقيِتُ</arabic>
+    <transliteration>Al-Muqit</transliteration>
+    <translations>
+      <en>The Nourisher</en>
+      <ur>طاقت دینے والا</ur>
+      <ps>قوت ورکوونکی</ps>
+      <ar>المقيت الرزاق</ar>
+    </translations>
+  </name>
+  <name id="41">
+    <arabic>الْحسِيبُ</arabic>
+    <transliteration>Al-Hasib</transliteration>
+    <translations>
+      <en>The Accounter</en>
+      <ur>حساب لینے والا</ur>
+      <ps>حسابونه کوونکی</ps>
+      <ar>الحسيب الرقيب</ar>
+    </translations>
+  </name>
+  <name id="42">
+    <arabic>الْجَلِيلُ</arabic>
+    <transliteration>Al-Jalil</transliteration>
+    <translations>
+      <en>The Mighty</en>
+      <ur>عظمت والا</ur>
+      <ps>جلال لرونکی</ps>
+      <ar>الجليل العظيم</ar>
+    </translations>
+  </name>
+  <name id="43">
+    <arabic>الْكَرِيمُ</arabic>
+    <transliteration>Al-Karim</transliteration>
+    <translations>
+      <en>The Generous</en>
+      <ur>سخی</ur>
+      <ps>سخي</ps>
+      <ar>الكريم الجواد</ar>
+    </translations>
+  </name>
+  <name id="44">
+    <arabic>الرَّقِيبُ</arabic>
+    <transliteration>Ar-Raqib</transliteration>
+    <translations>
+      <en>The Watchful One</en>
+      <ur>نگرانی کرنے والا</ur>
+      <ps>څارونکی</ps>
+      <ar>الرقيب الحفيظ</ar>
+    </translations>
+  </name>
+  <name id="45">
+    <arabic>الْمُجِيبُ</arabic>
+    <transliteration>Al-Mujib</transliteration>
+    <translations>
+      <en>The Responder to Prayer</en>
+      <ur>دعا قبول کرنے والا</ur>
+      <ps>دعا ومنونکی</ps>
+      <ar>المجيب السميع</ar>
+    </translations>
+  </name>
+  <name id="46">
+    <arabic>الْوَاسِعُ</arabic>
+    <transliteration>Al-Wasi</transliteration>
+    <translations>
+      <en>The All-Comprehending</en>
+      <ur>وسعت والا</ur>
+      <ps>پراخه</ps>
+      <ar>الواسع العليم</ar>
+    </translations>
+  </name>
+  <name id="47">
+    <arabic>الْحَكِيمُ</arabic>
+    <transliteration>Al-Hakim</transliteration>
+    <translations>
+      <en>The Perfectly Wise</en>
+      <ur>حکمت والا</ur>
+      <ps>حکمت لرونکی</ps>
+      <ar>الحكيم الخبير</ar>
+    </translations>
+  </name>
+  <name id="48">
+    <arabic>الْوَدُودُ</arabic>
+    <transliteration>Al-Wadud</transliteration>
+    <translations>
+      <en>The Loving One</en>
+      <ur>محبت کرنے والا</ur>
+      <ps>مینه لرونکی</ps>
+      <ar>الودود الرحيم</ar>
+    </translations>
+  </name>
+  <name id="49">
+    <arabic>الْمَجِيدُ</arabic>
+    <transliteration>Al-Majid</transliteration>
+    <translations>
+      <en>The Majestic One</en>
+      <ur>بزرگی والا</ur>
+      <ps>لوی لرونکی</ps>
+      <ar>المجيد الحميد</ar>
+    </translations>
+  </name>
+  <name id="50">
+    <arabic>الْبَاعِثُ</arabic>
+    <transliteration>Al-Ba'ith</transliteration>
+    <translations>
+      <en>The Resurrector</en>
+      <ur>اٹھانے والا</ur>
+      <ps>راپورته کوونکی</ps>
+      <ar>الباعث المحيي</ar>
+    </translations>
+  </name>
+  <name id="51">
+    <arabic>الشَّهِيدُ</arabic>
+    <transliteration>Ash-Shahid</transliteration>
+    <translations>
+      <en>The Witness</en>
+      <ur>گواہ</ur>
+      <ps>شاهد</ps>
+      <ar>الشهيد الرقيب</ar>
+    </translations>
+  </name>
+  <name id="52">
+    <arabic>الْحَقُّ</arabic>
+    <transliteration>Al-Haqq</transliteration>
+    <translations>
+      <en>The Truth</en>
+      <ur>حق</ur>
+      <ps>حق</ps>
+      <ar>الحق المبين</ar>
+    </translations>
+  </name>
+  <name id="53">
+    <arabic>الْوَكِيلُ</arabic>
+    <transliteration>Al-Wakil</transliteration>
+    <translations>
+      <en>The Trustee</en>
+      <ur>کارساز</ur>
+      <ps>کارګذار</ps>
+      <ar>الوكيل الحفيظ</ar>
+    </translations>
+  </name>
+  <name id="54">
+    <arabic>الْقَوِيُّ</arabic>
+    <transliteration>Al-Qawiyy</transliteration>
+    <translations>
+      <en>The Possessor of All Strength</en>
+      <ur>طاقتور</ur>
+      <ps>قوي</ps>
+      <ar>القوي المتين</ar>
+    </translations>
+  </name>
+  <name id="55">
+    <arabic>الْمَتِينُ</arabic>
+    <transliteration>Al-Matin</transliteration>
+    <translations>
+      <en>The Forceful One</en>
+      <ur>مضبوط</ur>
+      <ps>قوي</ps>
+      <ar>المتين القوي</ar>
+    </translations>
+  </name>
+  <name id="56">
+    <arabic>الْوَلِيُّ</arabic>
+    <transliteration>Al-Waliyy</transliteration>
+    <translations>
+      <en>The Governor</en>
+      <ur>دوست / مددگار</ur>
+      <ps>ملګری / مدد ګار</ps>
+      <ar>الولي الحميد</ar>
+    </translations>
+  </name>
+  <name id="57">
+    <arabic>الْحَمِيدُ</arabic>
+    <transliteration>Al-Hamid</transliteration>
+    <translations>
+      <en>The Praised One</en>
+      <ur>تعریف کیا جانے والا</ur>
+      <ps>ستاینه شوی</ps>
+      <ar>الحميد المجيد</ar>
+    </translations>
+  </name>
+  <name id="58">
+    <arabic>الْمُحْصِي</arabic>
+    <transliteration>Al-Muhsi</transliteration>
+    <translations>
+      <en>The Appraiser</en>
+      <ur>شمار کرنے والا</ur>
+      <ps>شمیرونکی</ps>
+      <ar>المحصي العليم</ar>
+    </translations>
+  </name>
+  <name id="59">
+    <arabic>الْمُبْدِئُ</arabic>
+    <transliteration>Al-Mubdi</transliteration>
+    <translations>
+      <en>The Originator</en>
+      <ur>شروع کرنے والا</ur>
+      <ps>پیل کوونکی</ps>
+      <ar>المبدئ الباعث</ar>
+    </translations>
+  </name>
+  <name id="60">
+    <arabic>الْمُعِيدُ</arabic>
+    <transliteration>Al-Mu'id</transliteration>
+    <translations>
+      <en>The Restorer</en>
+      <ur>دوبارہ پیدا کرنے والا</ur>
+      <ps>بیا راګرځوونکی</ps>
+      <ar>المعيد الباعث</ar>
+    </translations>
+  </name>
+  <name id="61">
+    <arabic>الْمُحْيِي</arabic>
+    <transliteration>Al-Muhyi</transliteration>
+    <translations>
+      <en>The Giver of Life</en>
+      <ur>زندگی دینے والا</ur>
+      <ps>ژوند ورکوونکی</ps>
+      <ar>المحيي الباعث</ar>
+    </translations>
+  </name>
+  <name id="62">
+    <arabic>اَلْمُمِيتُ</arabic>
+    <transliteration>Al-Mumit</transliteration>
+    <translations>
+      <en>The Taker of Life</en>
+      <ur>موت دینے والا</ur>
+      <ps>مرګ ورکوونکی</ps>
+      <ar>المميت القهار</ar>
+    </translations>
+  </name>
+  <name id="63">
+    <arabic>الْحَيُّ</arabic>
+    <transliteration>Al-Hayy</transliteration>
+    <translations>
+      <en>The Ever Living One</en>
+      <ur>ہمیشہ زندہ رہنے والا</ur>
+      <ps>تل ژوندی</ps>
+      <ar>الحي القيوم</ar>
+    </translations>
+  </name>
+  <name id="64">
+    <arabic>الْقَيُّومُ</arabic>
+    <transliteration>Al-Qayyum</transliteration>
+    <translations>
+      <en>The Self-Existing One</en>
+      <ur>قائم رہنے والا</ur>
+      <ps>پاتې کېدونکی</ps>
+      <ar>القيوم الحي</ar>
+    </translations>
+  </name>
+  <name id="65">
+    <arabic>الْوَاجِدُ</arabic>
+    <transliteration>Al-Wajid</transliteration>
+    <translations>
+      <en>The Finder</en>
+      <ur>پانے والا</ur>
+      <ps>موندونکی</ps>
+      <ar>الواجد الغني</ar>
+    </translations>
+  </name>
+  <name id="66">
+    <arabic>الْمَاجِدُ</arabic>
+    <transliteration>Al-Majid</transliteration>
+    <translations>
+      <en>The Glorious</en>
+      <ur>بزرگی والا</ur>
+      <ps>لوی</ps>
+      <ar>الماجد الكريم</ar>
+    </translations>
+  </name>
+  <name id="67">
+    <arabic>الْواحِدُ</arabic>
+    <transliteration>Al-Wahid</transliteration>
+    <translations>
+      <en>The Only One</en>
+      <ur>ایک</ur>
+      <ps>یو</ps>
+      <ar>الواحد الأحد</ar>
+    </translations>
+  </name>
+  <name id="68">
+    <arabic>اَلاَحَدُ</arabic>
+    <transliteration>Al-Ahad</transliteration>
+    <translations>
+      <en>The One</en>
+      <ur>واحد</ur>
+      <ps>احد</ps>
+      <ar>الأحد الواحد</ar>
+    </translations>
+  </name>
+  <name id="69">
+    <arabic>الصَّمَدُ</arabic>
+    <transliteration>As-Samad</transliteration>
+    <translations>
+      <en>The Satisfier of All Needs</en>
+      <ur>بے نیاز</ur>
+      <ps>بې اړتیا</ps>
+      <ar>الصمد الغني</ar>
+    </translations>
+  </name>
+  <name id="70">
+    <arabic>الْقَادِرُ</arabic>
+    <transliteration>Al-Qadir</transliteration>
+    <translations>
+      <en>The All Powerful</en>
+      <ur>قدرت والا</ur>
+      <ps>قدرت لرونکی</ps>
+      <ar>القادر القدير</ar>
+    </translations>
+  </name>
+  <name id="71">
+    <arabic>الْمُقْتَدِرُ</arabic>
+    <transliteration>Al-Muqtadir</transliteration>
+    <translations>
+      <en>The Creator of All Power</en>
+      <ur>پوری قدرت والا</ur>
+      <ps>بشپړ قوت لرونکی</ps>
+      <ar>المقتدر القادر</ar>
+    </translations>
+  </name>
+  <name id="72">
+    <arabic>الْمُقَدِّمُ</arabic>
+    <transliteration>Al-Muqaddim</transliteration>
+    <translations>
+      <en>The Expediter</en>
+      <ur>آگے کرنے والا</ur>
+      <ps>مخکې کوونکی</ps>
+      <ar>المقدم الرافع</ar>
+    </translations>
+  </name>
+  <name id="73">
+    <arabic>الْمُؤَخِّرُ</arabic>
+    <transliteration>Al-Mu'akhkhir</transliteration>
+    <translations>
+      <en>The Delayer</en>
+      <ur>پیچھے کرنے والا</ur>
+      <ps>شا کوونکی</ps>
+      <ar>المؤخر الخافض</ar>
+    </translations>
+  </name>
+  <name id="74">
+    <arabic>الأوَّلُ</arabic>
+    <transliteration>Al-Awwal</transliteration>
+    <translations>
+      <en>The First</en>
+      <ur>سب سے پہلے</ur>
+      <ps>لومړی</ps>
+      <ar>الأول الآخر</ar>
+    </translations>
+  </name>
+  <name id="75">
+    <arabic>الآخِرُ</arabic>
+    <transliteration>Al-Akhir</transliteration>
+    <translations>
+      <en>The Last</en>
+      <ur>سب سے آخر</ur>
+      <ps>وروستی</ps>
+      <ar>الآخر الأول</ar>
+    </translations>
+  </name>
+  <name id="76">
+    <arabic>الظَّاهِرُ</arabic>
+    <transliteration>Az-Zahir</transliteration>
+    <translations>
+      <en>The Manifest One</en>
+      <ur>ظاہر</ur>
+      <ps>څرګند</ps>
+      <ar>الظاهر الباطن</ar>
+    </translations>
+  </name>
+  <name id="77">
+    <arabic>الْبَاطِنُ</arabic>
+    <transliteration>Al-Batin</transliteration>
+    <translations>
+      <en>The Hidden One</en>
+      <ur>پوشیدہ</ur>
+      <ps>پټ</ps>
+      <ar>الباطن الظاهر</ar>
+    </translations>
+  </name>
+  <name id="78">
+    <arabic>الْوَالِي</arabic>
+    <transliteration>Al-Wali</transliteration>
+    <translations>
+      <en>The Governor</en>
+      <ur>حکمران</ur>
+      <ps>واکمن</ps>
+      <ar>الوالي المتعالي</ar>
+    </translations>
+  </name>
+  <name id="79">
+    <arabic>الْمُتَعَالِي</arabic>
+    <transliteration>Al-Muta'ali</transliteration>
+    <translations>
+      <en>The Supreme One</en>
+      <ur>بلند مرتبے والا</ur>
+      <ps>لوړ رتبه لرونکی</ps>
+      <ar>المتعالي العلي</ar>
+    </translations>
+  </name>
+  <name id="80">
+    <arabic>الْبَرُّ</arabic>
+    <transliteration>Al-Barr</transliteration>
+    <translations>
+      <en>The Doer of Good</en>
+      <ur>بھلائی کرنے والا</ur>
+      <ps>نیکي کوونکی</ps>
+      <ar>البر الرحيم</ar>
+    </translations>
+  </name>
+  <name id="81">
+    <arabic>التَّوَابُ</arabic>
+    <transliteration>At-Tawwab</transliteration>
+    <translations>
+      <en>The Guide to Repentance</en>
+      <ur>توبہ قبول کرنے والا</ur>
+      <ps>توبه منونکی</ps>
+      <ar>التواب الغفور</ar>
+    </translations>
+  </name>
+  <name id="82">
+    <arabic>الْمُنْتَقِمُ</arabic>
+    <transliteration>Al-Muntaqim</transliteration>
+    <translations>
+      <en>The Avenger</en>
+      <ur>بدلہ لینے والا</ur>
+      <ps>انتقام اخیستونکی</ps>
+      <ar>المنتقم العزيز</ar>
+    </translations>
+  </name>
+  <name id="83">
+    <arabic>العَفُوُّ</arabic>
+    <transliteration>Al-Afuww</transliteration>
+    <translations>
+      <en>The Forgiver</en>
+      <ur>معاف کرنے والا</ur>
+      <ps>بښونکی</ps>
+      <ar>العفو الغفور</ar>
+    </translations>
+  </name>
+  <name id="84">
+    <arabic>الرَّؤُوفُ</arabic>
+    <transliteration>Ar-Ra'uf</transliteration>
+    <translations>
+      <en>The Clement</en>
+      <ur>شفقت کرنے والا</ur>
+      <ps>مهربان</ps>
+      <ar>الرؤوف الرحيم</ar>
+    </translations>
+  </name>
+  <name id="85">
+    <arabic>مَالِكُ الْمُلْكِ</arabic>
+    <transliteration>Malik-al-Mulk</transliteration>
+    <translations>
+      <en>The Owner of All</en>
+      <ur>بادشاہی کا مالک</ur>
+      <ps>د پاچاهۍ خاوند</ps>
+      <ar>مالك الملك المالك</ar>
+    </translations>
+  </name>
+  <name id="86">
+    <arabic>ذُوالْجَلاَلِ وَالإكْرَامِ</arabic>
+    <transliteration>Dhul-Jalali Wal-Ikram</transliteration>
+    <translations>
+      <en>The Lord of Majesty and Bounty</en>
+      <ur>عظمت اور بزرگی والا</ur>
+      <ps>د جلال او عزت خاوند</ps>
+      <ar>ذو الجلال والإكرام</ar>
+    </translations>
+  </name>
+  <name id="87">
+    <arabic>الْمُقْسِطُ</arabic>
+    <transliteration>Al-Muqsit</transliteration>
+    <translations>
+      <en>The Equitable One</en>
+      <ur>انصاف کرنے والا</ur>
+      <ps>عدل کوونکی</ps>
+      <ar>المقسط العدل</ar>
+    </translations>
+  </name>
+  <name id="88">
+    <arabic>الْجَامِعُ</arabic>
+    <transliteration>Al-Jami</transliteration>
+    <translations>
+      <en>The Gatherer</en>
+      <ur>جمع کرنے والا</ur>
+      <ps>راټولوونکی</ps>
+      <ar>الجامع الباعث</ar>
+    </translations>
+  </name>
+  <name id="89">
+    <arabic>الْغَنِيُّ</arabic>
+    <transliteration>Al-Ghani</transliteration>
+    <translations>
+      <en>The Rich One</en>
+      <ur>بے نیاز / غنی</ur>
+      <ps>بې نیاز</ps>
+      <ar>الغني الصمد</ar>
+    </translations>
+  </name>
+  <name id="90">
+    <arabic>الْمُغْنِي</arabic>
+    <transliteration>Al-Mughni</transliteration>
+    <translations>
+      <en>The Enricher</en>
+      <ur>غنی کرنے والا</ur>
+      <ps>بې نیازه کوونکی</ps>
+      <ar>المغني الرزاق</ar>
+    </translations>
+  </name>
+  <name id="91">
+    <arabic>اَلْمَانِعُ</arabic>
+    <transliteration>Al-Mani'</transliteration>
+    <translations>
+      <en>The Preventer of Harm</en>
+      <ur>روکنے والا</ur>
+      <ps>منع کوونکی</ps>
+      <ar>المانع الحفيظ</ar>
+    </translations>
+  </name>
+  <name id="92">
+    <arabic>الضَّارَّ</arabic>
+    <transliteration>Ad-Darr</transliteration>
+    <translations>
+      <en>The Creator of The Harmful</en>
+      <ur>نقصان پہنچانے والا</ur>
+      <ps>تاوان رسوونکی</ps>
+      <ar>الضار النافع</ar>
+    </translations>
+  </name>
+  <name id="93">
+    <arabic>النَّافِعُ</arabic>
+    <transliteration>An-Nafi</transliteration>
+    <translations>
+      <en>The Creator of Good</en>
+      <ur>فائدہ پہنچانے والا</ur>
+      <ps>ګټه رسوونکی</ps>
+      <ar>النافع الضار</ar>
+    </translations>
+  </name>
+  <name id="94">
+    <arabic>النُّورُ</arabic>
+    <transliteration>An-Nur</transliteration>
+    <translations>
+      <en>The Light</en>
+      <ur>نور</ur>
+      <ps>رڼا</ps>
+      <ar>النور الهادي</ar>
+    </translations>
+  </name>
+  <name id="95">
+    <arabic>الْهَادِي</arabic>
+    <transliteration>Al-Hadi</transliteration>
+    <translations>
+      <en>The Guide</en>
+      <ur>ہدایت دینے والا</ur>
+      <ps>لارښوونکی</ps>
+      <ar>الهادي الرشيد</ar>
+    </translations>
+  </name>
+  <name id="96">
+    <arabic>الْبَدِيعُ</arabic>
+    <transliteration>Al-Badi</transliteration>
+    <translations>
+      <en>The Originator</en>
+      <ur>نئی چیز بنانے والا</ur>
+      <ps>نوی جوړوونکی</ps>
+      <ar>البديع المبدع</ar>
+    </translations>
+  </name>
+  <name id="97">
+    <arabic>اَلْبَاقِي</arabic>
+    <transliteration>Al-Baqi</transliteration>
+    <translations>
+      <en>The Everlasting One</en>
+      <ur>باقی رہنے والا</ur>
+      <ps>تل پاتې کېدونکی</ps>
+      <ar>الباقي الدائم</ar>
+    </translations>
+  </name>
+  <name id="98">
+    <arabic>الْوَارِثُ</arabic>
+    <transliteration>Al-Warith</transliteration>
+    <translations>
+      <en>The Inheritor of All</en>
+      <ur>وارث</ur>
+      <ps>میراث خاوند</ps>
+      <ar>الوارث الباقي</ar>
+    </translations>
+  </name>
+  <name id="99">
+    <arabic>الرَّشِيدُ</arabic>
+    <transliteration>Ar-Rashid</transliteration>
+    <translations>
+      <en>The Righteous Teacher</en>
+      <ur>ہدایت دینے والا</ur>
+      <ps>رښتینی ښوونکی</ps>
+      <ar>الرشيد الهادي</ar>
+    </translations>
+  </name>
+</asma_ul_husna>

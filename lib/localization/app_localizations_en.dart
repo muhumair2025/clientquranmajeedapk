@@ -271,6 +271,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get termsConditions => 'Terms & Conditions';
   @override
   String get version => 'Version';
+  @override
+  String get appearance => 'Appearance';
 
   // Quran Specific
   @override
@@ -401,6 +403,58 @@ class AppLocalizationsEn extends AppLocalizations {
   String get hint => 'Hint';
   @override
   String get tooltip => 'Tooltip';
+
+  // Tools Screen
+  @override
+  String get islamicTools => 'Islamic Tools';
+  @override
+  String get qiblaFinder => 'Qibla Finder';
+  @override
+  String get qiblaFinderDesc => 'Find prayer direction';
+  @override
+  String get calibrateCompass => 'Calibrate Compass';
+  @override
+  String get movePhoneFigure8 => 'Move your phone in a figure-8 pattern';
+  @override
+  String get skipCalibration => 'Skip Calibration';
+  @override
+  String get qiblaDirection => 'Qibla Direction';
+  @override
+  String get distanceToMakkah => 'km to Makkah';
+  @override
+  String get compassActive => 'Compass Active';
+  @override
+  String get permissionsRequired => 'Permissions Required';
+  @override
+  String get enablePermissions => 'Please enable location and camera permissions';
+  @override
+  String get prayerTimes => 'Prayer Times';
+  @override
+  String get prayerTimesDesc => 'Daily prayer schedule';
+  @override
+  String get tasbeehCounter => 'Tasbeeh Counter';
+  @override
+  String get tasbeehCounterDesc => 'Digital dhikr counter';
+  @override
+  String get hijriCalendar => 'Hijri Calendar';
+  @override
+  String get hijriCalendarDesc => 'Islamic calendar';
+  @override
+  String get namesOfAllah => '99 Names of Allah';
+  @override
+  String get namesOfAllahDesc => 'Asma ul Husna';
+  @override
+  String get islamicQuotes => 'Islamic Quotes';
+  @override
+  String get islamicQuotesDesc => 'Daily inspiration';
+  @override
+  String get duaCollection => 'Dua Collection';
+  @override
+  String get duaCollectionDesc => 'Essential supplications';
+  @override
+  String get zakat => 'Zakat Calculator';
+  @override
+  String get zakatDesc => 'Calculate your zakat';
 
   // Modal and Dialog Content
   @override
@@ -611,4 +665,106 @@ class AppLocalizationsEn extends AppLocalizations {
   String get ayahAudio => 'Ayah Audio';
   @override
   String get ayahVideo => 'Ayah Video';
+
+  // Prayer Times Screen
+  @override
+  String get prayerTimesTitle => 'Prayer Times';
+  @override
+  String get fajr => 'Fajr';
+  @override
+  String get sunrise => 'Sunrise';
+  @override
+  String get dhuhr => 'Dhuhr';
+  @override
+  String get asr => 'Asr';
+  @override
+  String get maghrib => 'Maghrib';
+  @override
+  String get isha => 'Isha';
+  @override
+  String get nextPrayer => 'Next Prayer';
+  @override
+  String get timeRemaining => 'Time Remaining';
+  @override
+  String get calculationMethod => 'Calculation Method';
+  @override
+  String get selectMethod => 'Select Method';
+  @override
+  String get enableNotifications => 'Enable Notifications';
+  @override
+  String get notificationSettings => 'Notification Settings';
+  @override
+  String get prayerReminder => 'Prayer Reminder';
+  @override
+  String get minutesBefore => 'minutes before';
+  @override
+  String get refreshData => 'Refresh Data';
+  @override
+  String get lastUpdated => 'Last Updated';
+  @override
+  String get offline => 'Offline';
+  @override
+  String get usingCachedData => 'Using cached data';
+  @override
+  String get locationNotAvailable => 'Location not available';
+  @override
+  String get fetchingPrayerTimes => 'Fetching prayer times...';
+  @override
+  String get prayerTimesError => 'Could not load prayer times';
+  @override
+  String get hijriDate => 'Hijri Date';
+  
+  // Alarm strings
+  @override
+  String get alarmAtPrayerTime => 'Alarm at prayer time';
+  @override
+  String get alarmMinutesBefore => 'min before';
+  @override
+  String get adhanSound => 'Adhan Sound';
+  @override
+  String get alarmRemoved => 'Alarm removed';
+  @override
+  String get alarmSet => 'Alarm set';
+  @override
+  String get setAlarm => 'Set Alarm';
+  @override
+  String get selectAdhanSound => 'Select Adhan Sound';
+  @override
+  String get builtInSounds => 'Built-in Sounds';
+  @override
+  String get customSound => 'Custom Sound';
+  @override
+  String get saveSelection => 'Save Selection';
+  
+  // Mushaf Download
+  @override
+  String get quranScript => 'Quran Script';
+  @override
+  String get downloadToReadQuran => 'Download to read Quran pages';
+  @override
+  String get openQuran => 'Open Quran';
+  @override
+  String get downloadScript => 'Download';
+  @override
+  String get scriptReady => 'Ready';
+  @override
+  String get extractingFiles => 'Extracting files...';
+  @override
+  String get downloadComplete => 'Download complete!';
+  @override
+  String get downloadFailing => 'Download failed. Please try again.';
+  @override
+  String get accessDenied => 'Access denied';
+  @override
+  String get fileNotAvailable => 'File may not be available';
+  @override
+  String get connectionTimeout => 'Connection timeout. Please check your internet.';
+  @override
+  String get downloadTimeout => 'Download timeout. Please try again.';
+  @override
+  String get mushafScript => 'Mushaf Script';
+  @override
+  String get uthmaniScript => 'Uthmani Script';
+  @override
+  String get pages => 'pages';
 } 

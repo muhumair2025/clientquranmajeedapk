@@ -1,3 +1,4 @@
+import '../widgets/app_text.dart';
 import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
 import '../themes/app_theme.dart';
@@ -174,7 +175,7 @@ class _VideoDownloadsScreenState extends State<VideoDownloadsScreen> {
     return Scaffold(
       backgroundColor: isDark ? AppTheme.darkBackground : AppTheme.lightBackground,
       appBar: AppBar(
-        title: Text(context.l.videoDownloads),
+        title: AppText(context.l.videoDownloads),
         backgroundColor: AppTheme.primaryGreen,
         foregroundColor: Colors.white,
       ),
@@ -192,7 +193,7 @@ class _VideoDownloadsScreenState extends State<VideoDownloadsScreen> {
               valueColor: AlwaysStoppedAnimation<Color>(AppTheme.primaryGreen),
             ),
             const SizedBox(height: 16),
-            Text(
+            AppText(
               context.l.loading,
               style: TextStyle(
                 fontSize: 16,
@@ -215,21 +216,19 @@ class _VideoDownloadsScreenState extends State<VideoDownloadsScreen> {
               color: Colors.grey[400],
             ),
             const SizedBox(height: 20),
-            Text(
+            AppText(
               context.l.noVideoDownloads,
               style: TextStyle(
                 fontSize: 18,
                 color: Colors.grey[600],
-                fontFamily: 'Bahij Badr Light',
               ),
             ),
             const SizedBox(height: 10),
-            Text(
+            AppText(
               context.l.downloadVideosFromVerses,
               style: TextStyle(
                 fontSize: 14,
                 color: Colors.grey[500],
-                fontFamily: 'Bahij Badr Light',
               ),
             ),
           ],
@@ -298,7 +297,7 @@ class _VideoDownloadsScreenState extends State<VideoDownloadsScreen> {
                   color: hasVideos ? AppTheme.primaryGold : Colors.grey[400],
                 ),
                 const SizedBox(height: 8),
-                Text(
+                AppText(
                   context.l.paraNumber.replaceAll('{number}', paraNumber.toString()),
                   style: TextStyle(
                     fontSize: 14,
@@ -306,17 +305,15 @@ class _VideoDownloadsScreenState extends State<VideoDownloadsScreen> {
                     color: hasVideos
                         ? (isDark ? Colors.white : Colors.black87)
                         : Colors.grey[500],
-                    fontFamily: 'Bahij Badr Light',
                   ),
                 ),
                 if (hasVideos) ...[
                   const SizedBox(height: 4),
-                  Text(
+                  AppText(
                     context.l.videosCount.replaceAll('{count}', videoCount.toString()),
                     style: TextStyle(
                       fontSize: 12,
                       color: AppTheme.primaryGold,
-                      fontFamily: 'Bahij Badr Light',
                     ),
                   ),
                 ],
@@ -365,7 +362,7 @@ class ParaVideoDetailScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: isDark ? AppTheme.darkBackground : AppTheme.lightBackground,
       appBar: AppBar(
-                        title: Text('$paraName - ${context.l.para} $paraNumber'),
+                        title: AppText('$paraName - ${context.l.para} $paraNumber'),
         backgroundColor: AppTheme.primaryGold,
         foregroundColor: Colors.white,
       ),
@@ -399,7 +396,7 @@ class ParaVideoDetailScreen extends StatelessWidget {
                   ),
                   const SizedBox(width: 12),
                   Expanded(
-                    child: Text(
+                    child: AppText(
                       surahVideos.first.surahName,
                       style: TextStyle(
                         fontSize: 16,
@@ -414,7 +411,7 @@ class ParaVideoDetailScreen extends StatelessWidget {
                       color: AppTheme.primaryGold.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: Text(
+                    child: AppText(
                       context.l.videosCount.replaceAll('{count}', surahVideos.length.toString()),
                       style: TextStyle(
                         fontSize: 12,
@@ -442,7 +439,7 @@ class ParaVideoDetailScreen extends StatelessWidget {
                       ),
                     ),
                   ),
-                  title: Text(
+                  title: AppText(
                     'آیت ${video.ayahIndex}',
                     style: TextStyle(
                       fontSize: 14,
@@ -450,7 +447,7 @@ class ParaVideoDetailScreen extends StatelessWidget {
                       color: isDark ? Colors.white : Colors.black87,
                     ),
                   ),
-                  subtitle: Text(
+                  subtitle: AppText(
                     context.l.vocabularyVideo,
                     style: TextStyle(
                       fontSize: 12,

@@ -50,8 +50,22 @@ dependencies:
   url_launcher: ^6.2.1
   webview_flutter: ^4.4.2
   youtube_player_flutter: ^9.1.1
+  sqflite: ^2.3.0
   flutter_localizations:
     sdk: flutter
+  
+  # Qibla Finder dependencies
+  flutter_compass: ^0.8.0
+  geolocator: ^13.0.2
+  geocoding: ^3.0.0
+  camera: ^0.11.0+2
+  permission_handler: ^11.3.1
+  sensors_plus: ^6.1.1
+  connectivity_plus: ^6.1.1
+  flutter_local_notifications: ^18.0.1
+  timezone: ^0.9.4
+  file_picker: ^8.1.6
+  archive: ^3.6.1
 
 dev_dependencies:
   flutter_test:
@@ -82,6 +96,10 @@ flutter:
     - assets/images/
     - assets/socials/
     - assets/quran_data/
+    - assets/data/
+    - assets/adhan/
+    - assets/Mushaf/1441/databases/
+    - assets/mushafscript.png
     - .env.local
 
   # An image asset can refer to one or more resolution-specific "variants", see

@@ -238,32 +238,52 @@ class TafseerService {
     final downloadKey = '${surahIndex}_${ayahIndex}_${type.name}';
     final key = '${surahIndex}_$ayahIndex';
     
-    // Get the URL to generate correct file path
-    String? remoteUrl;
-    if (type == TafseerType.audio) {
-      final audioData = await getAudioData(surahIndex, ayahIndex);
-      remoteUrl = audioData?.content;
-    } else if (type == TafseerType.video) {
-      final videoData = await getVideoData(surahIndex, ayahIndex);
-      remoteUrl = videoData?.content;
-    }
-    
-    if (remoteUrl == null) {
-      return null;
-    }
-    
-    if (_downloadStatus[downloadKey] == DownloadStatus.completed) {
-      return await _getLocalFilePath(key, type, remoteUrl);
-    }
-    
     try {
-      final localPath = await _getLocalFilePath(key, type, remoteUrl);
-      if (await File(localPath).exists()) {
-        _downloadStatus[downloadKey] = DownloadStatus.completed;
-        return localPath;
+      final directory = await getApplicationDocumentsDirectory();
+      final tafseerDir = Directory('${directory.path}/tafseer');
+      
+      if (!await tafseerDir.exists()) {
+        return null;
+      }
+      
+      final extension = type == TafseerType.audio ? 'mp3' : 'mp4';
+      final filePattern = '${key}_${type.name}_';
+      
+      // Scan directory for files matching this ayah pattern (handles URL hash variations)
+      final files = await tafseerDir.list().toList();
+      for (var file in files) {
+        if (file is File) {
+          final fileName = file.path.split('/').last;
+          if (fileName.startsWith(filePattern) && fileName.endsWith('.$extension')) {
+            if (await file.exists() && await file.length() > 0) {
+              _downloadStatus[downloadKey] = DownloadStatus.completed;
+              _downloadProgress[downloadKey] = 1.0;
+              return file.path;
+            }
+          }
+        }
+      }
+      
+      // Fallback to URL-based path
+      String? remoteUrl;
+      if (type == TafseerType.audio) {
+        final audioData = await getAudioData(surahIndex, ayahIndex);
+        remoteUrl = audioData?.content;
+      } else if (type == TafseerType.video) {
+        final videoData = await getVideoData(surahIndex, ayahIndex);
+        remoteUrl = videoData?.content;
+      }
+      
+      if (remoteUrl != null) {
+        final localPath = await _getLocalFilePath(key, type, remoteUrl);
+        if (await File(localPath).exists()) {
+          _downloadStatus[downloadKey] = DownloadStatus.completed;
+          _downloadProgress[downloadKey] = 1.0;
+          return localPath;
+        }
       }
     } catch (e) {
-      debugPrint('Error checking tafseer local file existence: $e');
+      debugPrint('Error getting tafseer local file path: $e');
     }
     
     return null;

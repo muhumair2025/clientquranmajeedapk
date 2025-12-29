@@ -8,6 +8,7 @@ import '../services/tafseer_service.dart';
 import '../services/faidi_service.dart';
 import '../services/common_models.dart';
 import '../localization/app_localizations_extension.dart';
+import 'app_text.dart';
 import 'dart:io';
 
 class FullScreenTextViewer extends StatelessWidget {
@@ -82,10 +83,9 @@ class FullScreenTextViewer extends StatelessWidget {
                     color: isDark ? Colors.grey.shade800 : Colors.grey.shade100,
                     borderRadius: BorderRadius.circular(6),
                   ),
-                  child: Text(
+                  child: AppText(
                     pashtoMeaning,
                     style: TextStyle(
-                      fontFamily: 'Bahij Badr Light',
                       fontSize: 14,
                       color: isDark ? Colors.white : Colors.black87,
                       height: 1.4,
@@ -107,10 +107,9 @@ class FullScreenTextViewer extends StatelessWidget {
               color: isDark ? Colors.grey.shade800 : Colors.grey.shade100,
               borderRadius: BorderRadius.circular(8),
             ),
-            child: Text(
+            child: AppText(
               explanation,
               style: TextStyle(
-                fontFamily: 'Bahij Badr Light',
                 fontSize: 14,
                 color: isDark ? Colors.white : Colors.black87,
                 height: 1.4,
@@ -192,7 +191,6 @@ class FullScreenTextViewer extends StatelessWidget {
                         color: Colors.white,
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
-                        fontFamily: 'Bahij Badr Bold',
                       ),
                       textAlign: TextAlign.right,
                       textDirection: TextDirection.rtl,
@@ -699,7 +697,7 @@ class _FullScreenAudioPlayerState extends State<FullScreenAudioPlayer>
                 child: Text(
                   title,
                   style: TextStyle(
-                    fontFamily: 'Bahij Badr Bold',
+                    fontWeight: FontWeight.bold,
                     fontSize: 16,
                     color: isDark ? Colors.white : Colors.black,
                   ),
@@ -711,7 +709,6 @@ class _FullScreenAudioPlayerState extends State<FullScreenAudioPlayer>
           content: Text(
             friendlyMessage,
             style: TextStyle(
-              fontFamily: 'Bahij Badr Light',
               fontSize: 14,
               color: isDark ? Colors.white70 : Colors.black87,
             ),
@@ -723,7 +720,6 @@ class _FullScreenAudioPlayerState extends State<FullScreenAudioPlayer>
               child: Text(
                 context.l.ok,
                 style: TextStyle(
-                  fontFamily: 'Bahij Badr Light',
                   color: AppTheme.primaryGreen,
                 ),
               ),
@@ -737,7 +733,24 @@ class _FullScreenAudioPlayerState extends State<FullScreenAudioPlayer>
   String _getFriendlyErrorMessage(dynamic error) {
     String errorStr = error.toString().toLowerCase();
     
-    if (errorStr.contains('network') || errorStr.contains('connection') || errorStr.contains('timeout')) {
+    // Network/Connection related errors
+    if (errorStr.contains('network') || 
+        errorStr.contains('connection') || 
+        errorStr.contains('timeout') ||
+        errorStr.contains('unknownhostexception') ||
+        errorStr.contains('unable to resolve host') ||
+        errorStr.contains('no address associated') ||
+        errorStr.contains('eai_nodata') ||
+        errorStr.contains('socketexception') ||
+        errorStr.contains('host lookup') ||
+        errorStr.contains('failed host lookup') ||
+        errorStr.contains('no internet') ||
+        errorStr.contains('unreachable')) {
+      return context.l.networkConnectionError;
+    } else if (errorStr.contains('media_error') || 
+               errorStr.contains('mediaplayer') ||
+               errorStr.contains('failed to set source') ||
+               errorStr.contains('platformexception') && errorStr.contains('audio')) {
       return context.l.networkConnectionError;
     } else if (errorStr.contains('permission') || errorStr.contains('denied')) {
       return context.l.filePermissionError;
@@ -759,7 +772,7 @@ class _FullScreenAudioPlayerState extends State<FullScreenAudioPlayer>
       SnackBar(
         content: Text(
           message,
-          style: const TextStyle(fontFamily: 'Bahij Badr Light'),
+          style: const TextStyle(),
           textDirection: TextDirection.rtl,
         ),
         backgroundColor: AppTheme.primaryGreen,
@@ -1360,7 +1373,6 @@ class _FullScreenVideoPlayerState extends State<FullScreenVideoPlayer>
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 16,
-                      fontFamily: 'Bahij Badr Light',
                     ),
                     textDirection: TextDirection.rtl,
                   ),
@@ -1638,7 +1650,7 @@ class _FullScreenVideoPlayerState extends State<FullScreenVideoPlayer>
                 child: Text(
                   title,
                   style: TextStyle(
-                    fontFamily: 'Bahij Badr Bold',
+                    fontWeight: FontWeight.bold,
                     fontSize: 16,
                     color: isDark ? Colors.white : Colors.black,
                   ),
@@ -1650,7 +1662,6 @@ class _FullScreenVideoPlayerState extends State<FullScreenVideoPlayer>
           content: Text(
             friendlyMessage,
             style: TextStyle(
-              fontFamily: 'Bahij Badr Light',
               fontSize: 14,
               color: isDark ? Colors.white70 : Colors.black87,
             ),
@@ -1662,7 +1673,6 @@ class _FullScreenVideoPlayerState extends State<FullScreenVideoPlayer>
               child: Text(
                 context.l.ok,
                 style: TextStyle(
-                  fontFamily: 'Bahij Badr Light',
                   color: AppTheme.primaryGreen,
                 ),
               ),
@@ -1676,7 +1686,24 @@ class _FullScreenVideoPlayerState extends State<FullScreenVideoPlayer>
   String _getFriendlyErrorMessage(dynamic error) {
     String errorStr = error.toString().toLowerCase();
     
-    if (errorStr.contains('network') || errorStr.contains('connection') || errorStr.contains('timeout')) {
+    // Network/Connection related errors
+    if (errorStr.contains('network') || 
+        errorStr.contains('connection') || 
+        errorStr.contains('timeout') ||
+        errorStr.contains('unknownhostexception') ||
+        errorStr.contains('unable to resolve host') ||
+        errorStr.contains('no address associated') ||
+        errorStr.contains('eai_nodata') ||
+        errorStr.contains('socketexception') ||
+        errorStr.contains('host lookup') ||
+        errorStr.contains('failed host lookup') ||
+        errorStr.contains('no internet') ||
+        errorStr.contains('unreachable')) {
+      return context.l.networkConnectionError;
+    } else if (errorStr.contains('media_error') || 
+               errorStr.contains('mediaplayer') ||
+               errorStr.contains('failed to set source') ||
+               errorStr.contains('platformexception') && errorStr.contains('video')) {
       return context.l.networkConnectionError;
     } else if (errorStr.contains('permission') || errorStr.contains('denied')) {
       return context.l.filePermissionError;
@@ -1698,7 +1725,7 @@ class _FullScreenVideoPlayerState extends State<FullScreenVideoPlayer>
       SnackBar(
         content: Text(
           message,
-          style: const TextStyle(fontFamily: 'Bahij Badr Light'),
+          style: const TextStyle(),
           textDirection: TextDirection.rtl,
         ),
         backgroundColor: AppTheme.primaryGreen,
@@ -1725,7 +1752,6 @@ class _FullScreenVideoPlayerState extends State<FullScreenVideoPlayer>
               Text(
                 _getDownloadStatusText(),
                 style: const TextStyle(
-                  fontFamily: 'Bahij Badr Light',
                   fontSize: 14,
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
@@ -1747,7 +1773,6 @@ class _FullScreenVideoPlayerState extends State<FullScreenVideoPlayer>
             Text(
               '${(_downloadProgress * 100).toInt()}%',
               style: const TextStyle(
-                fontFamily: 'Bahij Badr Light',
                 fontSize: 12,
                 color: Colors.white,
               ),
@@ -1826,7 +1851,6 @@ class _FullScreenVideoPlayerState extends State<FullScreenVideoPlayer>
                         color: Colors.white,
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
-                        fontFamily: 'Bahij Badr Bold',
                       ),
                       textAlign: TextAlign.right,
                       textDirection: TextDirection.rtl,
@@ -1867,7 +1891,6 @@ class _FullScreenVideoPlayerState extends State<FullScreenVideoPlayer>
                                 style: const TextStyle(
                                   color: Colors.white,
                                   fontSize: 16,
-                                  fontFamily: 'Bahij Badr Light',
                                 ),
                                 textDirection: TextDirection.rtl,
                               ),

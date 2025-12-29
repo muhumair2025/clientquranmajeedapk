@@ -298,6 +298,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get termsConditions => 'الشروط والأحكام';
   @override
   String get version => 'الإصدار';
+  @override
+  String get appearance => 'المظهر';
 
   // Quran Specific
   @override
@@ -428,6 +430,58 @@ class AppLocalizationsAr extends AppLocalizations {
   String get hint => 'تلميح';
   @override
   String get tooltip => 'نصيحة الأداة';
+
+  // Tools Screen
+  @override
+  String get islamicTools => 'الأدوات الإسلامية';
+  @override
+  String get qiblaFinder => 'مُحدِّد القبلة';
+  @override
+  String get qiblaFinderDesc => 'اعثر على اتجاه الصلاة';
+  @override
+  String get calibrateCompass => 'معايرة البوصلة';
+  @override
+  String get movePhoneFigure8 => 'حرك هاتفك على شكل الرقم 8';
+  @override
+  String get skipCalibration => 'تخطي المعايرة';
+  @override
+  String get qiblaDirection => 'اتجاه القبلة';
+  @override
+  String get distanceToMakkah => 'كم إلى مكة';
+  @override
+  String get compassActive => 'البوصلة نشطة';
+  @override
+  String get permissionsRequired => 'الأذونات مطلوبة';
+  @override
+  String get enablePermissions => 'يرجى تمكين أذونات الموقع والكاميرا';
+  @override
+  String get prayerTimes => 'مواقيت الصلاة';
+  @override
+  String get prayerTimesDesc => 'جدول الصلاة اليومي';
+  @override
+  String get tasbeehCounter => 'عداد التسبيح';
+  @override
+  String get tasbeehCounterDesc => 'عداد ذكر رقمي';
+  @override
+  String get hijriCalendar => 'التقويم الهجري';
+  @override
+  String get hijriCalendarDesc => 'التقويم الإسلامي';
+  @override
+  String get namesOfAllah => 'أسماء الله الحسنى';
+  @override
+  String get namesOfAllahDesc => 'الأسماء الـ 99';
+  @override
+  String get islamicQuotes => 'اقتباسات إسلامية';
+  @override
+  String get islamicQuotesDesc => 'إلهام يومي';
+  @override
+  String get duaCollection => 'مجموعة الأدعية';
+  @override
+  String get duaCollectionDesc => 'أدعية أساسية';
+  @override
+  String get zakat => 'حاسبة الزكاة';
+  @override
+  String get zakatDesc => 'احسب زكاتك';
 
   // Modal and Dialog Content
   @override
@@ -652,4 +706,106 @@ class AppLocalizationsAr extends AppLocalizations {
   String get ayahAudio => 'صوت الآية';
   @override
   String get ayahVideo => 'فيديو الآية';
+
+  // Prayer Times Screen
+  @override
+  String get prayerTimesTitle => 'أوقات الصلاة';
+  @override
+  String get fajr => 'الفجر';
+  @override
+  String get sunrise => 'الشروق';
+  @override
+  String get dhuhr => 'الظهر';
+  @override
+  String get asr => 'العصر';
+  @override
+  String get maghrib => 'المغرب';
+  @override
+  String get isha => 'العشاء';
+  @override
+  String get nextPrayer => 'الصلاة القادمة';
+  @override
+  String get timeRemaining => 'الوقت المتبقي';
+  @override
+  String get calculationMethod => 'طريقة الحساب';
+  @override
+  String get selectMethod => 'اختر الطريقة';
+  @override
+  String get enableNotifications => 'تفعيل الإشعارات';
+  @override
+  String get notificationSettings => 'إعدادات الإشعارات';
+  @override
+  String get prayerReminder => 'تذكير الصلاة';
+  @override
+  String get minutesBefore => 'دقائق قبل';
+  @override
+  String get refreshData => 'تحديث البيانات';
+  @override
+  String get lastUpdated => 'آخر تحديث';
+  @override
+  String get offline => 'غير متصل';
+  @override
+  String get usingCachedData => 'استخدام البيانات المخزنة';
+  @override
+  String get locationNotAvailable => 'الموقع غير متاح';
+  @override
+  String get fetchingPrayerTimes => 'جاري تحميل أوقات الصلاة...';
+  @override
+  String get prayerTimesError => 'تعذر تحميل أوقات الصلاة';
+  @override
+  String get hijriDate => 'التاريخ الهجري';
+  
+  // Alarm strings
+  @override
+  String get alarmAtPrayerTime => 'المنبه في وقت الصلاة';
+  @override
+  String get alarmMinutesBefore => 'دقائق قبل';
+  @override
+  String get adhanSound => 'صوت الأذان';
+  @override
+  String get alarmRemoved => 'تم إزالة المنبه';
+  @override
+  String get alarmSet => 'تم ضبط المنبه';
+  @override
+  String get setAlarm => 'ضبط المنبه';
+  @override
+  String get selectAdhanSound => 'اختر صوت الأذان';
+  @override
+  String get builtInSounds => 'الأصوات المدمجة';
+  @override
+  String get customSound => 'صوت مخصص';
+  @override
+  String get saveSelection => 'حفظ الاختيار';
+  
+  // Mushaf Download
+  @override
+  String get quranScript => 'خط القرآن';
+  @override
+  String get downloadToReadQuran => 'قم بالتحميل لقراءة صفحات القرآن';
+  @override
+  String get openQuran => 'فتح القرآن';
+  @override
+  String get downloadScript => 'تحميل';
+  @override
+  String get scriptReady => 'جاهز';
+  @override
+  String get extractingFiles => 'جاري استخراج الملفات...';
+  @override
+  String get downloadComplete => 'اكتمل التحميل!';
+  @override
+  String get downloadFailing => 'فشل التحميل. حاول مرة أخرى.';
+  @override
+  String get accessDenied => 'تم رفض الوصول';
+  @override
+  String get fileNotAvailable => 'الملف قد لا يكون متاحاً';
+  @override
+  String get connectionTimeout => 'انتهت مهلة الاتصال. تحقق من الإنترنت.';
+  @override
+  String get downloadTimeout => 'انتهت مهلة التحميل. حاول مرة أخرى.';
+  @override
+  String get mushafScript => 'خط المصحف';
+  @override
+  String get uthmaniScript => 'الخط العثماني';
+  @override
+  String get pages => 'صفحات';
 } 

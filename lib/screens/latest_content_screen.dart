@@ -1,3 +1,4 @@
+import '../widgets/app_text.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/language_provider.dart';
@@ -211,7 +212,7 @@ class _LatestContentScreenState extends State<LatestContentScreen> {
                   : (isDark ? AppTheme.darkTextSecondary : AppTheme.lightTextSecondary),
             ),
             const SizedBox(width: 6),
-            Text(
+            AppText(
               label,
               style: TextStyle(
                 fontSize: 12,
@@ -243,7 +244,7 @@ class _LatestContentScreenState extends State<LatestContentScreen> {
               ),
             ),
             const SizedBox(height: 16),
-            Text(
+            AppText(
               context.l.loadingLatestContent,
               style: TextStyle(
                 fontSize: 13,
@@ -269,7 +270,7 @@ class _LatestContentScreenState extends State<LatestContentScreen> {
                 color: isDark ? AppTheme.darkTextSecondary : AppTheme.lightTextSecondary,
               ),
               const SizedBox(height: 16),
-              Text(
+              AppText(
                 context.l.failedToLoadLatest,
                 style: TextStyle(
                   fontSize: 15,
@@ -281,7 +282,7 @@ class _LatestContentScreenState extends State<LatestContentScreen> {
               TextButton.icon(
                 onPressed: _loadLatestContent,
                 icon: const Icon(Icons.refresh_rounded, size: 18),
-                label: Text(context.l.retry),
+                label: AppText(context.l.retry),
                 style: TextButton.styleFrom(
                   foregroundColor: AppTheme.primaryGreen,
                 ),
@@ -308,7 +309,7 @@ class _LatestContentScreenState extends State<LatestContentScreen> {
                     : AppTheme.lightTextSecondary.withOpacity(0.5),
               ),
               const SizedBox(height: 16),
-              Text(
+              AppText(
                 context.l.noNewContent,
                 style: TextStyle(
                   fontSize: 15,
@@ -317,7 +318,7 @@ class _LatestContentScreenState extends State<LatestContentScreen> {
                 ),
               ),
               const SizedBox(height: 6),
-              Text(
+              AppText(
                 context.l.checkBackLater,
                 style: TextStyle(
                   fontSize: 13,
@@ -391,15 +392,16 @@ class _LatestContentScreenState extends State<LatestContentScreen> {
                         textDirection: isRTL ? TextDirection.rtl : TextDirection.ltr,
                         children: [
                           Expanded(
-                            child: MixedFontText(
+                            child: AppText(
                               item.title,
-                              languageCode: languageCode,
-                              fontSize: 13.5,
-                              fontWeight: FontWeight.w600,
-                              color: isDark 
-                                  ? AppTheme.darkTextPrimary 
-                                  : AppTheme.lightTextPrimary,
-                              height: 1.3,
+                              style: TextStyle(
+                                fontSize: 13.5,
+                                fontWeight: FontWeight.w600,
+                                color: isDark 
+                                    ? AppTheme.darkTextPrimary 
+                                    : AppTheme.lightTextPrimary,
+                                height: 1.3,
+                              ),
                               textAlign: isRTL ? TextAlign.right : TextAlign.left,
                               textDirection: isRTL ? TextDirection.rtl : TextDirection.ltr,
                               maxLines: 1,
@@ -420,7 +422,7 @@ class _LatestContentScreenState extends State<LatestContentScreen> {
                                 color: AppTheme.primaryGreen,
                                 borderRadius: BorderRadius.circular(3),
                               ),
-                              child: Text(
+                              child: AppText(
                                 context.l.newBadge,
                                 style: const TextStyle(
                                   fontSize: 8,
@@ -440,7 +442,7 @@ class _LatestContentScreenState extends State<LatestContentScreen> {
                         textDirection: isRTL ? TextDirection.rtl : TextDirection.ltr,
                         children: [
                           // Type label
-                          Text(
+                          AppText(
                             _getTypeLabel(context, item.type),
                             style: TextStyle(
                               fontSize: 11,
@@ -452,7 +454,7 @@ class _LatestContentScreenState extends State<LatestContentScreen> {
                           // Dot separator
                           Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 6),
-                            child: Text(
+                            child: AppText(
                               '•',
                               style: TextStyle(
                                 fontSize: 10,
@@ -464,7 +466,7 @@ class _LatestContentScreenState extends State<LatestContentScreen> {
                           ),
                           
                           // Time ago
-                          Text(
+                          AppText(
                             item.timeAgo,
                             style: TextStyle(
                               fontSize: 11,
@@ -478,7 +480,7 @@ class _LatestContentScreenState extends State<LatestContentScreen> {
                           if (item.breadcrumb.isNotEmpty) ...[
                             Padding(
                               padding: const EdgeInsets.symmetric(horizontal: 6),
-                              child: Text(
+                              child: AppText(
                                 '•',
                                 style: TextStyle(
                                   fontSize: 10,
@@ -489,7 +491,7 @@ class _LatestContentScreenState extends State<LatestContentScreen> {
                               ),
                             ),
                             Expanded(
-                              child: Text(
+                              child: AppText(
                                 item.breadcrumb,
                                 style: TextStyle(
                                   fontSize: 11,
@@ -658,7 +660,7 @@ class _LatestContentScreenState extends State<LatestContentScreen> {
     ScaffoldMessenger.of(context).hideCurrentSnackBar();
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(
+        content: AppText(
           '${item.title} - ${context.l.comingSoon}',
           maxLines: 1,
           overflow: TextOverflow.ellipsis,

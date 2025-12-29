@@ -152,6 +152,7 @@ abstract class AppLocalizations {
   String get privacy;
   String get termsConditions;
   String get version;
+  String get appearance;
 
   // Quran Specific
   String get bismillah;
@@ -225,6 +226,33 @@ abstract class AppLocalizations {
   String get semanticLabel;
   String get hint;
   String get tooltip;
+
+  // Tools Screen
+  String get islamicTools;
+  String get qiblaFinder;
+  String get qiblaFinderDesc;
+  String get calibrateCompass;
+  String get movePhoneFigure8;
+  String get skipCalibration;
+  String get qiblaDirection;
+  String get distanceToMakkah;
+  String get compassActive;
+  String get permissionsRequired;
+  String get enablePermissions;
+  String get prayerTimes;
+  String get prayerTimesDesc;
+  String get tasbeehCounter;
+  String get tasbeehCounterDesc;
+  String get hijriCalendar;
+  String get hijriCalendarDesc;
+  String get namesOfAllah;
+  String get namesOfAllahDesc;
+  String get islamicQuotes;
+  String get islamicQuotesDesc;
+  String get duaCollection;
+  String get duaCollectionDesc;
+  String get zakat;
+  String get zakatDesc;
 
   // Modal and Dialog Content
   String get verseOptions;
@@ -345,4 +373,58 @@ abstract class AppLocalizations {
   String get subcategory;
   String get ayahAudio;
   String get ayahVideo;
+
+  // Prayer Times Screen
+  String get prayerTimesTitle;
+  String get fajr;
+  String get sunrise;
+  String get dhuhr;
+  String get asr;
+  String get maghrib;
+  String get isha;
+  String get nextPrayer;
+  String get timeRemaining;
+  String get calculationMethod;
+  String get selectMethod;
+  String get enableNotifications;
+  String get notificationSettings;
+  String get prayerReminder;
+  String get minutesBefore;
+  String get refreshData;
+  String get lastUpdated;
+  String get offline;
+  String get usingCachedData;
+  String get locationNotAvailable;
+  String get fetchingPrayerTimes;
+  String get prayerTimesError;
+  String get hijriDate;
+  
+  // Alarm strings
+  String get alarmAtPrayerTime;
+  String get alarmMinutesBefore;
+  String get adhanSound;
+  String get alarmRemoved;
+  String get alarmSet;
+  String get setAlarm;
+  String get selectAdhanSound;
+  String get builtInSounds;
+  String get customSound;
+  String get saveSelection;
+  
+  // Mushaf Download
+  String get quranScript;
+  String get downloadToReadQuran;
+  String get openQuran;
+  String get downloadScript;
+  String get scriptReady;
+  String get extractingFiles;
+  String get downloadComplete;
+  String get downloadFailing;
+  String get accessDenied;
+  String get fileNotAvailable;
+  String get connectionTimeout;
+  String get downloadTimeout;
+  String get mushafScript;
+  String get uthmaniScript;
+  String get pages;
 } 

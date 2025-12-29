@@ -1,3 +1,4 @@
+import '../widgets/app_text.dart';
 import 'dart:io';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
@@ -6,9 +7,11 @@ import 'package:url_launcher/url_launcher.dart';
 import '../providers/language_provider.dart';
 import '../localization/app_localizations_extension.dart';
 import '../services/content_api_service.dart';
+import '../services/mushaf_download_service.dart';
 import '../models/category_models.dart';
 import '../widgets/hero_slider.dart';
 import '../widgets/floating_social_button.dart';
+import '../widgets/mushaf_script_modal.dart';
 import 'quran_navigation_screen.dart';
 import 'subcategories_screen.dart';
 
@@ -72,7 +75,7 @@ class _QuranMajeedHomePageState extends State<QuranMajeedHomePage> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(context.l.comingSoon), // Use appropriate error message
+            content: AppText(context.l.comingSoon), // Use appropriate error message
             duration: const Duration(seconds: 2),
           ),
         );
@@ -134,7 +137,7 @@ class _QuranMajeedHomePageState extends State<QuranMajeedHomePage> {
               color: Theme.of(context).colorScheme.primary,
             ),
             const SizedBox(height: 16),
-            Text(
+            AppText(
               'Loading categories...',
               style: TextStyle(
                 color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
@@ -157,7 +160,7 @@ class _QuranMajeedHomePageState extends State<QuranMajeedHomePage> {
               color: Theme.of(context).colorScheme.error,
             ),
             const SizedBox(height: 16),
-            Text(
+            AppText(
               _errorMessage!,
               style: TextStyle(
                 fontSize: 16,
@@ -168,7 +171,7 @@ class _QuranMajeedHomePageState extends State<QuranMajeedHomePage> {
             ElevatedButton.icon(
               onPressed: _loadCategories,
               icon: const Icon(Icons.refresh),
-              label: const Text('Retry'),
+              label: const AppText('Retry'),
             ),
           ],
         ),
@@ -303,9 +306,20 @@ class _QuranMajeedHomePageState extends State<QuranMajeedHomePage> {
               color: Colors.transparent,
               child: InkWell(
                 borderRadius: BorderRadius.circular(18),
-                onTap: () {
+                onTap: () async {
                   if (hasNavigation) {
-                    // Quran category - navigate to Quran Navigation Screen
+                    // Quran category - check if script is downloaded first
+                    final isScriptReady = await MushafDownloadService.shouldUseDownloadedImages();
+                    
+                    if (!isScriptReady) {
+                      // Show download modal
+                      if (!context.mounted) return;
+                      final result = await MushafScriptModal.show(context);
+                      if (!result) return; // User cancelled
+                    }
+                    
+                    // Navigate to Quran Navigation Screen
+                    if (!context.mounted) return;
                     Navigator.of(context).push(
                       MaterialPageRoute(
                         builder: (context) => const QuranNavigationScreen(),
@@ -376,7 +390,7 @@ class _QuranMajeedHomePageState extends State<QuranMajeedHomePage> {
                         crossAxisAlignment: isRTL ? CrossAxisAlignment.end : CrossAxisAlignment.start,
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Text(
+                          AppText(
                             title,
                             textAlign: isRTL ? TextAlign.right : TextAlign.left,
                             style: context.textStyle(
@@ -391,7 +405,7 @@ class _QuranMajeedHomePageState extends State<QuranMajeedHomePage> {
                           // Show ONLY real description from backend if available
                           if (description != null && description.trim().isNotEmpty) ...[
                             const SizedBox(height: 4),
-                            Text(
+                            AppText(
                               description,
                               textAlign: isRTL ? TextAlign.right : TextAlign.left,
                               style: context.textStyle(

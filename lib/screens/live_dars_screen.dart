@@ -1,3 +1,4 @@
+import '../widgets/app_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:youtube_player_flutter/youtube_player_flutter.dart';
@@ -177,7 +178,7 @@ class _LiveDarsScreenState extends State<LiveDarsScreen> {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(message),
+        content: AppText(message),
         backgroundColor: isError ? Colors.red.shade400 : null,
         duration: const Duration(seconds: 2),
       ),
@@ -218,7 +219,7 @@ class _LiveDarsScreenState extends State<LiveDarsScreen> {
           // Title
           Padding(
             padding: const EdgeInsets.all(16),
-            child: Text(
+            child: AppText(
               'Filter & Sort',
               style: TextStyle(
                 fontSize: 18,
@@ -240,7 +241,7 @@ class _LiveDarsScreenState extends State<LiveDarsScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
+                        AppText(
                           'Sort By',
                           style: TextStyle(
                             fontSize: 14,
@@ -264,7 +265,7 @@ class _LiveDarsScreenState extends State<LiveDarsScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
+                        AppText(
                           'Filter By Status',
                           style: TextStyle(
                             fontSize: 14,
@@ -321,7 +322,7 @@ class _LiveDarsScreenState extends State<LiveDarsScreen> {
             ),
             const SizedBox(width: 12),
             Expanded(
-              child: Text(
+              child: AppText(
                 label,
                 style: TextStyle(
                   fontSize: 15,
@@ -373,7 +374,7 @@ class _LiveDarsScreenState extends State<LiveDarsScreen> {
             ),
             const SizedBox(width: 12),
             Expanded(
-              child: Text(
+              child: AppText(
                 label,
                 style: TextStyle(
                   fontSize: 15,
@@ -422,7 +423,7 @@ class _LiveDarsScreenState extends State<LiveDarsScreen> {
               color: Colors.red.shade400,
             ),
             const SizedBox(height: 12),
-            Text(
+            AppText(
               _errorMessage!,
               style: TextStyle(
                 fontSize: 14,
@@ -436,7 +437,7 @@ class _LiveDarsScreenState extends State<LiveDarsScreen> {
                 backgroundColor: Colors.red.shade400,
                 foregroundColor: Colors.white,
               ),
-              child: const Text('Retry'),
+              child: const AppText('Retry'),
             ),
           ],
         ),
@@ -455,7 +456,7 @@ class _LiveDarsScreenState extends State<LiveDarsScreen> {
               color: Colors.red.shade400,
             ),
             const SizedBox(height: 12),
-            Text(
+            AppText(
               'No live streams available',
               style: TextStyle(
                 fontSize: 14,
@@ -469,7 +470,7 @@ class _LiveDarsScreenState extends State<LiveDarsScreen> {
                 backgroundColor: Colors.red.shade400,
                 foregroundColor: Colors.white,
               ),
-              child: const Text('Refresh'),
+              child: const AppText('Refresh'),
             ),
           ],
         ),
@@ -503,7 +504,7 @@ class _LiveDarsScreenState extends State<LiveDarsScreen> {
                   size: 18,
                   color: isDark ? Colors.white70 : Colors.grey.shade700,
                 ),
-                label: Text(
+                label: AppText(
                   'Filter & Sort',
                   style: TextStyle(
                     fontSize: 13,
@@ -529,7 +530,7 @@ class _LiveDarsScreenState extends State<LiveDarsScreen> {
               const Spacer(),
               
               // Video count
-              Text(
+              AppText(
                 '${filteredVideos.length} video${filteredVideos.length != 1 ? 's' : ''}',
                 style: TextStyle(
                   fontSize: 12,
@@ -554,7 +555,7 @@ class _LiveDarsScreenState extends State<LiveDarsScreen> {
                         color: Colors.red.shade400,
                       ),
                       const SizedBox(height: 12),
-                      Text(
+                      AppText(
                         'No videos match the filters',
                         style: TextStyle(
                           fontSize: 14,
@@ -569,7 +570,7 @@ class _LiveDarsScreenState extends State<LiveDarsScreen> {
                             _sortBy = VideoSortBy.dateNewest;
                           });
                         },
-                        child: Text(
+                        child: AppText(
                           'Clear Filters',
                           style: TextStyle(color: Colors.red.shade400),
                         ),
@@ -649,7 +650,7 @@ class _LiveDarsScreenState extends State<LiveDarsScreen> {
                           color: Colors.white,
                         ),
                         SizedBox(width: 3),
-                        Text(
+                        AppText(
                           'PINNED',
                           style: TextStyle(
                             color: Colors.white,
@@ -695,7 +696,7 @@ class _LiveDarsScreenState extends State<LiveDarsScreen> {
                               ),
                             ),
                             const SizedBox(width: 4),
-                            const Text(
+                            const AppText(
                               'LIVE',
                               style: TextStyle(
                                 color: Colors.white,
@@ -717,7 +718,7 @@ class _LiveDarsScreenState extends State<LiveDarsScreen> {
                           color: Colors.blue,
                           borderRadius: BorderRadius.circular(3),
                         ),
-                        child: const Text(
+                        child: const AppText(
                           'UPCOMING',
                           style: TextStyle(
                             color: Colors.white,
@@ -737,7 +738,7 @@ class _LiveDarsScreenState extends State<LiveDarsScreen> {
                           color: Colors.grey,
                           borderRadius: BorderRadius.circular(3),
                         ),
-                        child: const Text(
+                        child: const AppText(
                           'ENDED',
                           style: TextStyle(
                             color: Colors.white,
@@ -760,7 +761,7 @@ class _LiveDarsScreenState extends State<LiveDarsScreen> {
                             ),
                             const SizedBox(width: 3),
                             Flexible(
-                              child: Text(
+                              child: AppText(
                                 _formatDate(video.scheduledAt!),
                                 style: TextStyle(
                                   fontSize: 11,
@@ -798,7 +799,7 @@ class _LiveDarsScreenState extends State<LiveDarsScreen> {
                 const SizedBox(height: 8),
                 
                 // Title
-                Text(
+                AppText(
                   video.title,
                   style: TextStyle(
                     fontSize: 14,
@@ -915,7 +916,7 @@ class _YouTubePlayerWidgetState extends State<YouTubePlayerWidget> {
         topActions: [
           const SizedBox(width: 8),
           Expanded(
-            child: Text(
+            child: AppText(
               _controller.metadata.title,
               style: const TextStyle(
                 color: Colors.white,

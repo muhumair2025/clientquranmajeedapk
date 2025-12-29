@@ -283,36 +283,55 @@ class LughatService {
     final downloadKey = '${surahIndex}_${ayahIndex}_${type.name}';
     final key = '${surahIndex}_$ayahIndex';
     
-    // Get the URL to generate correct file path
-    String? remoteUrl;
-    if (type == LughatType.audio) {
-      final audioData = await getAudioData(surahIndex, ayahIndex);
-      remoteUrl = audioData?.content;
-    } else if (type == LughatType.video) {
-      final videoData = await getVideoData(surahIndex, ayahIndex);
-      remoteUrl = videoData?.content;
-    }
-    
-    if (remoteUrl == null) {
-      return null;
-    }
-    
-    // First check if status is completed
-    if (_downloadStatus[downloadKey] == DownloadStatus.completed) {
-      return await _getLocalFilePath(key, type, remoteUrl);
-    }
-    
-    // Fallback: Check if file actually exists even if status is not completed
-    // This handles cases where status might not be properly restored
     try {
-      final localPath = await _getLocalFilePath(key, type, remoteUrl);
-      if (await File(localPath).exists()) {
-        // Update status to completed since file exists
-        _downloadStatus[downloadKey] = DownloadStatus.completed;
-        return localPath;
+      final directory = await getApplicationDocumentsDirectory();
+      final lughatDir = Directory('${directory.path}/lughat');
+      
+      if (!await lughatDir.exists()) {
+        return null;
+      }
+      
+      final extension = type == LughatType.audio ? 'mp3' : 'mp4';
+      final filePattern = '${key}_${type.name}_';
+      
+      // Scan directory for files matching this ayah pattern (handles URL hash variations)
+      final files = await lughatDir.list().toList();
+      for (var file in files) {
+        if (file is File) {
+          final fileName = file.path.split('/').last;
+          // Match pattern: surahIndex_ayahIndex_type_urlhash.extension
+          if (fileName.startsWith(filePattern) && fileName.endsWith('.$extension')) {
+            // Found a matching file - verify it exists and has content
+            if (await file.exists() && await file.length() > 0) {
+              // Update status to completed
+              _downloadStatus[downloadKey] = DownloadStatus.completed;
+              _downloadProgress[downloadKey] = 1.0;
+              return file.path;
+            }
+          }
+        }
+      }
+      
+      // No matching file found - try the URL-based path as fallback
+      String? remoteUrl;
+      if (type == LughatType.audio) {
+        final audioData = await getAudioData(surahIndex, ayahIndex);
+        remoteUrl = audioData?.content;
+      } else if (type == LughatType.video) {
+        final videoData = await getVideoData(surahIndex, ayahIndex);
+        remoteUrl = videoData?.content;
+      }
+      
+      if (remoteUrl != null) {
+        final localPath = await _getLocalFilePath(key, type, remoteUrl);
+        if (await File(localPath).exists()) {
+          _downloadStatus[downloadKey] = DownloadStatus.completed;
+          _downloadProgress[downloadKey] = 1.0;
+          return localPath;
+        }
       }
     } catch (e) {
-      debugPrint('Error checking local file existence: $e');
+      debugPrint('Error getting local file path: $e');
     }
     
     return null;

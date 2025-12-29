@@ -8,7 +8,7 @@ import 'providers/theme_provider.dart';
 import 'providers/font_provider.dart';
 import 'providers/language_provider.dart';
 import 'screens/major_downloads_screen.dart';
-import 'screens/placeholder_screen.dart';
+import 'screens/more_tools_screen.dart';
 import 'screens/live_dars_screen.dart';
 import 'screens/home_screen.dart';
 import 'screens/latest_content_screen.dart';
@@ -17,9 +17,11 @@ import 'services/lughat_service.dart';
 import 'services/tafseer_service.dart';
 import 'services/faidi_service.dart';
 import 'services/favorites_service.dart';
+import 'services/prayer_alarm_service.dart';
 import 'services/notes_service.dart';
 import 'services/app_content_service.dart';
 import 'services/live_video_service.dart';
+import 'services/mushaf_database_service.dart';
 import 'localization/app_localizations_delegate.dart';
 import 'localization/app_localizations_extension.dart';
 import 'widgets/first_launch_language_modal.dart';
@@ -47,11 +49,17 @@ void main() async {
     NotesService.initialize(),
     AppContentService.initialize(), // Hero slides & splash screen
     LiveVideoService.initialize(), // Live videos
+    PrayerAlarmService.initialize(), // Prayer alarms
+    MushafDatabaseService.initialize(), // Mushaf image-based Quran
   ]);
   
-  // Setup system UI
-  SystemChrome.setEnabledSystemUIMode(SystemUiMode.manual, overlays: []);
+  // Setup system UI - Full screen immersive mode (hides navigation bar)
+  SystemChrome.setEnabledSystemUIMode(
+    SystemUiMode.immersiveSticky,
+    overlays: [], // Hide all system overlays
+  );
   
+  // Make status bar and navigation bar transparent when they appear
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,
@@ -62,11 +70,15 @@ void main() async {
     ),
   );
   
+  // Initialize providers
+  final themeProvider = ThemeProvider();
+  await themeProvider.loadThemePreferences(); // Load saved theme preferences
+  
   // Launch main app
   runApp(
     MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (context) => ThemeProvider()),
+        ChangeNotifierProvider.value(value: themeProvider),
         ChangeNotifierProvider(create: (context) => FontProvider()),
         ChangeNotifierProvider(create: (context) => LanguageProvider()),
       ],
@@ -101,8 +113,8 @@ class QuranMajeedApp extends StatelessWidget {
               child: child!,
             );
           },
-          theme: AppTheme.getLightTheme(languageProvider.currentLanguage),
-          darkTheme: AppTheme.getDarkTheme(languageProvider.currentLanguage),
+          theme: AppTheme.getLightTheme(languageProvider.currentLanguage, themeProvider.themePreset),
+          darkTheme: AppTheme.getDarkTheme(languageProvider.currentLanguage, themeProvider.themePreset),
           themeMode: themeProvider.themeMode,
           home: const SplashWrapper(),
         );
@@ -121,6 +133,16 @@ class SplashWrapper extends StatefulWidget {
 
 class _SplashWrapperState extends State<SplashWrapper> {
   bool _showSplash = true;
+
+  @override
+  void initState() {
+    super.initState();
+    // Ensure fullscreen mode from the start
+    SystemChrome.setEnabledSystemUIMode(
+      SystemUiMode.immersiveSticky,
+      overlays: [],
+    );
+  }
 
   void _onSplashComplete() {
     if (mounted) {
@@ -156,6 +178,9 @@ class _MainScreenState extends State<MainScreen> {
   @override
   void initState() {
     super.initState();
+    // Ensure fullscreen mode when main screen loads
+    _setFullScreenMode();
+    
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!_hasCheckedFirstLaunch) {
         Future.delayed(const Duration(milliseconds: 100), () {
@@ -167,12 +192,19 @@ class _MainScreenState extends State<MainScreen> {
     });
   }
   
+  void _setFullScreenMode() {
+    SystemChrome.setEnabledSystemUIMode(
+      SystemUiMode.immersiveSticky,
+      overlays: [],
+    );
+  }
+  
   Widget _getPageForIndex(int index) {
     final languageCode = context.read<LanguageProvider>().currentLanguage;
     
     switch (index) {
       case 0:
-        return const PlaceholderPage(); // Other tools (More)
+        return const MoreToolsScreen(); // Other tools (More)
       case 1:
         return LatestContentScreen(key: ValueKey('latest_$languageCode')); // Latest content
       case 2:

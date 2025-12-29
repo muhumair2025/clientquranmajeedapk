@@ -1,3 +1,4 @@
+import '../widgets/app_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:xml/xml.dart';
@@ -153,7 +154,7 @@ class _QuranSearchScreenState extends State<QuranSearchScreen> with SingleTicker
   }
 
   // Enhanced text normalization for intelligent Arabic search (with caching)
-  String _normalizeText(String text) {
+  String _normalizeAppText(String text) {
     // Check cache first
     if (_normalizedTextCache.containsKey(text)) {
       return _normalizedTextCache[text]!;
@@ -233,7 +234,7 @@ class _QuranSearchScreenState extends State<QuranSearchScreen> with SingleTicker
   
   // Create space-flexible normalized text for better matching
   String _normalizeTextForSpaceFlexibleSearch(String text) {
-    String normalized = _normalizeText(text);
+    String normalized = _normalizeAppText(text);
     // Remove all spaces for space-flexible matching
     return normalized.replaceAll(RegExp(r'\s+'), '');
   }
@@ -296,7 +297,7 @@ class _QuranSearchScreenState extends State<QuranSearchScreen> with SingleTicker
       
       // Clean and normalize the query
       String cleanQuery = query.trim();
-      String normalizedQuery = _normalizeText(cleanQuery);
+      String normalizedQuery = _normalizeAppText(cleanQuery);
       
       // Create multiple search strategies for better matching
       List<RegExp> searchPatterns = _createMultipleSearchPatterns(cleanQuery);
@@ -410,7 +411,7 @@ class _QuranSearchScreenState extends State<QuranSearchScreen> with SingleTicker
       patterns.add(RegExp(r'\b' + RegExp.escape(query) + r'\b', caseSensitive: false));
       
       // 4. Normalized pattern
-      String normalizedQuery = _normalizeText(query);
+      String normalizedQuery = _normalizeAppText(query);
       if (normalizedQuery != query.toLowerCase()) {
         patterns.add(RegExp(RegExp.escape(normalizedQuery), caseSensitive: false));
       }
@@ -431,7 +432,7 @@ class _QuranSearchScreenState extends State<QuranSearchScreen> with SingleTicker
   MatchResult _analyzeMatch(String text, String query, String normalizedQuery, List<RegExp> patterns) {
     String lowerText = text.toLowerCase();
     String lowerQuery = query.toLowerCase();
-    String normalizedText = _normalizeText(text);
+    String normalizedText = _normalizeAppText(text);
     
     // Create space-flexible versions
     String spaceFlexibleText = _normalizeTextForSpaceFlexibleSearch(text);
@@ -519,8 +520,8 @@ class _QuranSearchScreenState extends State<QuranSearchScreen> with SingleTicker
     String text = result.ayahText; // Always Arabic text now
     String lowerText = text.toLowerCase();
     String lowerQuery = query.toLowerCase();
-    String normalizedText = _normalizeText(text);
-    String normalizedQuery = _normalizeText(query);
+    String normalizedText = _normalizeAppText(text);
+    String normalizedQuery = _normalizeAppText(query);
     String spaceFlexibleText = _normalizeTextForSpaceFlexibleSearch(text);
     String spaceFlexibleQuery = _normalizeTextForSpaceFlexibleSearch(query);
     
@@ -562,7 +563,7 @@ class _QuranSearchScreenState extends State<QuranSearchScreen> with SingleTicker
   // Enhanced relevance scoring for intelligent search results
   double _calculateRelevance(String text, String query, String normalizedQuery) {
     double score = 0.0;
-    String normalizedText = _normalizeText(text);
+    String normalizedText = _normalizeAppText(text);
     String lowerText = text.toLowerCase();
     String lowerQuery = query.toLowerCase();
     
@@ -659,8 +660,8 @@ class _QuranSearchScreenState extends State<QuranSearchScreen> with SingleTicker
     if (!query.contains(' ')) return true;
     
     // Check if the query appears as a complete phrase
-    String normalizedText = _normalizeText(text);
-    String normalizedQuery = _normalizeText(query);
+    String normalizedText = _normalizeAppText(text);
+    String normalizedQuery = _normalizeAppText(query);
     
     return normalizedText.contains(normalizedQuery);
   }
@@ -675,6 +676,7 @@ class _QuranSearchScreenState extends State<QuranSearchScreen> with SingleTicker
             surahIndex: surahIndex,
             surahName: surahData.name,
             initialAyahIndex: ayahIndex,
+            highlightInitialAyah: true, // Highlight searched ayah
           ),
         ),
       );
@@ -690,7 +692,7 @@ class _QuranSearchScreenState extends State<QuranSearchScreen> with SingleTicker
       return Scaffold(
         backgroundColor: isDark ? AppTheme.darkBackground : AppTheme.lightBackground,
         appBar: AppBar(
-          title: Text(context.l.quranSearch),
+          title: AppText(context.l.quranSearch),
           backgroundColor: AppTheme.primaryGreen,
           foregroundColor: Colors.white,
         ),
@@ -705,7 +707,7 @@ class _QuranSearchScreenState extends State<QuranSearchScreen> with SingleTicker
     return Scaffold(
       backgroundColor: isDark ? AppTheme.darkBackground : AppTheme.lightBackground,
       appBar: AppBar(
-        title: Text(context.l.quranSearch),
+        title: AppText(context.l.quranSearch),
         backgroundColor: AppTheme.primaryGreen,
         foregroundColor: Colors.white,
         elevation: 0,
@@ -745,7 +747,7 @@ class _QuranSearchScreenState extends State<QuranSearchScreen> with SingleTicker
                                     ),
                                   ] : null,
                                 ),
-                                child: Text(
+                                child: AppText(
                                   context.l.textSearch,
                                   textAlign: TextAlign.center,
                                   style: TextStyle(
@@ -779,7 +781,7 @@ class _QuranSearchScreenState extends State<QuranSearchScreen> with SingleTicker
                                     ),
                                   ] : null,
                                 ),
-                                child: Text(
+                                child: AppText(
                                   context.l.directNavigation,
                                   textAlign: TextAlign.center,
                                   style: TextStyle(
@@ -888,21 +890,19 @@ class _QuranSearchScreenState extends State<QuranSearchScreen> with SingleTicker
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
+                  AppText(
                     context.l.smartSearchSystem,
                     style: TextStyle(
                       fontSize: 12,
                       color: Colors.grey[600],
-                      fontFamily: 'Bahij Badr Light',
                     ),
                   ),
                   const SizedBox(height: 4),
-                  Text(
+                  AppText(
                     context.l.searchFeatures,
                     style: TextStyle(
                       fontSize: 11,
                       color: Colors.grey[500],
-                      fontFamily: 'Bahij Badr Light',
                       height: 1.3,
                     ),
                   ),
@@ -930,24 +930,22 @@ class _QuranSearchScreenState extends State<QuranSearchScreen> with SingleTicker
                             color: Colors.grey[400],
                           ),
                           const SizedBox(height: 20),
-                          Text(
+                          AppText(
                             _searchController.text.isEmpty
                                 ? context.l.searchPlaceholder
                                 : context.l.noResultsFound,
                             style: TextStyle(
                               fontSize: 16,
                               color: Colors.grey[600],
-                              fontFamily: 'Bahij Badr Light',
                             ),
                           ),
                           if (_searchController.text.isNotEmpty) ...[
                             const SizedBox(height: 10),
-                            Text(
+                            AppText(
                               context.l.tryDifferentText,
                               style: TextStyle(
                                 fontSize: 14,
                                 color: Colors.grey[500],
-                                fontFamily: 'Bahij Badr Light',
                               ),
                             ),
                           ],
@@ -995,7 +993,7 @@ class _QuranSearchScreenState extends State<QuranSearchScreen> with SingleTicker
                                             color: AppTheme.primaryGreen.withValues(alpha: 0.1),
                                             borderRadius: BorderRadius.circular(8),
                                           ),
-                                          child: Text(
+                                          child: AppText(
                                             '${context.l.ayah} ${result.ayahIndex}',
                                             style: TextStyle(
                                               fontSize: 12,
@@ -1004,7 +1002,7 @@ class _QuranSearchScreenState extends State<QuranSearchScreen> with SingleTicker
                                             ),
                                           ),
                                         ),
-                                        Text(
+                                        AppText(
                                           result.surahName,
                                           style: TextStyle(
                                             fontSize: 16,
@@ -1016,7 +1014,7 @@ class _QuranSearchScreenState extends State<QuranSearchScreen> with SingleTicker
                                     ),
                                     const SizedBox(height: 12),
                                     // Arabic text with highlight (search only in Arabic)
-                                    _buildHighlightedText(
+                                    _buildHighlightedAppText(
                                       result.ayahText,
                                       _searchController.text,
                                       TextStyle(
@@ -1064,12 +1062,11 @@ class _QuranSearchScreenState extends State<QuranSearchScreen> with SingleTicker
                 ),
                 const SizedBox(width: 12),
                 Expanded(
-                  child: Text(
+                  child: AppText(
                     context.l.selectSurahFirst,
                     style: TextStyle(
                       fontSize: 14,
                       color: AppTheme.primaryGreen,
-                      fontFamily: 'Bahij Badr Light',
                     ),
                   ),
                 ),
@@ -1095,13 +1092,12 @@ class _QuranSearchScreenState extends State<QuranSearchScreen> with SingleTicker
               children: [
                 Padding(
                   padding: const EdgeInsets.all(16),
-                  child:                   Text(
+                  child:                   AppText(
                     context.l.selectSurah,
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
                       color: isDark ? Colors.white : Colors.black87,
-                      fontFamily: 'Bahij Badr Light',
                     ),
                   ),
                 ),
@@ -1137,7 +1133,7 @@ class _QuranSearchScreenState extends State<QuranSearchScreen> with SingleTicker
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Center(
-                            child: Text(
+                            child: AppText(
                               '$surahIndex',
                               style: TextStyle(
                                 fontSize: 14,
@@ -1147,7 +1143,7 @@ class _QuranSearchScreenState extends State<QuranSearchScreen> with SingleTicker
                             ),
                           ),
                         ),
-                        title: Text(
+                        title: AppText(
                           surahData.name,
                           textAlign: TextAlign.right,
                           style: TextStyle(
@@ -1156,7 +1152,7 @@ class _QuranSearchScreenState extends State<QuranSearchScreen> with SingleTicker
                             color: isDark ? Colors.white : Colors.black87,
                           ),
                         ),
-                        subtitle: Text(
+                        subtitle: AppText(
                           '${context.l.verses}: ${surahData.ayahs.length}',
                           textAlign: TextAlign.right,
                           style: TextStyle(
@@ -1196,13 +1192,12 @@ class _QuranSearchScreenState extends State<QuranSearchScreen> with SingleTicker
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
+                  AppText(
                     '${context.l.enterAyahNumber} (1/$maxAyahForSelectedSurah)',
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
                       color: isDark ? Colors.white : Colors.black87,
-                      fontFamily: 'Bahij Badr Light',
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -1242,9 +1237,9 @@ class _QuranSearchScreenState extends State<QuranSearchScreen> with SingleTicker
                           } else {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
-                                content: Text(
+                                content: AppText(
                                   context.l.ayahNumberRange.replaceAll('{min}', '1').replaceAll('{max}', '$maxAyahForSelectedSurah'),
-                                  style: TextStyle(fontFamily: 'Bahij Badr Light'),
+                                  style: TextStyle(),
                                 ),
                                 backgroundColor: Colors.red,
                               ),
@@ -1265,13 +1260,12 @@ class _QuranSearchScreenState extends State<QuranSearchScreen> with SingleTicker
                           children: [
                             Icon(Icons.navigation_rounded, color: Colors.white),
                             const SizedBox(width: 8),
-                            Text(
+                            AppText(
                               context.l.navigate,
                               style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,
                                 color: Colors.white,
-                                fontFamily: 'Bahij Badr Light',
                               ),
                             ),
                           ],
@@ -1288,9 +1282,9 @@ class _QuranSearchScreenState extends State<QuranSearchScreen> with SingleTicker
     );
   }
 
-  Widget _buildHighlightedText(String text, String query, TextStyle style) {
+  Widget _buildHighlightedAppText(String text, String query, TextStyle style) {
     if (query.isEmpty) {
-      return Text(
+      return AppText(
         text,
         textAlign: TextAlign.right,
         textDirection: TextDirection.rtl,
@@ -1302,7 +1296,7 @@ class _QuranSearchScreenState extends State<QuranSearchScreen> with SingleTicker
     final spans = _createHighlightSpans(text, query, style);
     
     if (spans.isEmpty) {
-      return Text(
+      return AppText(
         text,
         textAlign: TextAlign.right,
         textDirection: TextDirection.rtl,
@@ -1430,8 +1424,8 @@ class _QuranSearchScreenState extends State<QuranSearchScreen> with SingleTicker
   // Find normalized matches (without diacritics)
   List<_HighlightMatch> _findNormalizedMatches(String text, String query) {
     List<_HighlightMatch> matches = [];
-    String normalizedText = _normalizeText(text);
-    String normalizedQuery = _normalizeText(query);
+    String normalizedText = _normalizeAppText(text);
+    String normalizedQuery = _normalizeAppText(query);
     
     if (normalizedQuery.isEmpty) return matches;
     
@@ -1480,7 +1474,7 @@ class _QuranSearchScreenState extends State<QuranSearchScreen> with SingleTicker
     
     while (originalIndex < originalText.length && normalizedCount < normalizedIndex) {
       String char = originalText[originalIndex];
-      String normalizedChar = _normalizeText(char);
+      String normalizedChar = _normalizeAppText(char);
       
       if (normalizedChar.isNotEmpty) {
         normalizedCount++;
@@ -1528,7 +1522,7 @@ class _QuranSearchScreenState extends State<QuranSearchScreen> with SingleTicker
       int originalStart = -1;
       for (int i = 0; i <= originalText.length - matchedText.length; i++) {
         String segment = originalText.substring(i, i + matchedText.length);
-        if (_normalizeText(segment) == matchedText) {
+        if (_normalizeAppText(segment) == matchedText) {
           originalStart = i;
           break;
         }

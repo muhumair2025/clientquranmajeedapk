@@ -1,3 +1,4 @@
+import '../widgets/app_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:provider/provider.dart';
@@ -172,7 +173,7 @@ class _SubcategoriesScreenState extends State<SubcategoriesScreen> {
     return Scaffold(
       backgroundColor: isDark ? AppTheme.darkBackground : AppTheme.lightBackground,
       appBar: AppBar(
-        title: Text(
+        title: AppText(
           widget.categoryName,
           style: const TextStyle(
             fontWeight: FontWeight.w600,
@@ -197,7 +198,7 @@ class _SubcategoriesScreenState extends State<SubcategoriesScreen> {
               color: primaryColor,
             ),
             const SizedBox(height: 16),
-            Text(
+            AppText(
               'Loading...',
               style: TextStyle(
                 color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
@@ -220,7 +221,7 @@ class _SubcategoriesScreenState extends State<SubcategoriesScreen> {
               color: Theme.of(context).colorScheme.error,
             ),
             const SizedBox(height: 16),
-            Text(
+            AppText(
               _errorMessage!,
               style: TextStyle(
                 fontSize: 16,
@@ -231,7 +232,7 @@ class _SubcategoriesScreenState extends State<SubcategoriesScreen> {
             ElevatedButton.icon(
               onPressed: _loadSubcategories,
               icon: const Icon(Icons.refresh),
-              label: const Text('Retry'),
+              label: const AppText('Retry'),
               style: ElevatedButton.styleFrom(
                 backgroundColor: primaryColor,
                 foregroundColor: Colors.white,
@@ -254,7 +255,7 @@ class _SubcategoriesScreenState extends State<SubcategoriesScreen> {
               color: Theme.of(context).colorScheme.onSurface.withOpacity(0.3),
             ),
             const SizedBox(height: 16),
-            Text(
+            AppText(
               'No subcategories available',
               style: TextStyle(
                 fontSize: 16,
@@ -321,7 +322,7 @@ class _SubcategoriesScreenState extends State<SubcategoriesScreen> {
             // TODO: Navigate to materials/content screen
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text('${subcategory.name} - Coming Soon'),
+                content: AppText('${subcategory.name} - Coming Soon'),
                 backgroundColor: AppTheme.primaryGreen,
                 behavior: SnackBarBehavior.floating,
                 shape: RoundedRectangleBorder(
@@ -360,7 +361,7 @@ class _SubcategoriesScreenState extends State<SubcategoriesScreen> {
                     children: [
                       Align(
                         alignment: isRTL ? Alignment.centerRight : Alignment.centerLeft,
-                        child: Text(
+                        child: AppText(
                           subcategory.name,
                           style: FontManager.getTextStyle(
                             languageCode,
@@ -377,7 +378,7 @@ class _SubcategoriesScreenState extends State<SubcategoriesScreen> {
                         const SizedBox(height: 4), // More compact spacing
                         Align(
                           alignment: isRTL ? Alignment.centerRight : Alignment.centerLeft,
-                          child: Text(
+                          child: AppText(
                             subcategory.description!,
                             style: FontManager.getTextStyle(
                               languageCode,
@@ -406,7 +407,7 @@ class _SubcategoriesScreenState extends State<SubcategoriesScreen> {
                                 color: AppTheme.primaryGreen.withOpacity(0.8),
                               ),
                               const SizedBox(width: 4),
-                              Text(
+                              AppText(
                                 '${subcategory.contentsCount} items',
                                 style: FontManager.getTextStyle(
                                   languageCode,
