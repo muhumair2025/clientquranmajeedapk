@@ -354,6 +354,48 @@ class MushafDatabaseService {
     }
   }
   
+  /// Get surah numbers that appear on a specific page
+  static Future<List<int>> getSurahsOnPage(int pageNumber) async {
+    if (_ayahInfoDb == null) {
+      throw Exception('Ayah info database not initialized');
+    }
+    
+    try {
+      final results = await _ayahInfoDb!.rawQuery(
+        'SELECT DISTINCT sura_number FROM glyphs WHERE page_number = ? ORDER BY sura_number',
+        [pageNumber]
+      );
+      
+      return results.map((row) => row['sura_number'] as int).toList();
+    } catch (e) {
+      debugPrint('❌ Error fetching surahs for page $pageNumber: $e');
+      return [];
+    }
+  }
+  
+  /// Get juz number for a specific page
+  static int getJuzForPage(int pageNumber) {
+    // Para/Juz-to-page mapping (standard Mushaf)
+    const paraPages = {
+      1: 1, 2: 22, 3: 42, 4: 62, 5: 82, 6: 102, 7: 122, 8: 142,
+      9: 162, 10: 182, 11: 202, 12: 222, 13: 242, 14: 262, 15: 282,
+      16: 302, 17: 322, 18: 342, 19: 362, 20: 382, 21: 402, 22: 422,
+      23: 442, 24: 462, 25: 482, 26: 502, 27: 522, 28: 542, 29: 562, 30: 582,
+    };
+    
+    // Find which juz this page belongs to
+    int juzNumber = 1;
+    for (var entry in paraPages.entries) {
+      if (pageNumber >= entry.value) {
+        juzNumber = entry.key;
+      } else {
+        break;
+      }
+    }
+    
+    return juzNumber;
+  }
+  
   /// Close databases
   static Future<void> close() async {
     await _ayahInfoDb?.close();

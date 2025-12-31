@@ -7,6 +7,7 @@ import 'themes/app_theme.dart';
 import 'providers/theme_provider.dart';
 import 'providers/font_provider.dart';
 import 'providers/language_provider.dart';
+import 'providers/ayah_modal_settings_provider.dart';
 import 'screens/major_downloads_screen.dart';
 import 'screens/more_tools_screen.dart';
 import 'screens/live_dars_screen.dart';
@@ -85,6 +86,7 @@ void main() async {
         ChangeNotifierProvider.value(value: themeProvider),
         ChangeNotifierProvider(create: (context) => FontProvider()),
         ChangeNotifierProvider(create: (context) => LanguageProvider()),
+        ChangeNotifierProvider(create: (context) => AyahModalSettingsProvider()),
       ],
       child: const QuranMajeedApp(),
     ),

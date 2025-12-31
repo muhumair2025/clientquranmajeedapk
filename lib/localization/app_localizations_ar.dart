@@ -155,7 +155,6 @@ class AppLocalizationsAr extends AppLocalizations {
   // Additional Methods (not in base class)
   String get backgroundColor => 'لون الخلفية';
   String get textColor => 'لون النص';
-  String get showTranslation => 'إظهار الترجمة';
   String get hideTranslation => 'إخفاء الترجمة';
   String get goToPage => 'انتقل إلى الصفحة';
   String get pageNumber => 'رقم الصفحة';
@@ -502,6 +501,24 @@ class AppLocalizationsAr extends AppLocalizations {
   String get fontSettings => 'إعدادات الخط';
   @override
   String get arabicTextFont => 'خط النص العربي';
+  
+  // Ayah Modal Settings
+  @override
+  String get ayahModalSettings => 'إعدادات نافذة الآية';
+  @override
+  String get showArabicText => 'إظهار النص العربي';
+  @override
+  String get showTranslation => 'إظهار الترجمة';
+  @override
+  String get arabicFont => 'خط عربي';
+  @override
+  String get translationFont => 'خط الترجمة';
+  @override
+  String get arabicFontSize => 'حجم النص العربي';
+  @override
+  String get translationFontSize => 'حجم الترجمة';
+  @override
+  String get adjustSettings => 'الإعدادات';
   @override
   String get downloadIssue => 'مشكلة في التحميل';
   @override

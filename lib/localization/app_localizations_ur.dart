@@ -155,7 +155,6 @@ class AppLocalizationsUr extends AppLocalizations {
   // Additional Methods (not in base class)
   String get backgroundColor => 'پس منظر کا رنگ';
   String get textColor => 'متن کا رنگ';
-  String get showTranslation => 'ترجمہ دکھائیں';
   String get hideTranslation => 'ترجمہ چھپائیں';
   String get goToPage => 'صفحہ پر جائیں';
   String get pageNumber => 'صفحہ نمبر';
@@ -502,6 +501,24 @@ class AppLocalizationsUr extends AppLocalizations {
   String get fontSettings => 'فونٹ سیٹنگز';
   @override
   String get arabicTextFont => 'عربی متن کا فونٹ';
+  
+  // Ayah Modal Settings
+  @override
+  String get ayahModalSettings => 'آیت موڈل کی ترتیبات';
+  @override
+  String get showArabicText => 'عربی متن دکھائیں';
+  @override
+  String get showTranslation => 'ترجمہ دکھائیں';
+  @override
+  String get arabicFont => 'عربی فونٹ';
+  @override
+  String get translationFont => 'ترجمہ فونٹ';
+  @override
+  String get arabicFontSize => 'عربی متن کا سائز';
+  @override
+  String get translationFontSize => 'ترجمہ کا سائز';
+  @override
+  String get adjustSettings => 'ترتیبات';
   @override
   String get downloadIssue => 'ڈاؤن لوڈ کا مسئلہ';
   @override

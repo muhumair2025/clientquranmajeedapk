@@ -266,6 +266,16 @@ abstract class AppLocalizations {
   String get arabicTextFont;
   String get downloadIssue;
   String get downloadedFileDeleted;
+  
+  // Ayah Modal Settings
+  String get ayahModalSettings;
+  String get showArabicText;
+  String get showTranslation;
+  String get arabicFont;
+  String get translationFont;
+  String get arabicFontSize;
+  String get translationFontSize;
+  String get adjustSettings;
 
   // Additional localization strings
   String get downloads;

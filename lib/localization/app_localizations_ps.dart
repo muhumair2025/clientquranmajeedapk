@@ -479,6 +479,24 @@ class AppLocalizationsPs extends AppLocalizations {
   String get downloadIssue => 'د ډاونلوډ کې ستونزه';
   @override
   String get downloadedFileDeleted => 'ډاونلوډ شوی فایل ړنګ شو';
+  
+  // Ayah Modal Settings
+  @override
+  String get ayahModalSettings => 'د آیت تنظیمات';
+  @override
+  String get showArabicText => 'عربي متن ښکاره کړئ';
+  @override
+  String get showTranslation => 'ترجمه ښکاره کړئ';
+  @override
+  String get arabicFont => 'د عربي فونټ';
+  @override
+  String get translationFont => 'د ترجمې فونټ';
+  @override
+  String get arabicFontSize => 'د عربي متن اندازه';
+  @override
+  String get translationFontSize => 'د ترجمې اندازه';
+  @override
+  String get adjustSettings => 'تنظیمات';
 
   // Error messages for media viewers
   @override

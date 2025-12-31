@@ -479,6 +479,24 @@ class AppLocalizationsEn extends AppLocalizations {
   String get downloadIssue => 'Download Issue';
   @override
   String get downloadedFileDeleted => 'Downloaded file deleted';
+  
+  // Ayah Modal Settings
+  @override
+  String get ayahModalSettings => 'Ayah Modal Settings';
+  @override
+  String get showArabicText => 'Show Arabic Text';
+  @override
+  String get showTranslation => 'Show Translation';
+  @override
+  String get arabicFont => 'Arabic Font';
+  @override
+  String get translationFont => 'Translation Font';
+  @override
+  String get arabicFontSize => 'Arabic Text Size';
+  @override
+  String get translationFontSize => 'Translation Size';
+  @override
+  String get adjustSettings => 'Adjust Settings';
 
   // Error messages for media viewers
   @override
