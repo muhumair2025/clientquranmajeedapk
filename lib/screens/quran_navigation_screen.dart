@@ -395,14 +395,14 @@ class _QuranNavigationScreenState extends State<QuranNavigationScreen>
         itemBuilder: (context, index) {
         final paraNumber = filteredParas[index]['number'] as int;
         return Container(
-          margin: const EdgeInsets.only(bottom: 12),
+          margin: const EdgeInsets.only(bottom: 8),
           decoration: BoxDecoration(
             color: isDark ? context.surfaceColor : Colors.white,
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(12),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.08),
-                blurRadius: 8,
+                color: Colors.black.withValues(alpha: 0.05),
+                blurRadius: 4,
                 offset: const Offset(0, 2),
               ),
             ],
@@ -410,7 +410,7 @@ class _QuranNavigationScreenState extends State<QuranNavigationScreen>
           child: Material(
             color: Colors.transparent,
             child: InkWell(
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(12),
               onTap: () {
                 // Navigate to Para reading screen
                 Navigator.push(
@@ -426,34 +426,40 @@ class _QuranNavigationScreenState extends State<QuranNavigationScreen>
                 );
               },
               child: Padding(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(12),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     // Para number on the left with badge background
                     Container(
-                      width: 40,
-                      height: 40,
+                      width: 36,
+                      height: 36,
                       child: Stack(
                         children: [
                           // Badge background image (smaller)
                           Center(
-                            child: Image.asset(
-                              'assets/images/badge.png',
-                              width: 35,
-                              height: 35,
-                              fit: BoxFit.contain,
-                              errorBuilder: (context, error, stackTrace) {
-                                // Fallback to custom style if badge image fails to load
-                                return Container(
-                                  width: 35,
-                                  height: 35,
-                                  decoration: BoxDecoration(
-                                    color: context.primaryColor.withValues(alpha: 0.1),
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                );
-                              },
+                            child: ColorFiltered(
+                              colorFilter: ColorFilter.mode(
+                                context.primaryColor,
+                                BlendMode.srcIn,
+                              ),
+                              child: Image.asset(
+                                'assets/images/badge.png',
+                                width: 32,
+                                height: 32,
+                                fit: BoxFit.contain,
+                                errorBuilder: (context, error, stackTrace) {
+                                  // Fallback to custom style if badge image fails to load
+                                  return Container(
+                                    width: 32,
+                                    height: 32,
+                                    decoration: BoxDecoration(
+                                      color: context.primaryColor.withValues(alpha: 0.1),
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                  );
+                                },
+                              ),
                             ),
                           ),
                           // Para number text
@@ -461,8 +467,8 @@ class _QuranNavigationScreenState extends State<QuranNavigationScreen>
                             child: Center(
                               child: AppText(
                                 '$paraNumber',
-                                style: TextStyle(
-                                  fontSize: 16,
+                                style: const TextStyle(
+                                  fontSize: 14,
                                   fontWeight: FontWeight.w900,
                                   color: Colors.white,
                                 ),
@@ -472,16 +478,17 @@ class _QuranNavigationScreenState extends State<QuranNavigationScreen>
                         ],
                       ),
                     ),
-                    const SizedBox(width: 16),
+                    const SizedBox(width: 12),
                     // Para content
                     Expanded(
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.end,
+                        crossAxisAlignment: CrossAxisAlignment.stretch, // Use stretch to fill width
                         children: [
                           // Para name on the right side (RTL)
+                          // Force alignment to Right for Arabic text regardless of LTR/RTL layout
                           Container(
-                            height: 28,
+                            height: 24,
                             alignment: Alignment.centerRight,
                             child: Directionality(
                               textDirection: TextDirection.ltr, // Force LTR for images to prevent mirroring
@@ -496,7 +503,7 @@ class _QuranNavigationScreenState extends State<QuranNavigationScreen>
                                     return AppText(
                                       _getParaName(paraNumber),
                                       style: TextStyle(
-                                        fontSize: 18,
+                                        fontSize: 16,
                                         fontWeight: FontWeight.bold,
                                         color: isDark ? Colors.white : Colors.black,
                                       ),
@@ -513,26 +520,26 @@ class _QuranNavigationScreenState extends State<QuranNavigationScreen>
                           AppText(
                             context.l.ayahsCount.replaceAll('{count}', _getParaAyahCount(paraNumber).toString()),
                             style: TextStyle(
-                              fontSize: 12,
+                              fontSize: 11,
                               color: isDark ? Colors.white60 : Colors.grey[600],
                             ),
-                            textDirection: TextDirection.rtl,
-                            textAlign: TextAlign.right,
+                            textAlign: TextAlign.right, // Force right alignment
+                            textDirection: TextDirection.rtl, // Force RTL text direction
                           ),
                         ],
                       ),
                     ),
-                    const SizedBox(width: 12),
+                    const SizedBox(width: 8),
                     // Para emoji indicator on the right side
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                       decoration: BoxDecoration(
                         color: context.primaryColor.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(6),
                       ),
                       child: AppText(
                         _getParaEmoji(paraNumber),
-                        style: const TextStyle(fontSize: 16),
+                        style: const TextStyle(fontSize: 14),
                       ),
                     ),
                   ],
@@ -575,14 +582,14 @@ class _QuranNavigationScreenState extends State<QuranNavigationScreen>
         final surahNumber = surah['number'] as int;
         
         return Container(
-          margin: const EdgeInsets.only(bottom: 12),
+          margin: const EdgeInsets.only(bottom: 8),
           decoration: BoxDecoration(
             color: isDark ? context.surfaceColor : Colors.white,
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(12),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.08),
-                blurRadius: 8,
+                color: Colors.black.withValues(alpha: 0.05),
+                blurRadius: 4,
                 offset: const Offset(0, 2),
               ),
             ],
@@ -590,7 +597,7 @@ class _QuranNavigationScreenState extends State<QuranNavigationScreen>
           child: Material(
             color: Colors.transparent,
             child: InkWell(
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(12),
               onTap: () {
                 Navigator.push(
                   context,
@@ -604,34 +611,40 @@ class _QuranNavigationScreenState extends State<QuranNavigationScreen>
                 );
               },
               child: Padding(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(12),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     // Surah number on the left with badge background
                     Container(
-                      width: 40,
-                      height: 40,
+                      width: 36,
+                      height: 36,
                       child: Stack(
                         children: [
                           // Badge background image (smaller)
                           Center(
-                            child: Image.asset(
-                              'assets/images/badge.png',
-                              width: 35,
-                              height: 35,
-                              fit: BoxFit.contain,
-                              errorBuilder: (context, error, stackTrace) {
-                                // Fallback to custom style if badge image fails to load
-                                return Container(
-                                  width: 35,
-                                  height: 35,
-                                  decoration: BoxDecoration(
-                                    color: context.primaryColor.withValues(alpha: 0.1),
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                );
-                              },
+                            child: ColorFiltered(
+                              colorFilter: ColorFilter.mode(
+                                context.primaryColor,
+                                BlendMode.srcIn,
+                              ),
+                              child: Image.asset(
+                                'assets/images/badge.png',
+                                width: 32,
+                                height: 32,
+                                fit: BoxFit.contain,
+                                errorBuilder: (context, error, stackTrace) {
+                                  // Fallback to custom style if badge image fails to load
+                                  return Container(
+                                    width: 32,
+                                    height: 32,
+                                    decoration: BoxDecoration(
+                                      color: context.primaryColor.withValues(alpha: 0.1),
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                  );
+                                },
+                              ),
                             ),
                           ),
                           // Surah number text
@@ -639,8 +652,8 @@ class _QuranNavigationScreenState extends State<QuranNavigationScreen>
                             child: Center(
                               child: AppText(
                                 '$surahNumber',
-                                style: TextStyle(
-                                  fontSize: 16,
+                                style: const TextStyle(
+                                  fontSize: 14,
                                   fontWeight: FontWeight.w900,
                                   color: Colors.white,
                                 ),
@@ -650,16 +663,17 @@ class _QuranNavigationScreenState extends State<QuranNavigationScreen>
                         ],
                       ),
                     ),
-                    const SizedBox(width: 16),
+                    const SizedBox(width: 12),
                     // Surah content
                     Expanded(
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.end,
+                        crossAxisAlignment: CrossAxisAlignment.stretch, // Use stretch to fill width
                         children: [
                           // Surah name on the right side (RTL)
+                          // Force alignment to Right for Arabic text regardless of LTR/RTL layout
                           Container(
-                            height: 28,
+                            height: 24,
                             alignment: Alignment.centerRight,
                             child: Directionality(
                               textDirection: TextDirection.ltr, // Force LTR for images to prevent mirroring
@@ -674,7 +688,7 @@ class _QuranNavigationScreenState extends State<QuranNavigationScreen>
                                     return AppText(
                                       surah['name'],
                                       style: TextStyle(
-                                        fontSize: 18,
+                                        fontSize: 16,
                                         fontWeight: FontWeight.bold,
                                         color: isDark ? Colors.white : Colors.black,
                                       ),
@@ -691,20 +705,20 @@ class _QuranNavigationScreenState extends State<QuranNavigationScreen>
                           AppText(
                             context.l.ayahsCount.replaceAll('{count}', surah['ayahCount'].toString()),
                             style: TextStyle(
-                              fontSize: 12,
+                              fontSize: 11,
                               color: isDark ? Colors.white60 : Colors.grey[600],
                             ),
-                            textDirection: TextDirection.rtl,
-                            textAlign: TextAlign.right,
+                            textAlign: TextAlign.right, // Force right alignment
+                            textDirection: TextDirection.rtl, // Force RTL text direction
                           ),
                         ],
                       ),
                     ),
-                    const SizedBox(width: 12),
+                    const SizedBox(width: 8),
                     // Navigation icon button (larger)
                     Container(
-                      width: 44,
-                      height: 44,
+                      width: 40,
+                      height: 40,
                       decoration: BoxDecoration(
                         color: context.primaryColor.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(10),
@@ -715,20 +729,25 @@ class _QuranNavigationScreenState extends State<QuranNavigationScreen>
                           borderRadius: BorderRadius.circular(10),
                           onTap: () => _showSurahModal(context, surah),
                           child: Center(
-                            child: Image.asset(
-                              'assets/images/navigation.png',
-                              width: 24,
-                              height: 24,
-                              fit: BoxFit.contain,
-                              errorBuilder: (context, error, stackTrace) {
-                                // Fallback to original icon if image fails to load
-                                return Icon(
-                                  Icons.send_rounded,
-                                  color: context.primaryColor,
-                                  size: 24,
-                                );
-                              },
-                            ),
+                            child: ColorFiltered(
+                                colorFilter: ColorFilter.mode(
+                                    context.primaryColor, 
+                                    BlendMode.srcIn,
+                                ),
+                                child: Image.asset(
+                                'assets/images/navigation.png',
+                                width: 20,
+                                height: 20,
+                                fit: BoxFit.contain,
+                                errorBuilder: (context, error, stackTrace) {
+                                    // Fallback to original icon if image fails to load
+                                    return Icon(
+                                    Icons.send_rounded,
+                                    color: context.primaryColor,
+                                    size: 20,
+                                    );
+                                },
+                            )),
                           ),
                         ),
                       ),
@@ -736,25 +755,25 @@ class _QuranNavigationScreenState extends State<QuranNavigationScreen>
                     const SizedBox(width: 8),
                     // Makki/Madani indicator on the right side
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                       decoration: BoxDecoration(
                         color: surah['isMakki'] 
                             ? Colors.orange.withValues(alpha: 0.1)
                             : Colors.blue.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(6),
                       ),
                       child: Image.asset(
                         surah['isMakki'] 
                             ? 'assets/images/kaaba.png'  // Makki surahs use Kaaba image
                             : 'assets/images/masjid-al-nabawi.png',  // Madani surahs use Masjid Al-Nabawi image
-                        width: 16,
-                        height: 16,
+                        width: 14,
+                        height: 14,
                         fit: BoxFit.contain,
                         errorBuilder: (context, error, stackTrace) {
                           // Fallback to emoji if image fails to load
                           return AppText(
                             surah['isMakki'] ? '🕋' : '🕌',
-                            style: const TextStyle(fontSize: 16),
+                            style: const TextStyle(fontSize: 14),
                           );
                         },
                       ),
@@ -1934,7 +1953,7 @@ class _SurahAyahModalState extends State<SurahAyahModal> {
                           final ayahText = ayah['text'] as String;
                           
                           return Container(
-                            margin: const EdgeInsets.only(bottom: 12),
+                            margin: const EdgeInsets.only(bottom: 8),
                             decoration: BoxDecoration(
                               color: isDark ? context.surfaceColor : Colors.white,
                               borderRadius: BorderRadius.circular(12),
@@ -1948,7 +1967,7 @@ class _SurahAyahModalState extends State<SurahAyahModal> {
                                 borderRadius: BorderRadius.circular(12),
                                 onTap: () => _navigateToAyah(ayahIndex),
                                 child: Padding(
-                                  padding: const EdgeInsets.all(16),
+                                  padding: const EdgeInsets.all(12),
                                   child: Row(
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
@@ -1960,22 +1979,28 @@ class _SurahAyahModalState extends State<SurahAyahModal> {
                                           children: [
                                             // Badge background image
                                             Center(
-                                              child: Image.asset(
-                                                'assets/images/badge.png',
-                                                width: 28,
-                                                height: 28,
-                                                fit: BoxFit.contain,
-                                                errorBuilder: (context, error, stackTrace) {
-                                                  // Fallback to custom style if badge image fails to load
-                                                  return Container(
-                                                    width: 28,
-                                                    height: 28,
-                                                    decoration: BoxDecoration(
-                                                      color: context.primaryColor.withValues(alpha: 0.1),
-                                                      borderRadius: BorderRadius.circular(14),
-                                                    ),
-                                                  );
-                                                },
+                                              child: ColorFiltered(
+                                                colorFilter: ColorFilter.mode(
+                                                  context.primaryColor,
+                                                  BlendMode.srcIn,
+                                                ),
+                                                child: Image.asset(
+                                                  'assets/images/badge.png',
+                                                  width: 30,
+                                                  height: 30,
+                                                  fit: BoxFit.contain,
+                                                  errorBuilder: (context, error, stackTrace) {
+                                                    // Fallback to custom style if badge image fails to load
+                                                    return Container(
+                                                      width: 30,
+                                                      height: 30,
+                                                      decoration: BoxDecoration(
+                                                        color: context.primaryColor.withValues(alpha: 0.1),
+                                                        borderRadius: BorderRadius.circular(14),
+                                                      ),
+                                                    );
+                                                  },
+                                                ),
                                               ),
                                             ),
                                             // Ayah number text
@@ -1983,7 +2008,7 @@ class _SurahAyahModalState extends State<SurahAyahModal> {
                                               child: Center(
                                                 child: AppText(
                                                   '$ayahIndex',
-                                                  style: TextStyle(
+                                                  style: const TextStyle(
                                                     fontSize: 12,
                                                     fontWeight: FontWeight.w900,
                                                     color: Colors.white,
@@ -2004,7 +2029,7 @@ class _SurahAyahModalState extends State<SurahAyahModal> {
                                           ayah['searchTerm'],
                                           ayah['highlighted'] ?? false,
                                           TextStyle(
-                                            fontSize: 18.0,
+                                            fontSize: 16.0,
                                             height: 1.4,
                                             color: isDark ? Colors.white : Colors.black,
                                             fontFamily: 'Noorehuda',
@@ -2017,7 +2042,7 @@ class _SurahAyahModalState extends State<SurahAyahModal> {
                                       // Navigate icon
                                       Icon(
                                         Icons.arrow_forward_ios_rounded,
-                                        size: 16,
+                                        size: 14,
                                         color: Colors.grey[400],
                                       ),
                                     ],
